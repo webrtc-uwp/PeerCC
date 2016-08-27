@@ -1,0 +1,34 @@
+﻿<Page
+    x:Class="PeerConnectionClient.VideoRenderPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:PeerConnectionClient"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+   
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Border BorderBrush="Blue"
+                BorderThickness="1"
+                Margin="5" >
+            <MediaElement Name="PeerVideo" />
+        </Border>
+        <Border BorderBrush="Blue"
+                BorderThickness="1"
+                Margin="15"
+                Width="150"
+                Height="150" 
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom" >
+            <MediaElement Name="SelfVideo" />
+        </Border>
+        <Button Content="Disconnect" 
+                Command="{Binding DisconnectCommand}"
+                Grid.Row="1" />
+    </Grid>
+</Page>

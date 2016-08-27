@@ -1,0 +1,224 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProjectGuid>{46D1B3CB-DAE0-4AA9-A56E-C2B6EC534C1C}</ProjectGuid>
+    <OutputType>AppContainerExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>PeerConnectionClient.Win10</RootNamespace>
+    <AssemblyName>PeerConnectionClient.Win10</AssemblyName>
+    <DefaultLanguage>en</DefaultLanguage>
+    <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+    <TargetPlatformVersion>10.0.10240.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
+    <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
+    <EnableDotNetNativeCompatibleProfile>true</EnableDotNetNativeCompatibleProfile>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <PackageCertificateKeyFile>PeerConnectionClient.Win10_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+    <AppxBundle>Always</AppxBundle>
+    <PackageCertificateThumbprint>B04A14D284923310880F5E8C12D8D699A7B09036</PackageCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;USE_WIN10_PHONE_DLL</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <OutputPath>bin\ARM\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;USE_WIN10_PHONE_DLL</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <None Include="project.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\PeerConnectionClient.Shared\Model\IceServer.cs">
+      <Link>Links\IceServer.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\MVVM\BindableBase.cs">
+      <Link>Links\BindableBase.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\MVVM\DispatcherBindableBase.cs">
+      <Link>Links\DispatcherBindableBase.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Signalling\Conductor.cs">
+      <Link>Links\Conductor.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Signalling\Signalling.cs">
+      <Link>Links\Signalling.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\ActionCommand.cs">
+      <Link>Links\ActionCommand.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\AppPerf.cs">
+      <Link>Links\AppPerf.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\BoolToVisConverter.cs">
+      <Link>Links\BoolToVisConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\InvertedBooleanConverter.cs">
+      <Link>Links\InvertedBooleanConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\NtpService.cs">
+      <Link>Links\NtpService.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\NullToVisibleConverter.cs">
+      <Link>Links\NullToVisibleConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\SdpUtils.cs">
+      <Link>Links\SdpUtils.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\ToggleImageConverter.cs">
+      <Link>Links\ToggleImageConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\UI\ErrorControl.xaml.cs">
+      <Link>Links\ErrorControl.xaml.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\ValidableBase.cs">
+      <Link>Links\ValidableBase.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\ValidableIntegerString.cs">
+      <Link>Links\ValidableIntegerString.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\ValidableNonEmptyString.cs">
+      <Link>Links\ValidableNonEmptyString.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\VideoCaptureFormat.cs">
+      <Link>Links\VideoCaptureFormat.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\Utilities\XmlSerializer.cs">
+      <Link>Links\XmlSerializer.cs</Link>
+    </Compile>
+    <Compile Include="..\PeerConnectionClient.Shared\ViewModels\MainViewModel.cs">
+      <Link>Links\MainViewModel.cs</Link>
+    </Compile>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MainPage.xaml.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </AppxManifest>
+    <None Include="PeerConnectionClient.Win10_TemporaryKey.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assets\Microphone-100.png" />
+    <Content Include="Assets\No Microphone-100.png" />
+    <Content Include="Assets\No Selfie-100.png" />
+    <Content Include="Assets\No Video-100.png" />
+    <Content Include="Assets\Phone Disconnected-100.png" />
+    <Content Include="Assets\Phone-100.png" />
+    <Content Include="Assets\Selfie-100.png" />
+    <Content Include="Assets\Settings-100.png" />
+    <Content Include="Assets\SplashScreen.scale-200.png" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Include="Assets\Video-100.png" />
+    <Content Include="Properties\Default.rd.xml" />
+    <Content Include="Assets\Logo.scale-100.png" />
+    <Content Include="Assets\SmallLogo.scale-100.png" />
+    <Content Include="Assets\SplashScreen.scale-100.png" />
+    <Content Include="Assets\StoreLogo.png" />
+    <Content Include="Assets\WideLogo.scale-100.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="..\PeerConnectionClient.Shared\Utilities\UI\ErrorControl.xaml">
+      <Link>Links\ErrorControl.xaml</Link>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
+    <VisualStudioVersion>14.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

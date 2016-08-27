@@ -1,0 +1,365 @@
+﻿<Page
+    x:Class="PeerConnectionClient.SettingsPage"
+    xmlns:Controls="using:PeerConnectionClient.Controls" 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:PeerConnectionClient"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utilities="using:PeerConnectionClient.Utilities"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.Resources>
+        <utilities:NullToVisibleConverter x:Key="NullToVisibleConverter" />
+        <utilities:BoolToVisConverter x:Key="BoolToVisConverter" />
+        <utilities:BoolToVisConverter Negated="True" x:Key="BoolToVisConverterNegated" />
+        <utilities:InvertedBooleanConverter x:Key="InvertedBooleanConverter"/>
+        <!-- This style is copy of TextBlock Header Style `HeaderContentPresenterStyle`-->
+        <Style TargetType="TextBlock" x:Name="TextBlockHeader">
+            <Setter Property="FontFamily" Value="{StaticResource PhoneFontFamilyNormal}" />
+            <Setter Property="FontSize" Value="{StaticResource TextStyleMediumFontSize}" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Foreground" Value="{ThemeResource PhoneMidBrush}" />
+            <Setter Property="Margin" Value="{ThemeResource TextControlHeaderMarginThemeThickness}"/>
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer>
+        <Grid Name="ControlsGrid"
+              Margin="20,0,20,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0"
+                  Margin="0,25,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="SETTINGS"
+                           Style="{ThemeResource SubheaderTextBlockStyle}"
+                           Grid.Column="0"/>
+                <TextBlock Text="{Binding AppVersion, Mode=OneWay}"
+                           TextAlignment="Right"
+                           VerticalAlignment="Bottom"
+                           Grid.Column="1"/>
+            </Grid>
+            <Controls:ErrorControl DataContext="{Binding Ip}"
+                                   Grid.Row="1">
+                <Controls:ErrorControl.InnerContent>
+                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MinWidth="160"
+                             Header="IP"/>
+                </Controls:ErrorControl.InnerContent>
+            </Controls:ErrorControl>
+            <Controls:ErrorControl DataContext="{Binding Port}"
+                                   Grid.Row="2">
+                <Controls:ErrorControl.InnerContent>
+                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MinWidth="160"
+                             Header="Port"/>
+                </Controls:ErrorControl.InnerContent>
+            </Controls:ErrorControl>
+            <TextBlock Text="ICE servers"
+                       Grid.Row="3"
+                       Style="{StaticResource TextBlockHeader}" 
+                       Margin="0,10,0,0"/>
+            <ListBox Grid.Row="4"
+                     Grid.Column="1"
+                     ItemsSource="{Binding IceServers}"
+                     SelectedItem="{Binding SelectedIceServer, Mode=TwoWay}"
+                     MinWidth="160"
+                     Height="300"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     ScrollViewer.VerticalScrollMode="Enabled"
+                     ScrollViewer.HorizontalScrollMode="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Height="Auto" Margin="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       Grid.Row="0"
+                                       Grid.ColumnSpan="2"
+                                       Text="{Binding HostAndPort}"
+                                       Style="{StaticResource TitleTextBlockStyle}"/>
+                            <TextBlock Grid.Column="0"
+                                       Grid.Row="1"
+                                       Text="Type"
+                                       Style="{StaticResource FlyoutPickerTitleTextBlockStyle}"
+                                       FontWeight="Bold"
+                                       Margin="5,0,10,0"/>
+                            <TextBlock Grid.Column="1"
+                                       Grid.Row="1"
+                                       Text="{Binding TypeStr}"
+                                       Style="{StaticResource FlyoutPickerTitleTextBlockStyle}"/>
+                            <TextBlock Grid.Column="0"
+                                       Grid.Row="2"
+                                       Text="User"
+                                       Style="{StaticResource FlyoutPickerTitleTextBlockStyle}"
+                                       FontWeight="Bold"
+                                       Margin="5,0,10,0"
+                                       Visibility="{Binding Username, Converter={StaticResource NullToVisibleConverter}}"/>
+                            <TextBlock Grid.Column="1"
+                                       Grid.Row="2"
+                                       Text="{Binding Username}"
+                                       Visibility="{Binding Username, Converter={StaticResource NullToVisibleConverter}}"
+                                       Style="{StaticResource FlyoutPickerTitleTextBlockStyle}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <StackPanel Grid.Row="5" Grid.Column="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Name="AddButton"
+                            Content="&#xE109;"
+                            FontFamily="Segoe UI Symbol"
+                            Grid.Column="0"
+                            HorizontalAlignment="Right"
+                            Margin="5">
+                        <Button.Flyout>
+                            <Flyout>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Margin="20,0,0,0"
+                                                HorizontalAlignment="Center">
+                                        <Controls:ErrorControl DataContext="{Binding NewIceServer.Host}">
+                                            <Controls:ErrorControl.InnerContent>
+                                                <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         Header="Server"
+                                                         Width="160"/>
+                                            </Controls:ErrorControl.InnerContent>
+                                        </Controls:ErrorControl>
+                                        <ComboBox Header="Type"
+                                                  ItemsSource="{Binding NewIceServer.Types}"
+                                                  SelectedItem="{Binding NewIceServer.Type, Mode=TwoWay}"
+                                                  Width="160"/>
+                                        <Controls:ErrorControl DataContext="{Binding NewIceServer.Port}">
+                                            <Controls:ErrorControl.InnerContent>
+                                                <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         Header="Port"
+                                                         Width="160"/>
+                                            </Controls:ErrorControl.InnerContent>
+                                        </Controls:ErrorControl>
+                                        <TextBox Text="{Binding NewIceServer.Username, Mode=TwoWay}"
+                                                 Header="Username"
+                                                 Width="160"/>
+                                        <PasswordBox Password="{Binding NewIceServer.Credential, Mode=TwoWay}"
+                                                     Header="Credential"
+                                                     Width="160"/>
+                                        <Button Content="&#xE105;"
+                                                FontFamily="Segoe UI Symbol"
+                                                Name="ConfirmAddButton"
+                                                Click="ConfirmAddButton_Click"
+                                                HorizontalAlignment="Center"
+                                                Command="{Binding AddIceServerCommand}"
+                                                Margin="10"/>
+                                    </StackPanel>
+                                </Grid>
+
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                    <Button Grid.Column="1"
+                            Content="&#xE107;"
+                            FontFamily="Segoe UI Symbol"
+                            Command="{Binding RemoveSelectedIceServerCommand}"
+                            HorizontalAlignment="Left"
+                            Margin="5"/>
+                </Grid>
+            </StackPanel>
+            <ComboBox Header="Camera"
+                      Grid.Row="6"
+                      Margin="0,10,0,0"
+                      ItemsSource="{Binding Cameras}"
+                      SelectedItem="{Binding SelectedCamera, Mode=TwoWay}"
+                      HorizontalAlignment="Left">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ComboBox Header="Microphone"
+                      Grid.Row="7"
+                      Margin="0,10,0,0"
+                      ItemsSource="{Binding Microphones}"
+                      SelectedItem="{Binding SelectedMicrophone, Mode=TwoWay}"
+                      HorizontalAlignment="Left">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ComboBox Header="Speakers"
+                      Grid.Row="8"
+                      Margin="0,10,0,0"
+                      ItemsSource="{Binding AudioPlayoutDevices}"
+                      SelectedItem="{Binding SelectedAudioPlayoutDevice, Mode=TwoWay}"
+                      HorizontalAlignment="Left">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ComboBox Header="Audio codec"
+                      Grid.Row="9"
+                      Margin="0,10,0,0"
+                      ItemsSource="{Binding AudioCodecs}"
+                      SelectedItem="{Binding SelectedAudioCodec, Mode=TwoWay}"
+                      Width="200"
+                      HorizontalAlignment="Left">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}"/>
+                            <TextBlock Text="|"/>
+                            <TextBlock Text="{Binding Clockrate}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <ComboBox Header="Video codec"
+                      Grid.Row="10"
+                      Margin="0,10,0,0"
+                      ItemsSource="{Binding VideoCodecs}"
+                      SelectedItem="{Binding SelectedVideoCodec, Mode=TwoWay}"
+                      Width="200"
+                      HorizontalAlignment="Left">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Name}"/>
+                            <TextBlock Text="|"/>
+                            <TextBlock Text="{Binding Clockrate}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <ToggleSwitch Header="Tracing"
+                          Grid.Row="11"
+                          IsOn="{Binding TracingEnabled, Mode=TwoWay}"
+                          Width="Auto"
+                          MinWidth="200"
+                          Margin="0,10,0,0"/>
+            <TextBlock TextWrapping="Wrap"
+                       Grid.Row="12"
+                       Margin="5,0,5,0"
+                       Text="Note: Traces are automatically sent upon the tracing is stopped!" />
+            <TextBox Header="Trace server IP"
+                     Grid.Row="13"
+                     IsEnabled="{Binding TracingEnabled, Mode=OneWay}"
+                     PlaceholderText="IPv4"
+                     Text="{Binding TraceServerIp, Mode=TwoWay}"/>
+            <TextBox Header="Trace server port"
+                     Grid.Row="14"
+                     Text="{Binding TraceServerPort, Mode=TwoWay}"
+                     IsEnabled="{Binding TracingEnabled, Mode=OneWay}"
+                     PlaceholderText="Port"/>
+            <ToggleSwitch Header="Logging"
+                          Grid.Row="15"
+                          IsOn="{Binding LoggingEnabled, Mode=TwoWay}"
+                          Margin="0,10,0,0"/>
+            <ComboBox Width="200"
+                      Grid.Row="16"
+                      HorizontalAlignment="Left" 
+                      Header="Capture resolution:"
+                      ItemsSource="{Binding AllCapRes, Mode=TwoWay}"
+                      SelectedItem="{Binding SelectedCapResItem, Mode=TwoWay}"
+                      Margin="0,10,0,0"/>
+            <ComboBox Width="200"
+                      Grid.Row="17"
+                      HorizontalAlignment="Left"
+                      Header="Capture frame rate:"
+                      DisplayMemberPath="FrameRateDescription" 
+                      ItemsSource="{Binding AllCapFPS, Mode=TwoWay}"
+                      SelectedItem="{Binding SelectedCapFPSItem, Mode=TwoWay}"
+                      Margin="0,10,0,0"/>
+            <TextBox Header="Crash report user info"
+                     Grid.Row="18"
+                     Text="{Binding CrashReportUserInfo, Mode=TwoWay}"
+                     PlaceholderText="User info"/>
+            <ToggleSwitch Name="NtpSyncToggleSwitch"
+                          Header="NTP Sync"
+                          IsOn="{Binding NtpSyncEnabled, Mode=TwoWay}"
+                          IsEnabled="{Binding NtpSyncInProgress, Mode=OneWay, Converter={StaticResource InvertedBooleanConverter}}"
+                          Grid.Row="19"
+                          Margin="0,10,0,0"/>
+            <TextBlock Name="NtpSyncInProgressLabel"
+                       Text="NTP sync in progress..."
+                       Visibility="{Binding NtpSyncInProgress, Mode=OneWay, Converter={StaticResource BoolToVisConverter}}"
+                       Grid.Row="20"/>
+            <Controls:ErrorControl DataContext="{Binding NtpServer}"
+                                   Grid.Row="21">
+                <Controls:ErrorControl.InnerContent>
+                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MinWidth="160"
+                             Header="NTP Server"/>
+                </Controls:ErrorControl.InnerContent>
+            </Controls:ErrorControl>
+            <ToggleSwitch Name="ETWStatsToggle"
+                          Header="ETW Statistics"
+                          IsOn="{Binding ETWStatsEnabled, Mode=TwoWay}"
+                          Grid.Row="22"
+                          Margin="0,10,0,0"/>
+            <ToggleSwitch Name="ConnectionHealthStatsToggle"
+                          Header="Connection Health Statistics"  
+                          IsOn="{Binding PeerConnectionHealthStatsEnabled, Mode=TwoWay}"
+                          Grid.Row="23"
+                          Margin="0,10,0,0"/>
+        </Grid>
+    </ScrollViewer>
+</Page>

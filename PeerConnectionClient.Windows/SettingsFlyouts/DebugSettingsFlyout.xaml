@@ -1,0 +1,92 @@
+﻿<SettingsFlyout
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:PeerConnectionClient"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Class="PeerConnectionClient.DebugSettingsFlyout"
+    xmlns:utilities="using:PeerConnectionClient.Utilities"
+    xmlns:Controls="using:PeerConnectionClient.Controls"
+    mc:Ignorable="d"
+    IconSource="Assets/SmallLogo.png"
+    Title="Debug" Height="688.722" Width="288.694">
+
+    <SettingsFlyout.Resources>
+        <utilities:BoolToVisConverter x:Key="BoolToVisConverter" />
+        <utilities:BoolToVisConverter Negated="True" x:Key="BoolToVisConverterNegated" />
+        <utilities:InvertedBooleanConverter x:Key="InvertedBooleanConverter"/>
+    </SettingsFlyout.Resources>
+
+    <!-- This StackPanel acts as a root panel for vertical layout of the content sections -->
+    <StackPanel VerticalAlignment="Stretch"
+                HorizontalAlignment="Stretch" >
+        <StackPanel Style="{StaticResource SettingsFlyoutSectionStyle}">
+            <ToggleSwitch Header="Tracing"
+                          Margin="-6,0,0,0"
+                          IsOn="{Binding TracingEnabled, Mode=TwoWay}"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Left"/>
+            <TextBlock TextWrapping="Wrap"
+                       Margin="5,0,5,10"
+                       Text="Note: Traces are automatically sent upon the tracing is stopped!" />
+            <TextBox Header="Trace server IP"
+                     Margin="0,0,0,0"
+                     HorizontalAlignment="Left"
+                     PlaceholderText="IPv4"
+                     Text="{Binding TraceServerIp, Mode=TwoWay}"
+                     IsEnabled="{Binding TracingEnabled, Mode=OneWay}"
+                     Width="155"/>
+            <TextBox Header="Trace server port"
+                     Margin="0,0,0,0"
+                     Text="{Binding TraceServerPort, Mode=TwoWay}"
+                     IsEnabled="{Binding TracingEnabled, Mode=OneWay}"
+                     HorizontalAlignment="Left"
+                     PlaceholderText="Port"
+                     Width="155"/>
+        </StackPanel>
+        <StackPanel Style="{StaticResource SettingsFlyoutSectionStyle}">
+            <ToggleSwitch Header="Logging"  
+                          Margin="-6,0,0,0"
+                          IsOn="{Binding LoggingEnabled, Mode=TwoWay}"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Left"/>
+        </StackPanel>
+        <StackPanel Style="{StaticResource SettingsFlyoutSectionStyle}">
+            <TextBox Header="Crash report user info"
+                     Text="{Binding CrashReportUserInfo, Mode=TwoWay}"
+                     PlaceholderText="User info"/>
+        </StackPanel>
+        <StackPanel Style="{StaticResource SettingsFlyoutSectionStyle}">
+            <ToggleSwitch Name="NtpSyncToggleSwitch"
+                          Header="NTP Sync"
+                          IsOn="{Binding NtpSyncEnabled, Mode=TwoWay}"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Left"
+                          Margin="-6,5,5,0"/>
+            <TextBlock Name="NtpSyncInProgressLabel"
+                       Text="NTP sync in progress..."
+                       Visibility="{Binding NtpSyncInProgress, Mode=OneWay, Converter={StaticResource BoolToVisConverter}}"
+                       Margin="0,0,5,5"/>
+            <Controls:ErrorControl DataContext="{Binding NtpServer}"
+                               Margin="0,5,5,5">
+                <Controls:ErrorControl.InnerContent>
+                    <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MinWidth="160"
+                             Header="NTP server"/>
+                </Controls:ErrorControl.InnerContent>
+            </Controls:ErrorControl>
+        </StackPanel>
+        <StackPanel Style="{StaticResource SettingsFlyoutSectionStyle}">
+            <ToggleSwitch Header="ETW Statistics"  
+                          Margin="-6,0,0,0"
+                          IsOn="{Binding ETWStatsEnabled, Mode=TwoWay}"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Left"/>
+            <ToggleSwitch Header="Connection Health Statistics"  
+                          Margin="-6,0,0,0"
+                          IsOn="{Binding PeerConnectionHealthStatsEnabled, Mode=TwoWay}"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Left"/>
+        </StackPanel>
+    </StackPanel>
+</SettingsFlyout>
