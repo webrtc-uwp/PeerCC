@@ -17,23 +17,26 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.Activation;
+using Windows.Networking;
+using Windows.Networking.Connectivity;
 using Windows.Storage;
 using Windows.System.Display;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Microsoft.HockeyApp;
 using PeerConnectionClient.Model;
 using PeerConnectionClient.MVVM;
 using PeerConnectionClient.Signalling;
 using PeerConnectionClient.Utilities;
 using webrtc_winrt_api;
 
-#if !WINDOWS_UAP // Disable on Win10 for now.
+/*#if !WINDOWS_UAP // Disable on Win10 for now.
 using HockeyApp;
 using Windows.Networking.Connectivity;
 using Windows.Networking;
-#endif
+#endif*/
 
 namespace PeerConnectionClient.ViewModels
 {
@@ -2039,9 +2042,9 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="obj">The sender object.</param>
         private void SendFeedbackExecute(object obj)
         {
-#if !WINDOWS_UAP // Disable on Win10 for now.
+/*#if !WINDOWS_UAP // Disable on Win10 for now.
             HockeyClient.Current.ShowFeedback();
-#endif
+#endif*/
         }
 
         private bool _settingsButtonChecked;

@@ -137,7 +137,7 @@
     </Compile>
     <Compile Include="..\..\code\Utilities\UI\ErrorControl.xaml.cs">
       <Link>Utilities\ErrorControl.xaml.cs</Link>
-	  <DependentUpon>ErrorControl.xaml</DependentUpon>
+      <DependentUpon>ErrorControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="..\..\code\Utilities\ValidableBase.cs">
       <Link>Utilities\ValidableBase.cs</Link>
@@ -243,7 +243,12 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\..\webrtc\windows\projects\msvc\webrtc_winrt_api.Universal\webrtc_winrt_api.vcxproj">
+      <Project>{32a4abd8-eb1c-4198-b261-425e6caddbef}</Project>
+      <Name>webrtc_winrt_api</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
