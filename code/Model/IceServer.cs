@@ -27,7 +27,7 @@ namespace PeerConnectionClient.Model
         /// <summary>
         /// Default constructor for Ice server.
         /// </summary>
-        public IceServer() : this(string.Empty, string.Empty, ServerType.STUN)
+        public IceServer() : this(string.Empty, ServerType.STUN)
         {
         }
 
@@ -35,14 +35,11 @@ namespace PeerConnectionClient.Model
         /// Creates an Ice server with specified host, port and server type.
         /// </summary>
         /// <param name="host">The host name of the Ice server.</param>
-        /// <param name="port">The port to connect to the Ice server.</param>
         /// <param name="type">The type of the Ice server.</param>
-        public IceServer(string host, string port, ServerType type)
+        public IceServer(string host, ServerType type)
         {
-            Port.PropertyChanged += ValidableProperties_PropertyChanged;
             Host.PropertyChanged += ValidableProperties_PropertyChanged;
             Host.Value = host;
-            Port.Value = port;
             Type = type;
         }
 
@@ -105,19 +102,10 @@ namespace PeerConnectionClient.Model
         [XmlIgnore]
         public string HostAndPort
         {
-            get { return string.Format("{0}:{1}", Host.Value, Port.Value); }
+            get { return string.Format("{0}", Host.Value); }
         }
 
         private ValidableIntegerString _port = new ValidableIntegerString(0, 65535);
-
-        /// <summary>
-        /// Ice server's port.
-        /// </summary>
-        public ValidableIntegerString Port
-        {
-            get { return _port; }
-            set { _port = value; }
-        }
 
         /// <summary>
         /// The Ice server's password.
@@ -165,7 +153,7 @@ namespace PeerConnectionClient.Model
         {
             if (e.PropertyName == "Valid")
             {
-                Valid = Port.Valid && Host.Valid;
+                Valid = Host.Valid;
             }
         }
     }
