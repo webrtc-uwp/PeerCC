@@ -96,6 +96,67 @@
 	  <Link>App.xaml.cs</Link>
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="..\..\code\Model\IceServer.cs">
+      <Link>Model\IceServer.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\MVVM\BindableBase.cs">
+      <Link>MVVM\BindableBase.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\MVVM\DispatcherBindableBase.cs">
+      <Link>MVVM\DispatcherBindableBase.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Signalling\Conductor.cs">
+      <Link>Signalling\Conductor.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Signalling\Signalling.cs">
+      <Link>Signalling\Signalling.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\ActionCommand.cs">
+      <Link>Utilities\ActionCommand.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\AppPerf.cs">
+      <Link>Utilities\AppPerf.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\BoolToVisConverter.cs">
+      <Link>Utilities\BoolToVisConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\InvertedBooleanConverter.cs">
+      <Link>Utilities\InvertedBooleanConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\NtpService.cs">
+      <Link>Utilities\NtpService.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\NullToVisibleConverter.cs">
+      <Link>Utilities\NullToVisibleConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\SdpUtils.cs">
+      <Link>Utilities\SdpUtils.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\ToggleImageConverter.cs">
+      <Link>Utilities\ToggleImageConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\UI\ErrorControl.xaml.cs">
+      <Link>Utilities\ErrorControl.xaml.cs</Link>
+      <DependentUpon>ErrorControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\ValidableBase.cs">
+      <Link>Utilities\ValidableBase.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\ValidableIntegerString.cs">
+      <Link>Utilities\ValidableIntegerString.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\ValidableNonEmptyString.cs">
+      <Link>Utilities\ValidableNonEmptyString.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\VideoCaptureFormat.cs">
+      <Link>Utilities\VideoCaptureFormat.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Utilities\XmlSerializer.cs">
+      <Link>Utilities\XmlSerializer.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\ViewModels\MainViewModel.cs">
+      <Link>ViewModels\MainViewModel.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -176,6 +237,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="..\..\code\Utilities\UI\ErrorControl.xaml">
+      <Link>Utilities\ErrorControl.xaml</Link>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\..\ortc\windows\projects\msvc\org.ortc.Universal\org.ortc.vcxproj" Condition="'$(Configuration)' == 'ORTC Debug' Or '$(Configuration)' == 'ORTC Release'">
+      <Project>{648daeee-b5c3-4fc9-b016-418e1db2bee5}</Project>
+      <Name>org.ortc</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

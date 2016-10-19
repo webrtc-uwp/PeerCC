@@ -164,7 +164,7 @@
       <Link>Package.appxmanifest</Link>
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="PeerConnectionClient_TemporaryKey.pfx" />
+    <None Include="PeerConnectionClientWebRTC_TemporaryKey.pfx" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>

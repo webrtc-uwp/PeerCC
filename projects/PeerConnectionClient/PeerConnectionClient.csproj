@@ -244,9 +244,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\webrtc\windows\projects\msvc\webrtc_winrt_api.Universal\webrtc_winrt_api.vcxproj">
-      <Project>{32a4abd8-eb1c-4198-b261-425e6caddbef}</Project>
-      <Name>webrtc_winrt_api</Name>
+    <ProjectReference Include="..\..\..\..\..\..\ortc\windows\projects\msvc\org.ortc.Universal\org.ortc.vcxproj" Condition="'$(Configuration)' == 'ORTC Debug' Or '$(Configuration)' == 'ORTC Release'">
+      <Project>{648daeee-b5c3-4fc9-b016-418e1db2bee5}</Project>
+      <Name>org.ortc</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
