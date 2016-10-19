@@ -5,4 +5,4 @@ packages/
 *.csproj.user
 project.lock.json
 *.sdf
-
+*.bak
