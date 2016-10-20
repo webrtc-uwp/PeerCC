@@ -99,6 +99,9 @@
     <Compile Include="..\..\code\Model\IceServer.cs">
       <Link>Model\IceServer.cs</Link>
     </Compile>
+    <Compile Include="..\..\code\Model\Peer.cs">
+      <Link>Model\Peer.cs</Link>
+    </Compile>
     <Compile Include="..\..\code\MVVM\BindableBase.cs">
       <Link>MVVM\BindableBase.cs</Link>
     </Compile>

@@ -728,7 +728,7 @@ namespace PeerConnectionClient.ViewModels
         /// <summary>
         /// A class represents a peer.
         /// </summary>
-        public class Peer
+        /*public class Peer
         {
             public int Id { get; set; }
             public string Name { get; set; }
@@ -737,7 +737,7 @@ namespace PeerConnectionClient.ViewModels
             {
                 return Id + ": " + Name;
             }
-        }
+        }*/
 
         private ObservableCollection<Peer> _peers;
         
@@ -1726,7 +1726,7 @@ namespace PeerConnectionClient.ViewModels
                 if (SetProperty(ref _selectedCapFPSItem, value))
                 {
                     Conductor.Instance.VideoCaptureProfile = value;
-                    Conductor.Instance.updatePreferredFrameFormat();
+                    Conductor.Instance.UpdatePreferredFrameFormat();
 
                     var localSettings = ApplicationData.Current.LocalSettings;
                     localSettings.Values["SelectedCapFPSItemFrameRate"] = (value != null) ? value.FrameRate : 0;
@@ -1932,7 +1932,7 @@ namespace PeerConnectionClient.ViewModels
         {
             new Task(() =>
             {
-                Conductor.Instance.ConnectToPeer(SelectedPeer.Id);
+                Conductor.Instance.ConnectToPeer(SelectedPeer);
             }).Start();
         }
 
