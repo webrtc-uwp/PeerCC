@@ -114,6 +114,9 @@
     <Compile Include="..\..\code\Ortc\MediaDevice.cs">
       <Link>Ortc-Specific\MediaDevice.cs</Link>
     </Compile>
+    <Compile Include="..\..\code\Ortc\ORTCStatsManager.cs">
+      <Link>Ortc-Specific\ORTCStatsManager.cs</Link>
+    </Compile>
     <Compile Include="..\..\code\Signalling\Conductor.cs">
       <Link>Signalling\Conductor.cs</Link>
     </Compile>
@@ -166,7 +169,9 @@
     <Compile Include="..\..\code\ViewModels\MainViewModel.cs">
       <Link>ViewModels\MainViewModel.cs</Link>
     </Compile>
+    <Compile Include="Ortc-Specific\AutoLock.cs" />
     <Compile Include="Ortc-Specific\Helper.cs" />
+    <Compile Include="Ortc-Specific\WebRTC.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

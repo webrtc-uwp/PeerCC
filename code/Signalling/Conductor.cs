@@ -44,8 +44,9 @@ namespace PeerConnectionClient.Signalling
     {
         private static readonly object InstanceLock = new object();
         private static Conductor _instance;
+#if ORTCLIB
         private RTCPeerConnectionSignalingMode _signalingMode;
-
+#endif
         /// <summary>
         ///  The single instance of the Conductor class.
         /// </summary>
@@ -362,11 +363,13 @@ namespace PeerConnectionClient.Signalling
             double index = null != evt.Candidate.SdpMLineIndex ? (double)evt.Candidate.SdpMLineIndex : -1;
 
             JsonObject json;
+#if ORTCLIB
             if (RTCPeerConnectionSignalingMode.Json == _signalingMode)
             {
                 json = JsonObject.Parse(evt.Candidate.ToJsonString());
             }
             else
+#endif
             {
                 json = new JsonObject
                 {
@@ -433,8 +436,8 @@ namespace PeerConnectionClient.Signalling
         {
 #if ORTCLIB
             _signalingMode = RTCPeerConnectionSignalingMode.Json;
-#else
-            _signalingMode = RTCPeerConnectionSignalingMode.Sdp;
+//#else
+            //_signalingMode = RTCPeerConnectionSignalingMode.Sdp;
 #endif
             _signaller = new Signaller();
             _media = Media.CreateMedia();
@@ -542,8 +545,9 @@ namespace PeerConnectionClient.Signalling
 
                             IEnumerable<Peer> enumerablePeer = Peers.Where(x => x.Id == peerId);
                             Peer = enumerablePeer.First();
+#if ORTCLIB
                             _signalingMode = Helper.SignalingModeForClientName(Peer.Name);
-
+#endif
                             _connectToPeerCancelationTokenSource = new CancellationTokenSource();
                             _connectToPeerTask = CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
                             bool connectResult = await _connectToPeerTask;
@@ -636,7 +640,9 @@ namespace PeerConnectionClient.Signalling
                 else
                 {
                     RTCIceCandidate candidate = null;
+#if ORTCLIB
                     if (RTCPeerConnectionSignalingMode.Json != _signalingMode)
+#endif
                     {
                         var sdpMid = jMessage.ContainsKey(kCandidateSdpMidName)
                             ? jMessage.GetNamedString(kCandidateSdpMidName)
@@ -722,7 +728,9 @@ namespace PeerConnectionClient.Signalling
                 Debug.WriteLine("[Error] Conductor: We only support connecting to one peer at a time");
                 return;
             }
+#if ORTCLIB
             _signalingMode = Helper.SignalingModeForClientName(peer.Name);
+#endif       
             _connectToPeerCancelationTokenSource = new System.Threading.CancellationTokenSource();
             _connectToPeerTask = CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
             bool connectResult = await _connectToPeerTask;
@@ -932,15 +940,16 @@ namespace PeerConnectionClient.Signalling
                     url = "turn:";
                 }
                 RTCIceServer server = null;
-#if ORTCLIB
                 url += iceServer.Host.Value;
+#if ORTCLIB
+                //url += iceServer.Host.Value;
                 server = new RTCIceServer()
                 {
                     Urls = new List<string>(),
                 };
                 server.Urls.Add(url);
 #else
-                url += iceServer.Host.Value + ":" + iceServer.Port.Value;
+                //url += iceServer.Host.Value + ":" + iceServer.Port.Value;
                 server = new RTCIceServer { Url = url };
 #endif
                 if (iceServer.Credential != null)
