@@ -108,6 +108,12 @@
     <Compile Include="..\..\code\MVVM\DispatcherBindableBase.cs">
       <Link>MVVM\DispatcherBindableBase.cs</Link>
     </Compile>
+    <Compile Include="..\..\code\Ortc\AutoLock.cs">
+      <Link>Ortc-Specific\AutoLock.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Ortc\Helper.cs">
+      <Link>Ortc-Specific\Helper.cs</Link>
+    </Compile>
     <Compile Include="..\..\code\Ortc\Media.cs">
       <Link>Ortc-Specific\Media.cs</Link>
     </Compile>
@@ -116,6 +122,9 @@
     </Compile>
     <Compile Include="..\..\code\Ortc\ORTCStatsManager.cs">
       <Link>Ortc-Specific\ORTCStatsManager.cs</Link>
+    </Compile>
+    <Compile Include="..\..\code\Ortc\WebRTC.cs">
+      <Link>Ortc-Specific\WebRTC.cs</Link>
     </Compile>
     <Compile Include="..\..\code\Signalling\Conductor.cs">
       <Link>Signalling\Conductor.cs</Link>
@@ -169,9 +178,6 @@
     <Compile Include="..\..\code\ViewModels\MainViewModel.cs">
       <Link>ViewModels\MainViewModel.cs</Link>
     </Compile>
-    <Compile Include="Ortc-Specific\AutoLock.cs" />
-    <Compile Include="Ortc-Specific\Helper.cs" />
-    <Compile Include="Ortc-Specific\WebRTC.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
