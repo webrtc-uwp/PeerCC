@@ -4,24 +4,24 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProjectGuid>{99103751-25B2-420E-9297-17E0259538BC}</ProjectGuid>
+    <ProjectGuid>{A2EA7350-EE59-42C5-9323-C942B058B217}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>PeerConnectionClient</RootNamespace>
-    <AssemblyName>PeerConnectionClient.Ortc</AssemblyName>
-    <DefaultLanguage>en-US</DefaultLanguage>
+    <AssemblyName>PeerConnectionClient.WebRtc</AssemblyName>
+    <DefaultLanguage>en</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.10586.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <PackageCertificateKeyFile>PeerConnectionClientORTC_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>PeerConnectionClientWebRTC_TemporaryKey.pfx</PackageCertificateKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB;CODE_ANALYSIS;ORTCLIB</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -31,7 +31,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB;CODE_ANALYSIS;ORTCLIB</DefineConstants>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <Optimize>true</Optimize>
     <NoWarn>;2008</NoWarn>
     <DebugType>pdbonly</DebugType>
@@ -44,7 +44,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\ARM\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB;CODE_ANALYSIS;ORTCLIB</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>ARM</PlatformTarget>
@@ -54,7 +54,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
     <OutputPath>bin\ARM\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB;CODE_ANALYSIS;ORTCLIB</DefineConstants>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <Optimize>true</Optimize>
     <NoWarn>;2008</NoWarn>
     <DebugType>pdbonly</DebugType>
@@ -67,7 +67,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB;CODE_ANALYSIS;ORTCLIB</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -77,7 +77,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB;CODE_ANALYSIS;ORTCLIB</DefineConstants>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <Optimize>true</Optimize>
     <NoWarn>;2008</NoWarn>
     <DebugType>pdbonly</DebugType>
@@ -107,24 +107,6 @@
     </Compile>
     <Compile Include="..\..\code\MVVM\DispatcherBindableBase.cs">
       <Link>MVVM\DispatcherBindableBase.cs</Link>
-    </Compile>
-    <Compile Include="..\..\code\Ortc\AutoLock.cs">
-      <Link>Ortc-Specific\AutoLock.cs</Link>
-    </Compile>
-    <Compile Include="..\..\code\Ortc\Helper.cs">
-      <Link>Ortc-Specific\Helper.cs</Link>
-    </Compile>
-    <Compile Include="..\..\code\Ortc\Media.cs">
-      <Link>Ortc-Specific\Media.cs</Link>
-    </Compile>
-    <Compile Include="..\..\code\Ortc\MediaDevice.cs">
-      <Link>Ortc-Specific\MediaDevice.cs</Link>
-    </Compile>
-    <Compile Include="..\..\code\Ortc\ORTCStatsManager.cs">
-      <Link>Ortc-Specific\ORTCStatsManager.cs</Link>
-    </Compile>
-    <Compile Include="..\..\code\Ortc\WebRTC.cs">
-      <Link>Ortc-Specific\WebRTC.cs</Link>
     </Compile>
     <Compile Include="..\..\code\Signalling\Conductor.cs">
       <Link>Signalling\Conductor.cs</Link>
@@ -181,11 +163,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <AppxManifest Include="..\..\code\Package.appxmanifest">
-      <Link>Package.appxmanifest</Link>
+    <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="PeerConnectionClientORTC_TemporaryKey.pfx" />
+    <None Include="PeerConnectionClientWebRTC_TemporaryKey.pfx" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
@@ -265,9 +246,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\ortc\windows\projects\msvc\org.ortc.Universal\org.ortc.vcxproj">
-      <Project>{648daeee-b5c3-4fc9-b016-418e1db2bee5}</Project>
-      <Name>org.ortc</Name>
+    <ProjectReference Include="..\..\..\..\..\..\webrtc\windows\projects\msvc\webrtc_winrt_api.Universal\webrtc_winrt_api.vcxproj">
+      <Project>{32a4abd8-eb1c-4198-b261-425e6caddbef}</Project>
+      <Name>webrtc_winrt_api</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

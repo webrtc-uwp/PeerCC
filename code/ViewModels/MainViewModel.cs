@@ -2107,7 +2107,7 @@ namespace PeerConnectionClient.ViewModels
                             }
                             SelectedCapFpsItem = defaultFps;
                         });
-                    OnPropertyChanged("AllCapFPS");
+                    OnPropertyChanged("AllCapFps");
                 });
                 SetProperty(ref _selectedCapResItem, value);
             }

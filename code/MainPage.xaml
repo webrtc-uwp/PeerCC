@@ -582,8 +582,8 @@
                         Width="200"
                         HorizontalAlignment="Left"
                         DisplayMemberPath="FrameRateDescription" 
-                        ItemsSource="{Binding AllCapFPS, Mode=OneWay}"
-                        SelectedItem="{Binding SelectedCapFPSItem, Mode=TwoWay}"
+                        ItemsSource="{Binding AllCapFps, Mode=OneWay}"
+                        SelectedItem="{Binding SelectedCapFpsItem, Mode=TwoWay}"
                         RelativePanel.Below="VideoResolutionCombo"
                         RelativePanel.AlignRightWithPanel="True"
                         RelativePanel.AlignLeftWithPanel="True"/>
