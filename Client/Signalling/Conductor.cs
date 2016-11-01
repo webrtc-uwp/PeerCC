@@ -226,15 +226,21 @@ namespace PeerConnectionClient.Signalling
 
             Debug.WriteLine("Conductor: Creating peer connection.");
             _peerConnection = new RTCPeerConnection(config);
+
+            if (_peerConnection == null)
+                throw new NullReferenceException("Peer connection is not created.");
+
 #if !ORTCLIB
             _peerConnection.EtwStatsEnabled = _etwStatsEnabled;
             _peerConnection.ConnectionHealthStatsEnabled = _peerConnectionStatsEnabled;
 #endif
-            if (cancelationToken.IsCancellationRequested)
+                if (cancelationToken.IsCancellationRequested)
             {
                 return false;
             }
-
+#if ORTCLIB
+            OrtcStatsManager.Instance.Initialize(_peerConnection);
+#endif
             OnPeerConnectionCreated?.Invoke();
 
             _peerConnection.OnIceCandidate += PeerConnection_OnIceCandidate;
@@ -288,7 +294,7 @@ namespace PeerConnectionClient.Signalling
                             await Helper.GetTrackConfigurationForCapabilities(videoCapabilities, VideoCodec);
                     }
                     if (configuration != null)
-                        await _peerConnection.AddTrack(mediaStreamTrack, mediaStreamList, configuration);
+                        _peerConnection.AddTrack(mediaStreamTrack, mediaStreamList, configuration);
                 }
             }
 #else
@@ -339,7 +345,7 @@ namespace PeerConnectionClient.Signalling
 
                     SessionId = null;
 
-                    //OrtcStatsManager.Instance.CallEnded();
+                    OrtcStatsManager.Instance.CallEnded();
 
                     _peerConnection = null;
 
@@ -638,7 +644,9 @@ namespace PeerConnectionClient.Signalling
                         await _peerConnection.SetLocalDescription(answer);
                         // Send answer
                         SendSdp(answer);
-                        //OrtcStatsManager.Instance.StartCallWatch(_sessionId, false);
+#if ORTCLIB
+                        OrtcStatsManager.Instance.StartCallWatch(SessionId, false);
+#endif
                     }
                 }
                 else
@@ -754,7 +762,9 @@ namespace PeerConnectionClient.Signalling
                 await _peerConnection.SetLocalDescription(offer);
                 Debug.WriteLine("Conductor: Sending offer.");
                 SendSdp(offer);
-                //OrtcStatsManager.Instance.StartCallWatch(_sessionId,true);
+#if ORTCLIB
+                OrtcStatsManager.Instance.StartCallWatch(SessionId, true);
+#endif
             }
         }
 
