@@ -344,9 +344,9 @@ namespace PeerConnectionClient.Signalling
                     _peerConnection.Close(); // Slow, so do this after UI updated and camera turned off
 
                     SessionId = null;
-
+#if ORTCLIB
                     OrtcStatsManager.Instance.CallEnded();
-
+#endif
                     _peerConnection = null;
 
                     OnReadyToConnect?.Invoke();
