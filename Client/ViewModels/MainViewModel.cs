@@ -40,7 +40,7 @@ using MediaVideoTrack = org.ortc.MediaStreamTrack;
 using MediaAudioTrack = org.ortc.MediaStreamTrack;
 using FrameCounterHelper= PeerConnectionClient.Ortc.OrtcStatsManager;
 #else
-using webrtc_winrt_api;
+using Org.WebRtc;
 #endif
 
 

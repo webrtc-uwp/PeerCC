@@ -16,7 +16,7 @@ using System.Text.RegularExpressions;
 using org.ortc;
 using CodecInfo= org.ortc.RTCRtpCodecCapability;
 #else
-using webrtc_winrt_api;
+using Org.WebRtc;
 #endif
 
 namespace PeerConnectionClient.Utilities

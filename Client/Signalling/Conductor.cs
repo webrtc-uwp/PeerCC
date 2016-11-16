@@ -32,7 +32,7 @@ using MediaVideoTrack = org.ortc.MediaStreamTrack;
 using MediaAudioTrack = org.ortc.MediaStreamTrack;
 using RTCIceCandidate = org.ortc.adapter.RTCIceCandidate;
 #else
-using webrtc_winrt_api;
+using Org.WebRtc;
 using PeerConnectionClient.Utilities;
 #endif
 
@@ -191,7 +191,7 @@ namespace PeerConnectionClient.Signalling
             _media.SetPreferredVideoCaptureFormat(
               (int)VideoCaptureProfile.Width, (int)VideoCaptureProfile.Height, (int)VideoCaptureProfile.FrameRate);
 #else
-            webrtc_winrt_api.WebRTC.SetPreferredVideoCaptureFormat(
+            Org.WebRtc.WebRTC.SetPreferredVideoCaptureFormat(
                           (int)VideoCaptureProfile.Width, (int)VideoCaptureProfile.Height, (int)VideoCaptureProfile.FrameRate);
 #endif
             }
@@ -363,7 +363,7 @@ namespace PeerConnectionClient.Signalling
         /// <param name="evt">Details about RTC Peer Connection Ice event.</param>
         private void PeerConnection_OnIceCandidate(RTCPeerConnectionIceEvent evt)
         {
-            if (evt.Candidate == null) // relevant: GlobalObserver::OnIceComplete in webrtc_winrt_api
+            if (evt.Candidate == null) // relevant: GlobalObserver::OnIceComplete in Org.WebRtc
             {
                 return;
             }

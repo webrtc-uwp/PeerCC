@@ -165,9 +165,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\webrtc_winrt_api.Universal\webrtc_winrt_api.vcxproj">
+    <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
       <Project>{32a4abd8-eb1c-4198-b261-425e6caddbef}</Project>
-      <Name>webrtc_winrt_api</Name>
+      <Name>Org.WebRtc</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
