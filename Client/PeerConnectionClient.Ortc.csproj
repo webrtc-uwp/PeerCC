@@ -21,8 +21,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\Output\PeerCC.Client\bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>..\Output\PeerCC.Client\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <OutputPath>..\Output\PeerCC.Client\Ortc\bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>..\Output\PeerCC.Client\Ortc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
@@ -32,8 +32,8 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>..\Output\PeerCC.Client\bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>..\Output\PeerCC.Client\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <OutputPath>..\Output\PeerCC.Client\Ortc\bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>..\Output\PeerCC.Client\Ortc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB</DefineConstants>
     <Optimize>true</Optimize>
     <NoWarn>;2008</NoWarn>
@@ -46,8 +46,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\Output\PeerCC.Client\bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>..\Output\PeerCC.Client\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <OutputPath>..\Output\PeerCC.Client\Ortc\bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>..\Output\PeerCC.Client\Ortc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
@@ -57,8 +57,8 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
-    <OutputPath>..\Output\PeerCC.Client\bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>..\Output\PeerCC.Client\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <OutputPath>..\Output\PeerCC.Client\Ortc\bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>..\Output\PeerCC.Client\Ortc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB</DefineConstants>
     <Optimize>true</Optimize>
     <NoWarn>;2008</NoWarn>
@@ -71,8 +71,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\Output\PeerCC.Client\bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>..\Output\PeerCC.Client\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <OutputPath>..\Output\PeerCC.Client\Ortc\bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>..\Output\PeerCC.Client\Ortc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
@@ -82,8 +82,8 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>..\Output\PeerCC.Client\bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>..\Output\PeerCC.Client\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
+    <OutputPath>..\Output\PeerCC.Client\Ortc\bin\$(Platform)\$(Configuration)\</OutputPath>
+    <IntermediateOutputPath>..\Output\PeerCC.Client\Ortc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;CODE_ANALYSIS;ORTCLIB</DefineConstants>
     <Optimize>true</Optimize>
     <NoWarn>;2008</NoWarn>
