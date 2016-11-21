@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.System.Profile;
-using org.ortc;
-using org.ortc.adapter;
+using Org.Ortc;
+using Org.Ortc.Adapter;
 using PeerConnectionClient.Ortc;
 
 namespace PeerConnectionClient.Ortc.Utilities

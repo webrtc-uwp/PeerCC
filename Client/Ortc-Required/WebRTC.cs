@@ -8,7 +8,7 @@ using Windows.UI.Core;
 using Windows.Storage;
 using Windows.Foundation;
 using Windows.Media.Capture;
-using org.ortc;
+using Org.Ortc;
 using PeerConnectionClient.Ortc.Utilities;
 
 namespace PeerConnectionClient.Utilities

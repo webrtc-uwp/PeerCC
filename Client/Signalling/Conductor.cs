@@ -23,14 +23,14 @@ using System.Threading;
 using System.Text.RegularExpressions;
 using static System.String;
 #if ORTCLIB
-using org.ortc;
-using org.ortc.adapter;
+using Org.Ortc;
+using Org.Ortc.Adapter;
 using PeerConnectionClient.Ortc;
 using PeerConnectionClient.Ortc.Utilities;
-using CodecInfo = org.ortc.RTCRtpCodecCapability;
-using MediaVideoTrack = org.ortc.MediaStreamTrack;
-using MediaAudioTrack = org.ortc.MediaStreamTrack;
-using RTCIceCandidate = org.ortc.adapter.RTCIceCandidate;
+using CodecInfo = Org.Ortc.RTCRtpCodecCapability;
+using MediaVideoTrack = Org.Ortc.MediaStreamTrack;
+using MediaAudioTrack = Org.Ortc.MediaStreamTrack;
+using RTCIceCandidate = Org.Ortc.Adapter.RTCIceCandidate;
 #else
 using Org.WebRtc;
 using PeerConnectionClient.Utilities;

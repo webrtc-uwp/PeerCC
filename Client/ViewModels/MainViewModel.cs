@@ -31,13 +31,13 @@ using PeerConnectionClient.MVVM;
 using PeerConnectionClient.Signalling;
 using PeerConnectionClient.Utilities;
 #if ORTCLIB
-using org.ortc;
-using org.ortc.adapter;
+using Org.Ortc;
+using Org.Ortc.Adapter;
 using PeerConnectionClient.Ortc;
 using PeerConnectionClient.Ortc.Utilities;
-using CodecInfo = org.ortc.RTCRtpCodecCapability;
-using MediaVideoTrack = org.ortc.MediaStreamTrack;
-using MediaAudioTrack = org.ortc.MediaStreamTrack;
+using CodecInfo = Org.Ortc.RTCRtpCodecCapability;
+using MediaVideoTrack = Org.Ortc.MediaStreamTrack;
+using MediaAudioTrack = Org.Ortc.MediaStreamTrack;
 using FrameCounterHelper= PeerConnectionClient.Ortc.OrtcStatsManager;
 #else
 using Org.WebRtc;
@@ -1611,12 +1611,12 @@ namespace PeerConnectionClient.ViewModels
 #if ORTCLIB
                 if (_tracingEnabled)
                 {
-                    org.ortc.Ortc.StartMediaTracing();
+                    Org.Ortc.Ortc.StartMediaTracing();
                 }
                 else
                 {
-                    org.ortc.Ortc.StopMediaTracing();
-                    org.ortc.Ortc.SaveMediaTrace(_traceServerIp, Int32.Parse(_traceServerPort));
+                    Org.Ortc.Ortc.StopMediaTracing();
+                    Org.Ortc.Ortc.SaveMediaTrace(_traceServerIp, Int32.Parse(_traceServerPort));
                 }
 #else
                 if (_tracingEnabled)
@@ -1849,8 +1849,8 @@ namespace PeerConnectionClient.ViewModels
                 {
 #if ORTCLIB
                     Logger.InstallTelnetLogger(UInt16.Parse(_traceServerPort), 60, true);
-                    Logger.SetLogLevel(org.ortc.Log.Level.Debug);
-                    Logger.SetLogLevel(org.ortc.Log.Component.OrtcLibWebrtc, org.ortc.Log.Level.Detail);
+                    Logger.SetLogLevel(Org.Ortc.Log.Level.Debug);
+                    Logger.SetLogLevel(Org.Ortc.Log.Component.OrtcLibWebrtc, Org.Ortc.Log.Level.Detail);
                     var message = "ORTC logging enabled, connect to TCP port " + _traceServerPort +
                                   " to receive log stream.";
 #else
@@ -2718,7 +2718,7 @@ namespace PeerConnectionClient.ViewModels
         {
             Debug.WriteLine("New NTP time: {0}", ntpTime);
 #if ORTCLIB
-            org.ortc.Ortc.NtpServerTime = ntpTime;
+            Org.Ortc.Ortc.NtpServerTime = ntpTime;
 #else
             WebRTC.SynNTPTime(ntpTime);
 #endif

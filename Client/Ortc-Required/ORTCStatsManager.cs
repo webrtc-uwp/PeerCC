@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using org.ortc;
-using RtcPeerConnection = org.ortc.adapter.RTCPeerConnection;
+using Org.Ortc;
+using RtcPeerConnection = Org.Ortc.Adapter.RTCPeerConnection;
 
 namespace PeerConnectionClient.Ortc
 {

@@ -13,8 +13,8 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 #if ORTCLIB
-using org.ortc;
-using CodecInfo= org.ortc.RTCRtpCodecCapability;
+using Org.Ortc;
+using CodecInfo= Org.Ortc.RTCRtpCodecCapability;
 #else
 using Org.WebRtc;
 #endif

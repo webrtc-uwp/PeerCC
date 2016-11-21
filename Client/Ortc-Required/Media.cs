@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Media.Core;
-using org.ortc;
+using Org.Ortc;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using org.ortc.adapter;
+using Org.Ortc.Adapter;
 using PeerConnectionClient.Ortc.Utilities;
 
 namespace PeerConnectionClient.Ortc
