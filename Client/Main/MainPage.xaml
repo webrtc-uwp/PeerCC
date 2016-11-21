@@ -3,18 +3,18 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:PeerConnectionClient"
-    xmlns:Controls="using:PeerConnectionClient.Controls"
-    xmlns:Utilities="using:PeerConnectionClient.Utilities"
+    xmlns:controls="using:PeerConnectionClient.Controls"
+    xmlns:utilities="using:PeerConnectionClient.Utilities"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
     <Page.Resources>
-        <Utilities:BoolToVisConverter x:Key="BoolToVisConverterNegated" Negated="true"/>
-        <Utilities:BoolToVisConverter x:Key="BoolToVisConverter" Negated="false"/>
-        <Utilities:NullToVisibleConverter x:Key="NullToVisibleConverter" />
-        <Utilities:ToggleImageConverter x:Key="ToggleImageConverter"/>
-        <Utilities:InvertedBooleanConverter x:Key="InvertedBooleanConverter"/>
+        <utilities:BoolToVisConverter x:Key="BoolToVisConverterNegated" Negated="true"/>
+        <utilities:BoolToVisConverter x:Key="BoolToVisConverter" Negated="false"/>
+        <utilities:NullToVisibleConverter x:Key="NullToVisibleConverter" />
+        <utilities:ToggleImageConverter x:Key="ToggleImageConverter"/>
+        <utilities:InvertedBooleanConverter x:Key="InvertedBooleanConverter"/>
 
         <Style TargetType="TextBlock" x:Name="TextBlockHeader">
             <Setter Property="FontWeight" Value="{ThemeResource ComboBoxHeaderThemeFontWeight}" />
@@ -24,7 +24,7 @@
         </Style>
         <Style TargetType="Image" x:Name="CallActionImage">
             <Setter Property="Height" Value="25"/>
-            <Setter Property="Width" Value="25"/>            
+            <Setter Property="Width" Value="25"/>
         </Style>
         <Style TargetType="Button" x:Name="CallActionButton">
             <Setter Property="Padding" Value="5"/>
@@ -102,7 +102,7 @@
                             Command="{Binding DisconnectFromServerCommand}"
                             HorizontalAlignment="Right"
                             Visibility="{Binding IsConnected, Converter={StaticResource BoolToVisConverter}}"/>
-    </Grid>
+                    </Grid>
                     <TextBlock 
                         Text="Available Peers"
                         Margin="5"/>
@@ -296,30 +296,30 @@
                         Text="Connection"
                         Style="{StaticResource SubtitleTextBlockStyle}"
                         RelativePanel.AlignTopWithPanel="True"/>
-                    <Controls:ErrorControl 
+                    <controls:ErrorControl 
                         x:Name="ServerIpTextBox"
                         DataContext="{Binding Ip}"
                         Margin="5"
                         RelativePanel.Below="ConnectionSettingPanelHeader">
-                        <Controls:ErrorControl.InnerContent>
+                        <controls:ErrorControl.InnerContent>
                             <TextBox 
                                 Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 MinWidth="160"
                                 Header="IP"/>
-                        </Controls:ErrorControl.InnerContent>
-                    </Controls:ErrorControl>
-                    <Controls:ErrorControl 
+                        </controls:ErrorControl.InnerContent>
+                    </controls:ErrorControl>
+                    <controls:ErrorControl 
                         x:Name="ServerPortTextBox"
                         DataContext="{Binding Port}"
                         Margin="5"
                         RelativePanel.Below="ServerIpTextBox">
-                        <Controls:ErrorControl.InnerContent>
+                        <controls:ErrorControl.InnerContent>
                             <TextBox 
                                 Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 MinWidth="160"
                                 Header="Port"/>
-                        </Controls:ErrorControl.InnerContent>
-                    </Controls:ErrorControl>
+                        </controls:ErrorControl.InnerContent>
+                    </controls:ErrorControl>
                     <TextBlock
                         Name="IceServerHeader"
                         Text="ICE servers"
@@ -343,7 +343,7 @@
                         RelativePanel.Above="IceServerControlPanel">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                    <RelativePanel 
+                                <RelativePanel 
                                     RelativePanel.AlignLeftWithPanel="True"
                                     RelativePanel.AlignRightWithPanel="True">
                                     <TextBlock 
@@ -395,27 +395,27 @@
                             <Button.Flyout>
                                 <Flyout>
                                     <StackPanel Margin="20,0,0,0">
-                                        <Controls:ErrorControl DataContext="{Binding NewIceServer.Host}">
-                                            <Controls:ErrorControl.InnerContent>
+                                        <controls:ErrorControl DataContext="{Binding NewIceServer.Host}">
+                                            <controls:ErrorControl.InnerContent>
                                                 <TextBox 
                                                     Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                     Header="Server"
                                                     Width="160"/>
-                                            </Controls:ErrorControl.InnerContent>
-                                        </Controls:ErrorControl>
+                                            </controls:ErrorControl.InnerContent>
+                                        </controls:ErrorControl>
                                         <ComboBox 
                                             Header="Type"
                                             ItemsSource="{Binding NewIceServer.Types}"
                                             SelectedItem="{Binding NewIceServer.Type, Mode=TwoWay}"
                                             Width="160"/>
-                                        <Controls:ErrorControl DataContext="{Binding NewIceServer.Port}">
-                                            <Controls:ErrorControl.InnerContent>
+                                        <controls:ErrorControl DataContext="{Binding NewIceServer.Port}">
+                                            <controls:ErrorControl.InnerContent>
                                                 <TextBox
                                                     Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                     Header="Port"
                                                     Width="160"/>
-                                            </Controls:ErrorControl.InnerContent>
-                                        </Controls:ErrorControl>
+                                            </controls:ErrorControl.InnerContent>
+                                        </controls:ErrorControl>
                                         <TextBox
                                             Text="{Binding NewIceServer.Username, Mode=TwoWay}"
                                             Header="Username"
@@ -538,7 +538,7 @@
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Name}"/>
                                     <TextBlock Text="|"/>
-                                    <TextBlock Text="{Binding Clockrate}"/>
+                                    <TextBlock Text="{Binding ClockRate}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
@@ -559,7 +559,7 @@
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Name}"/>
                                     <TextBlock Text="|"/>
-                                    <TextBlock Text="{Binding Clockrate}"/>
+                                    <TextBlock Text="{Binding ClockRate}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
@@ -646,18 +646,18 @@
                         HorizontalAlignment="Left"
                         HorizontalContentAlignment="Left"
                         RelativePanel.Below="TraceServerPortTextBox"/>
-                    <Controls:ErrorControl 
+                    <controls:ErrorControl 
                           x:Name="NTPServerAddressTextBox"
                           RelativePanel.Below="LoggingToggleSwitch"
                           DataContext="{Binding NtpServer}"
                           Margin="5">
-                          <Controls:ErrorControl.InnerContent>
-                              <TextBox 
+                        <controls:ErrorControl.InnerContent>
+                            <TextBox 
                                   Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                   MinWidth="160"
                                   Header="NTP Server"/>
-                          </Controls:ErrorControl.InnerContent>
-                    </Controls:ErrorControl>
+                        </controls:ErrorControl.InnerContent>
+                    </controls:ErrorControl>
                     <ToggleSwitch 
                           Name="NtpSyncToggleSwitch"
                           Header="NTP Sync"

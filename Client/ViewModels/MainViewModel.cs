@@ -491,7 +491,7 @@ namespace PeerConnectionClient.ViewModels
 #if ORTCLIB
                     if (!incompatibleAudioCodecs.Contains(audioCodec.Name + audioCodec.ClockRate))
 #else
-                    if (!incompatibleAudioCodecs.Contains(audioCodec.Name + audioCodec.Clockrate))
+                    if (!incompatibleAudioCodecs.Contains(audioCodec.Name + audioCodec.ClockRate))
 #endif
                     {
                         AudioCodecs.Add(audioCodec);
