@@ -175,7 +175,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\ortc\windows\projects\msvc\org.ortc.Universal\org.ortc.vcxproj">
+    <ProjectReference Include="..\..\..\..\..\ortc\windows\projects\msvc\Org.Ortc.Universal\org.ortc.vcxproj">
       <Project>{648daeee-b5c3-4fc9-b016-418e1db2bee5}</Project>
       <Name>org.ortc</Name>
     </ProjectReference>
