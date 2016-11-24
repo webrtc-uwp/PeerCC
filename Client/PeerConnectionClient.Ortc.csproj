@@ -16,8 +16,9 @@
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <PackageCertificateKeyFile>PeerConnectionClientORTC_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>PeerConnectionClient.Ortc_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxBundlePlatforms>$(Platform)</AppxBundlePlatforms>
+    <PackageCertificateThumbprint>3396B71AF5425FEA924E1C840441B784248C9C25</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -133,11 +134,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="PeerConnectionClient.Ortc_TemporaryKey.pfx" />
     <None Include="project.json" />
     <AppxManifest Include="Package.Ortc.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="PeerConnectionClientORTC_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\Logo.scale-100.png" />
