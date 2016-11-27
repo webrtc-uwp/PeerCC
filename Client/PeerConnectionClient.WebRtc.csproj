@@ -132,7 +132,6 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="PeerConnectionClient.WebRtc_TemporaryKey.pfx" />
-    <None Include="PeerConnectionClientWebRTC_TemporaryKey.pfx" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
