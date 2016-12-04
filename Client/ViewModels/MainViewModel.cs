@@ -2226,6 +2226,17 @@ namespace PeerConnectionClient.ViewModels
                     OnPropertyChanged("ETWStatsEnabled");
                 }
 
+#if ORTCLIB
+                if (value)
+                {
+                    Logger.InstallEventingListener("", 63311, 60);
+                }
+                else
+                {
+                    Logger.UninstallEventingListener();
+                }
+#endif
+
                 AppPerformanceCheck();
             }
         }
@@ -2290,7 +2301,7 @@ namespace PeerConnectionClient.ViewModels
         public MediaElement SelfVideo;
         public MediaElement PeerVideo;
 
-                    #endregion
+#endregion
 
         /// <summary>
         /// Logic to determine if the server is configured.
@@ -2445,7 +2456,7 @@ namespace PeerConnectionClient.ViewModels
 /*#if !WINDOWS_UAP // Disable on Win10 for now.
             HockeyClient.Current.ShowFeedback();
 #endif*/
-                }
+            }
 
     private bool _settingsButtonChecked;
 
