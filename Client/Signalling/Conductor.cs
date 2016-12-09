@@ -125,7 +125,7 @@ namespace PeerConnectionClient.Signalling
         /// Enable/Disable ETW stats used by WebRTCDiagHubTool Visual Studio plugin.
         /// If the ETW Stats are disabled, no data will be sent to the plugin.
         /// </summary>
-        public bool ETWStatsEnabled
+        public bool EtwStatsEnabled
         {
             get
             {

@@ -675,7 +675,7 @@
                     <ToggleSwitch 
                           Name="EtwStatsToggleSwitch"
                           Header="ETW Statistics"
-                          IsOn="{Binding ETWStatsEnabled, Mode=TwoWay}"
+                          IsOn="{Binding EtwStatsEnabled, Mode=TwoWay}"
                           HorizontalAlignment="Left"
                           HorizontalContentAlignment="Left"
                           RelativePanel.Below="NtpSyncInProgressLabel"

@@ -2217,19 +2217,19 @@ namespace PeerConnectionClient.ViewModels
         /// </summary>
         public bool EtwStatsEnabled
         {
-            get { return Conductor.Instance.ETWStatsEnabled; }
+            get { return Conductor.Instance.EtwStatsEnabled; }
             set
             {
-                if (Conductor.Instance.ETWStatsEnabled != value)
+                if (Conductor.Instance.EtwStatsEnabled != value)
                 {
-                    Conductor.Instance.ETWStatsEnabled = value;
-                    OnPropertyChanged("ETWStatsEnabled");
+                    Conductor.Instance.EtwStatsEnabled = value;
+                    OnPropertyChanged("EtwStatsEnabled");
                 }
 
 #if ORTCLIB
                 if (value)
                 {
-                    Logger.InstallEventingListener("", 63311, 60);
+                    Logger.InstallEventingListener("", 0, 60);
                 }
                 else
                 {
