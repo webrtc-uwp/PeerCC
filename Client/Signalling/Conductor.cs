@@ -331,13 +331,17 @@ namespace PeerConnectionClient.Signalling
                     _peerId = -1;
                     if (_mediaStream != null)
                     {
-                        foreach (var track in _mediaStream.GetTracks())
+                        //IList<IMediaStreamTrack> temp = _mediaStream.GetTracks();
+                        //foreach (var track in _mediaStream.GetTracks())
+                        //foreach (var track in temp)
                         {
-                            track.Stop();
-                            _mediaStream.RemoveTrack(track);
+                            //track.Stop();
+                           // _mediaStream.RemoveTrack(track);
                         }
+                        //temp.Clear();
+                        //temp = null;
                     }
-                    _mediaStream = null;
+                    
 
                     OnPeerConnectionClosed?.Invoke();
 
@@ -351,6 +355,7 @@ namespace PeerConnectionClient.Signalling
 
                     OnReadyToConnect?.Invoke();
 
+                    _mediaStream = null;
                     GC.Collect(); // Ensure all references are truly dropped.
                 }
             }

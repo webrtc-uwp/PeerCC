@@ -436,7 +436,18 @@ namespace PeerConnectionClient.ViewModels
                 {
                     IsConnectedToPeer = false;
                     PeerVideo.Source = null;
-                    SelfVideo.Source = null;
+                    //SelfVideo.Source = null;
+                    try
+                    {
+                        //SelfVideo.Source = null;
+                        SelfVideo.Stop();
+                        SelfVideo.ClearValue(MediaElement.SourceProperty);
+                        SelfVideo.Source = null;
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e);
+                    }
                     _peerVideoTrack = null;
                     _selfVideoTrack = null;
                     GC.Collect(); // Ensure all references are truly dropped.
