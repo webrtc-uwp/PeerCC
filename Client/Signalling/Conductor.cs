@@ -294,7 +294,7 @@ namespace PeerConnectionClient.Signalling
                             await Helper.GetTrackConfigurationForCapabilities(videoCapabilities, VideoCodec);
                     }
                     if (configuration != null)
-                        _peerConnection.AddTrack(mediaStreamTrack, mediaStreamList, configuration);
+                        await _peerConnection.AddTrack(mediaStreamTrack, mediaStreamList, configuration);
                 }
             }
 #else
@@ -680,7 +680,7 @@ namespace PeerConnectionClient.Signalling
 #if ORTCLIB
                     else
                     {
-                        candidate = RTCIceCandidate.FromJsonString(message);
+                        candidate = new RTCIceCandidate(new Json(message));
                     }
                     _peerConnection?.AddIceCandidate(candidate);
 #else
@@ -875,7 +875,7 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_mediaStream != null)
                 {
-                    foreach (MediaVideoTrack videoTrack in _mediaStream.GetVideoTracks())
+                    foreach (MediaVideoTrack videoTrack in _mediaStream.VideoTracks)
                     {
                         videoTrack.Enabled = true;
                     }
@@ -893,7 +893,7 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_mediaStream != null)
                 {
-                    foreach (MediaVideoTrack videoTrack in _mediaStream.GetVideoTracks())
+                    foreach (MediaVideoTrack videoTrack in _mediaStream.VideoTracks)
                     {
                         videoTrack.Enabled = false;
                     }
@@ -911,7 +911,7 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_mediaStream != null)
                 {
-                    foreach (MediaAudioTrack audioTrack in _mediaStream.GetAudioTracks())
+                    foreach (MediaAudioTrack audioTrack in _mediaStream.AudioTracks)
                     {
                         audioTrack.Enabled = false;
                     }
@@ -929,7 +929,7 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_mediaStream != null)
                 {
-                    foreach (MediaAudioTrack audioTrack in _mediaStream.GetAudioTracks())
+                    foreach (MediaAudioTrack audioTrack in _mediaStream.AudioTracks)
                     {
                         audioTrack.Enabled = true;
                     }

@@ -1611,12 +1611,12 @@ namespace PeerConnectionClient.ViewModels
 #if ORTCLIB
                 if (_tracingEnabled)
                 {
-                    Org.Ortc.Ortc.StartMediaTracing();
+                    OrtcLib.StartMediaTracing();
                 }
                 else
                 {
-                    Org.Ortc.Ortc.StopMediaTracing();
-                    Org.Ortc.Ortc.SaveMediaTrace(_traceServerIp, Int32.Parse(_traceServerPort));
+                    OrtcLib.StopMediaTracing();
+                    OrtcLib.SaveMediaTrace(_traceServerIp, Int32.Parse(_traceServerPort));
                 }
 #else
                 if (_tracingEnabled)
@@ -1848,9 +1848,9 @@ namespace PeerConnectionClient.ViewModels
                 if (_loggingEnabled)
                 {
 #if ORTCLIB
-                    Org.Ortc.Ortc.InstallTelnetLogger(UInt16.Parse(_traceServerPort), 60, true);
-                    Org.Ortc.Ortc.SetDefaultLogLevel(Org.Ortc.Log.Level.Debug);
-                    Org.Ortc.Ortc.SetLogLevel(Org.Ortc.Log.Component.OrtcLibWebrtc, Org.Ortc.Log.Level.Detail);
+                    Logger.InstallTelnetLogger(UInt16.Parse(_traceServerPort), TimeSpan.FromSeconds(60), true);
+                    Logger.SetDefaultLogLevel(Org.Ortc.Log.Level.Debug);
+                    Logger.SetLogLevel(Org.Ortc.Log.Component.OrtcLibWebrtc, Org.Ortc.Log.Level.Detail);
                     var message = "ORTC logging enabled, connect to TCP port " + _traceServerPort +
                                   " to receive log stream.";
 #else
@@ -2229,7 +2229,7 @@ namespace PeerConnectionClient.ViewModels
 #if ORTCLIB
                 if (value)
                 {
-                    Logger.InstallEventingListener("", 0, 60);
+                    Logger.InstallEventingListener("", 0, TimeSpan.FromSeconds(60));
                 }
                 else
                 {
@@ -2729,7 +2729,7 @@ namespace PeerConnectionClient.ViewModels
         {
             Debug.WriteLine("New NTP time: {0}", ntpTime);
 #if ORTCLIB
-            Org.Ortc.Ortc.NtpServerTime = ntpTime;
+            OrtcLib.NtpServerTime = TimeSpan.FromMilliseconds(ntpTime);
 #else
             WebRTC.SynNTPTime(ntpTime);
 #endif
