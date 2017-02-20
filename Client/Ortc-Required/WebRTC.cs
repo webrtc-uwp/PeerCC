@@ -49,7 +49,7 @@ namespace PeerConnectionClient.Utilities
         public static void Initialize(CoreDispatcher dispatcher)
         {
             Settings.ApplyDefaults();
-            OrtcWithDispatcher.Setup(dispatcher);
+            OrtcLibWithDispatcher.Setup(new Dispatcher(dispatcher));
         }
 
         //public static bool IsTracing();

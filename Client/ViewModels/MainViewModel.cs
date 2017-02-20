@@ -1099,7 +1099,7 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="evt">Details about Media stream event.</param>
         private void Conductor_OnAddLocalStream(MediaStreamEvent evt)
         {
-          _selfVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
+          _selfVideoTrack = evt.Stream.VideoTracks.FirstOrDefault();
           if (_selfVideoTrack != null)
             {
                 var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
@@ -1848,9 +1848,9 @@ namespace PeerConnectionClient.ViewModels
                 if (_loggingEnabled)
                 {
 #if ORTCLIB
-                    Logger.InstallTelnetLogger(UInt16.Parse(_traceServerPort), 60, true);
-                    Logger.SetLogLevel(Org.Ortc.Log.Level.Debug);
-                    Logger.SetLogLevel(Org.Ortc.Log.Component.OrtcLibWebrtc, Org.Ortc.Log.Level.Detail);
+                    Org.Ortc.Ortc.InstallTelnetLogger(UInt16.Parse(_traceServerPort), 60, true);
+                    Org.Ortc.Ortc.SetDefaultLogLevel(Org.Ortc.Log.Level.Debug);
+                    Org.Ortc.Ortc.SetLogLevel(Org.Ortc.Log.Component.OrtcLibWebrtc, Org.Ortc.Log.Level.Detail);
                     var message = "ORTC logging enabled, connect to TCP port " + _traceServerPort +
                                   " to receive log stream.";
 #else

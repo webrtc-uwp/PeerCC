@@ -272,8 +272,8 @@ namespace PeerConnectionClient.Signalling
             var tracks = await _media.GetUserMedia(mediaStreamConstraints);
             if (tracks != null)
             {
-                RTCRtpCapabilities audioCapabilities = RTCRtpSender.GetCapabilities("audio");
-                RTCRtpCapabilities videoCapabilities = RTCRtpSender.GetCapabilities("video");
+                RTCRtpCapabilities audioCapabilities = RTCRtpSender.GetCapabilities(MediaStreamTrackKind.Audio);
+                RTCRtpCapabilities videoCapabilities = RTCRtpSender.GetCapabilities(MediaStreamTrackKind.Video);
 
                 _mediaStream = new MediaStream(tracks);
                 Debug.WriteLine("Conductor: Adding local media stream.");
@@ -331,7 +331,7 @@ namespace PeerConnectionClient.Signalling
                     _peerId = -1;
                     if (_mediaStream != null)
                     {
-                        foreach (var track in _mediaStream.GetTracks())
+                        foreach (var track in _mediaStream.Tracks)
                         {
                             track.Stop();
                             _mediaStream.RemoveTrack(track);
@@ -374,7 +374,7 @@ namespace PeerConnectionClient.Signalling
 #if ORTCLIB
             if (RTCPeerConnectionSignalingMode.Json == _signalingMode)
             {
-                json = JsonObject.Parse(evt.Candidate.ToJsonString());
+                json = JsonObject.Parse(evt.Candidate.ToJson().ToString());
             }
             else
 #endif
@@ -383,7 +383,7 @@ namespace PeerConnectionClient.Signalling
                 {
                     {kCandidateSdpMidName, JsonValue.CreateStringValue(evt.Candidate.SdpMid)},
                     {kCandidateSdpMlineIndexName, JsonValue.CreateNumberValue(index)},
-                    {kCandidateSdpName, JsonValue.CreateStringValue(evt.Candidate.Candidate)}
+                    {kCandidateSdpName, JsonValue.CreateStringValue(evt.Candidate.ToJson().ToString())}
                 };
             }
             Debug.WriteLine("Conductor: Sending ice candidate.\n" + json.Stringify());

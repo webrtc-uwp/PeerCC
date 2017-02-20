@@ -23,7 +23,7 @@ namespace PeerConnectionClient.Ortc.Utilities
 
         public static IList<RTCRtpCodecCapability> GetCodecs(string kind)
         {
-            var caps = RTCRtpSender.GetCapabilities(kind);
+            var caps = RTCRtpSender.GetCapabilities(kind == "audio" ? MediaStreamTrackKind.Audio : MediaStreamTrackKind.Video);
             var results = new List<RTCRtpCodecCapability>(caps.Codecs);
             return results;
         }

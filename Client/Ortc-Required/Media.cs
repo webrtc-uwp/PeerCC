@@ -74,12 +74,12 @@ namespace PeerConnectionClient.Ortc
         }
         public IMediaSource CreateMediaSource(MediaStreamTrack track, string id)
         {
-            return track?.CreateMediaSource();
+            return track?.Source?.Source;
         }
 
         public static void OnAppSuspending()
         {
-            MediaDevices.OnAppSuspending();
+            OrtcLib.NotifyGoingToBackground().AsTask().ContinueWith(task => { });
         }
 
         public void SelectAudioCaptureDevice(MediaDevice device)
