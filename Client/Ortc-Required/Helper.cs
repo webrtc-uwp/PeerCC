@@ -116,7 +116,7 @@ namespace PeerConnectionClient.Ortc.Utilities
 
             return Task.Run(() =>
             {
-                RTCRtpCapabilities capabilities = sourceCapabilities.Clone();
+                RTCRtpCapabilities capabilities = new RTCRtpCapabilities(sourceCapabilities);
               
                 // scoope: move prefered codec to be first in the list
                 {
