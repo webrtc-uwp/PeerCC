@@ -294,7 +294,9 @@ namespace PeerConnectionClient.Signalling
                             await Helper.GetTrackConfigurationForCapabilities(videoCapabilities, VideoCodec);
                     }
                     if (configuration != null)
-                        await _peerConnection.AddTrack(mediaStreamTrack, mediaStreamList, configuration);
+                    {
+                        var task = _peerConnection.AddTrack(mediaStreamTrack, mediaStreamList, configuration).AsTask<RTCRtpSender>();
+                    }
                 }
             }
 #else
