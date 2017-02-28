@@ -52,7 +52,7 @@ namespace PeerConnectionClient.Ortc
         }
 
 
-        public Task<IList<MediaStreamTrack>> GetUserMedia(RTCMediaStreamConstraints mediaStreamConstraints)
+        public Task<IReadOnlyList<MediaStreamTrack>> GetUserMedia(RTCMediaStreamConstraints mediaStreamConstraints)
         {
             return Task.Run(() =>
             {
@@ -68,7 +68,7 @@ namespace PeerConnectionClient.Ortc
                     constraintSet.FrameRate = new ConstrainDouble { Value = _preferredFPS };
                 }
 
-                Task<IList<MediaStreamTrack>> task = MediaDevices.GetUserMedia(constraints).AsTask();
+                Task< IReadOnlyList<MediaStreamTrack> > task = MediaDevices.GetUserMedia(constraints).AsTask();
                 return task.Result;
             });
         }

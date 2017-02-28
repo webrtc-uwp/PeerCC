@@ -892,7 +892,7 @@ namespace PeerConnectionClient.ViewModels
         /// </summary>
         private async void OnMediaDevicesChanged()
         {
-            IList<MediaDeviceInfo> devices = await MediaDevices.EnumerateDevices();
+            IReadOnlyList<MediaDeviceInfo> devices = await MediaDevices.EnumerateDevices();
             //contentAsync.AsTask().Wait();
             //var devices = contentAsync.GetResults();
 

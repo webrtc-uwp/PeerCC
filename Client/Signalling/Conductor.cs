@@ -275,9 +275,9 @@ namespace PeerConnectionClient.Signalling
                 RTCRtpCapabilities audioCapabilities = RTCRtpSender.GetCapabilities(MediaStreamTrackKind.Audio);
                 RTCRtpCapabilities videoCapabilities = RTCRtpSender.GetCapabilities(MediaStreamTrackKind.Video);
 
-                _mediaStream = new MediaStream(tracks);
+                _mediaStream = new MediaStream(tracks as IReadOnlyList<MediaVideoTrack>);
                 Debug.WriteLine("Conductor: Adding local media stream.");
-                IList<MediaStream> mediaStreamList = new List<MediaStream>();
+                var mediaStreamList = new List<MediaStream>();
                 mediaStreamList.Add(_mediaStream);
                 foreach (var mediaStreamTrack in tracks)
                 {
@@ -957,11 +957,12 @@ namespace PeerConnectionClient.Signalling
                 url += iceServer.Host.Value;
 #if ORTCLIB
                 //url += iceServer.Host.Value;
+                var tempUrls = new List<string>();
+                tempUrls.Add(url);
                 server = new RTCIceServer()
                 {
-                    Urls = new List<string>(),
+                    Urls = tempUrls
                 };
-                server.Urls.Add(url);
 #else
                 //url += iceServer.Host.Value + ":" + iceServer.Port.Value;
                 server = new RTCIceServer { Url = url };
