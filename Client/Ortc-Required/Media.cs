@@ -52,7 +52,7 @@ namespace PeerConnectionClient.Ortc
         }
 
 
-        public Task<IList<MediaStreamTrack>> GetUserMedia(RTCMediaStreamConstraints mediaStreamConstraints)
+        public Task<IReadOnlyList<MediaStreamTrack>> GetUserMedia(RTCMediaStreamConstraints mediaStreamConstraints)
         {
             return Task.Run(() =>
             {
@@ -68,18 +68,18 @@ namespace PeerConnectionClient.Ortc
                     constraintSet.FrameRate = new ConstrainDouble { Value = _preferredFPS };
                 }
 
-                Task<IList<MediaStreamTrack>> task = MediaDevices.GetUserMedia(constraints).AsTask();
+                Task< IReadOnlyList<MediaStreamTrack> > task = MediaDevices.GetUserMedia(constraints).AsTask();
                 return task.Result;
             });
         }
         public IMediaSource CreateMediaSource(MediaStreamTrack track, string id)
         {
-            return track?.CreateMediaSource();
+            return track?.Source?.Source;
         }
 
         public static void OnAppSuspending()
         {
-            MediaDevices.OnAppSuspending();
+            OrtcLib.NotifyGoingToBackground().AsTask().ContinueWith(task => { });
         }
 
         public void SelectAudioCaptureDevice(MediaDevice device)

@@ -896,7 +896,7 @@ namespace PeerConnectionClient.ViewModels
         /// </summary>
         private async void OnMediaDevicesChanged()
         {
-            IList<MediaDeviceInfo> devices = await MediaDevices.EnumerateDevices();
+            IReadOnlyList<MediaDeviceInfo> devices = await MediaDevices.EnumerateDevices();
             //contentAsync.AsTask().Wait();
             //var devices = contentAsync.GetResults();
 
@@ -1103,7 +1103,7 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="evt">Details about Media stream event.</param>
         private void Conductor_OnAddLocalStream(MediaStreamEvent evt)
         {
-          _selfVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
+          _selfVideoTrack = evt.Stream.VideoTracks.FirstOrDefault();
           if (_selfVideoTrack != null)
             {
                 var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
@@ -1615,12 +1615,12 @@ namespace PeerConnectionClient.ViewModels
 #if ORTCLIB
                 if (_tracingEnabled)
                 {
-                    Org.Ortc.Ortc.StartMediaTracing();
+                    OrtcLib.StartMediaTracing();
                 }
                 else
                 {
-                    Org.Ortc.Ortc.StopMediaTracing();
-                    Org.Ortc.Ortc.SaveMediaTrace(_traceServerIp, Int32.Parse(_traceServerPort));
+                    OrtcLib.StopMediaTracing();
+                    OrtcLib.SaveMediaTrace(_traceServerIp, Int32.Parse(_traceServerPort));
                 }
 #else
                 if (_tracingEnabled)
@@ -1852,8 +1852,8 @@ namespace PeerConnectionClient.ViewModels
                 if (_loggingEnabled)
                 {
 #if ORTCLIB
-                    Logger.InstallTelnetLogger(UInt16.Parse(_traceServerPort), 60, true);
-                    Logger.SetLogLevel(Org.Ortc.Log.Level.Debug);
+                    Logger.InstallTelnetLogger(UInt16.Parse(_traceServerPort), TimeSpan.FromSeconds(60), true);
+                    Logger.SetDefaultLogLevel(Org.Ortc.Log.Level.Debug);
                     Logger.SetLogLevel(Org.Ortc.Log.Component.OrtcLibWebrtc, Org.Ortc.Log.Level.Detail);
                     var message = "ORTC logging enabled, connect to TCP port " + _traceServerPort +
                                   " to receive log stream.";
@@ -2233,7 +2233,7 @@ namespace PeerConnectionClient.ViewModels
 #if ORTCLIB
                 if (value)
                 {
-                    Logger.InstallEventingListener("", 0, 60);
+                    Logger.InstallEventingListener("", 0, TimeSpan.FromSeconds(60));
                 }
                 else
                 {
@@ -2733,7 +2733,7 @@ namespace PeerConnectionClient.ViewModels
         {
             Debug.WriteLine("New NTP time: {0}", ntpTime);
 #if ORTCLIB
-            Org.Ortc.Ortc.NtpServerTime = ntpTime;
+            OrtcLib.NtpServerTime = TimeSpan.FromMilliseconds(ntpTime);
 #else
             WebRTC.SynNTPTime(ntpTime);
 #endif

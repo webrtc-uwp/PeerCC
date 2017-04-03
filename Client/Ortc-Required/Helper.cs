@@ -23,7 +23,7 @@ namespace PeerConnectionClient.Ortc.Utilities
 
         public static IList<RTCRtpCodecCapability> GetCodecs(string kind)
         {
-            var caps = RTCRtpSender.GetCapabilities(kind);
+            var caps = RTCRtpSender.GetCapabilities(kind == "audio" ? MediaStreamTrackKind.Audio : MediaStreamTrackKind.Video);
             var results = new List<RTCRtpCodecCapability>(caps.Codecs);
             return results;
         }
@@ -70,7 +70,9 @@ namespace PeerConnectionClient.Ortc.Utilities
                 }
             };
 
-            trackConstraints.Advanced.Add(constraintSet);
+            var tempList = new List<MediaTrackConstraintSet>(trackConstraints.Advanced);
+            tempList.Add(constraintSet);
+            trackConstraints.Advanced = tempList;
 
             switch (kind)
             {
@@ -116,7 +118,7 @@ namespace PeerConnectionClient.Ortc.Utilities
 
             return Task.Run(() =>
             {
-                RTCRtpCapabilities capabilities = sourceCapabilities.Clone();
+                RTCRtpCapabilities capabilities = new RTCRtpCapabilities(sourceCapabilities);
               
                 // scoope: move prefered codec to be first in the list
                 {
@@ -124,10 +126,12 @@ namespace PeerConnectionClient.Ortc.Utilities
                     if (itemsToRemove.Count > 0)
                     {
                         RTCRtpCodecCapability codecCapability = itemsToRemove.First();
-                        if (codecCapability != null && capabilities.Codecs.IndexOf(codecCapability) > 0)
+                        var tempList = new List<RTCRtpCodecCapability>(capabilities.Codecs);
+                        if (codecCapability != null && tempList.IndexOf(codecCapability) > 0)
                         {
-                            capabilities.Codecs.Remove(codecCapability);
-                            capabilities.Codecs.Insert(0, codecCapability);
+                            tempList.Remove(codecCapability);
+                            tempList.Insert(0, codecCapability);
+                            capabilities.Codecs = tempList;
                         }
                     }
                 }

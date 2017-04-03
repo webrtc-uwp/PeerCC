@@ -272,12 +272,12 @@ namespace PeerConnectionClient.Signalling
             var tracks = await _media.GetUserMedia(mediaStreamConstraints);
             if (tracks != null)
             {
-                RTCRtpCapabilities audioCapabilities = RTCRtpSender.GetCapabilities("audio");
-                RTCRtpCapabilities videoCapabilities = RTCRtpSender.GetCapabilities("video");
+                RTCRtpCapabilities audioCapabilities = RTCRtpSender.GetCapabilities(MediaStreamTrackKind.Audio);
+                RTCRtpCapabilities videoCapabilities = RTCRtpSender.GetCapabilities(MediaStreamTrackKind.Video);
 
-                _mediaStream = new MediaStream(tracks);
+                _mediaStream = new MediaStream(tracks as IReadOnlyList<MediaVideoTrack>);
                 Debug.WriteLine("Conductor: Adding local media stream.");
-                IList<MediaStream> mediaStreamList = new List<MediaStream>();
+                var mediaStreamList = new List<MediaStream>();
                 mediaStreamList.Add(_mediaStream);
                 foreach (var mediaStreamTrack in tracks)
                 {
@@ -294,7 +294,9 @@ namespace PeerConnectionClient.Signalling
                             await Helper.GetTrackConfigurationForCapabilities(videoCapabilities, VideoCodec);
                     }
                     if (configuration != null)
-                        _peerConnection.AddTrack(mediaStreamTrack, mediaStreamList, configuration);
+                    {
+                        var task = _peerConnection.AddTrack(mediaStreamTrack, mediaStreamList, configuration).AsTask<RTCRtpSender>();
+                    }
                 }
             }
 #else
@@ -331,7 +333,7 @@ namespace PeerConnectionClient.Signalling
                     _peerId = -1;
                     if (_mediaStream != null)
                     {
-                        foreach (var track in _mediaStream.GetTracks())
+                        foreach (var track in _mediaStream.Tracks)
                         {
                            _mediaStream.RemoveTrack(track);
                             track.Stop();
@@ -375,7 +377,7 @@ namespace PeerConnectionClient.Signalling
 #if ORTCLIB
             if (RTCPeerConnectionSignalingMode.Json == _signalingMode)
             {
-                json = JsonObject.Parse(evt.Candidate.ToJsonString());
+                json = JsonObject.Parse(evt.Candidate.ToJson().ToString());
             }
             else
 #endif
@@ -384,7 +386,7 @@ namespace PeerConnectionClient.Signalling
                 {
                     {kCandidateSdpMidName, JsonValue.CreateStringValue(evt.Candidate.SdpMid)},
                     {kCandidateSdpMlineIndexName, JsonValue.CreateNumberValue(index)},
-                    {kCandidateSdpName, JsonValue.CreateStringValue(evt.Candidate.Candidate)}
+                    {kCandidateSdpName, JsonValue.CreateStringValue(evt.Candidate.ToJson().ToString())}
                 };
             }
             Debug.WriteLine("Conductor: Sending ice candidate.\n" + json.Stringify());
@@ -681,7 +683,7 @@ namespace PeerConnectionClient.Signalling
 #if ORTCLIB
                     else
                     {
-                        candidate = RTCIceCandidate.FromJsonString(message);
+                        candidate = new RTCIceCandidate(new Json(message));
                     }
                     _peerConnection?.AddIceCandidate(candidate);
 #else
@@ -876,7 +878,7 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_mediaStream != null)
                 {
-                    foreach (MediaVideoTrack videoTrack in _mediaStream.GetVideoTracks())
+                    foreach (MediaVideoTrack videoTrack in _mediaStream.VideoTracks)
                     {
                         videoTrack.Enabled = true;
                     }
@@ -894,7 +896,7 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_mediaStream != null)
                 {
-                    foreach (MediaVideoTrack videoTrack in _mediaStream.GetVideoTracks())
+                    foreach (MediaVideoTrack videoTrack in _mediaStream.VideoTracks)
                     {
                         videoTrack.Enabled = false;
                     }
@@ -912,7 +914,7 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_mediaStream != null)
                 {
-                    foreach (MediaAudioTrack audioTrack in _mediaStream.GetAudioTracks())
+                    foreach (MediaAudioTrack audioTrack in _mediaStream.AudioTracks)
                     {
                         audioTrack.Enabled = false;
                     }
@@ -930,7 +932,7 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_mediaStream != null)
                 {
-                    foreach (MediaAudioTrack audioTrack in _mediaStream.GetAudioTracks())
+                    foreach (MediaAudioTrack audioTrack in _mediaStream.AudioTracks)
                     {
                         audioTrack.Enabled = true;
                     }
@@ -958,11 +960,12 @@ namespace PeerConnectionClient.Signalling
                 url += iceServer.Host.Value;
 #if ORTCLIB
                 //url += iceServer.Host.Value;
+                var tempUrls = new List<string>();
+                tempUrls.Add(url);
                 server = new RTCIceServer()
                 {
-                    Urls = new List<string>(),
+                    Urls = tempUrls
                 };
-                server.Urls.Add(url);
 #else
                 //url += iceServer.Host.Value + ":" + iceServer.Port.Value;
                 server = new RTCIceServer { Url = url };

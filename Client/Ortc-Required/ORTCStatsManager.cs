@@ -131,7 +131,7 @@ namespace PeerConnectionClient.Ortc
         private Timer _callMetricsTimer;
         private const int ScheduleTimeInSeconds = 1;
         private int CallDuration { get; set; }
-        private RTCStatsProvider StatsProviderPeerConnectionCall { get; set; }
+        private RTCStatsTypeSet StatsSet { get; set; }
 
         private Dictionary<string, StatsData> CallsStatsDictionary { get; }
 
@@ -201,7 +201,7 @@ namespace PeerConnectionClient.Ortc
         public void Reset()
         {
             _peerConnection = null;
-            StatsProviderPeerConnectionCall = null;
+            StatsSet = null;
         }
 
         public bool IsStatsCollectionEnabled
@@ -210,7 +210,7 @@ namespace PeerConnectionClient.Ortc
             set
             {
                 _isStatsCollectionEnabled = value;
-                if (_peerConnection != null && StatsProviderPeerConnectionCall == null)
+                if (_peerConnection != null && StatsSet == null)
                 {
                     if (_isStatsCollectionEnabled)
                     {
@@ -236,14 +236,11 @@ namespace PeerConnectionClient.Ortc
             {
                 PrepareStatsForCall(callId, isCaller);
 
-                RTCStatsProviderOptions options =
-                    new RTCStatsProviderOptions(new List<RTCStatsType>
-                    {
-                        RTCStatsType.InboundRtp,
-                        RTCStatsType.OutboundRtp,
-                        RTCStatsType.Track
-                    });
-                StatsProviderPeerConnectionCall = new RTCStatsProvider(_peerConnection, options);
+                StatsSet = new RTCStatsTypeSet(new Dictionary<RTCStatsType, Object> {
+                    { RTCStatsType.InboundRtp, null },
+                    { RTCStatsType.OutboundRtp, null},
+                    { RTCStatsType.Track, null}
+                });
                 CallDuration = 0;
                 AutoResetEvent autoEvent = new AutoResetEvent(false);
                 TimerCallback tcb = CollectCallMetrics3;
@@ -394,11 +391,11 @@ namespace PeerConnectionClient.Ortc
                 {
                     case RTCStatsType.InboundRtp:
                         //Debug.WriteLine("RTCStatsType.InboundRtp:" + statId);
-                        RTCInboundRtpStreamStats inboundRtpStreamStats = stats.ToInboundRtp();
+                        RTCInboundRtpStreamStats inboundRtpStreamStats = RTCInboundRtpStreamStats.Cast(stats);
                         if (inboundRtpStreamStats != null)
                         {
                             TrackStatsData tsd =
-                                statsData.GetTrackStatsData(inboundRtpStreamStats.RtpStreamStats.MediaTrackId, false);
+                                statsData.GetTrackStatsData(inboundRtpStreamStats.MediaTrackId, false);
 
                             if (tsd != null)
                             {
@@ -418,16 +415,16 @@ namespace PeerConnectionClient.Ortc
                                 tsd.AddAverage(RtcStatsValueName.StatsValueNamePacketsLost, inboundRtpStreamStats.PacketsLost);
 
                                 tsd.AddData(RtcStatsValueName.StatsValueNameCurrentEndToEndDelayMs,
-                                    inboundRtpStreamStats.EndToEndDelay);
+                                    inboundRtpStreamStats.EndToEndDelay.TotalMilliseconds);
                             }
                         }
                         break;
                     case RTCStatsType.OutboundRtp:
-                        RTCOutboundRtpStreamStats outboundRtpStreamStats = stats.ToOutboundRtp();
+                        RTCOutboundRtpStreamStats outboundRtpStreamStats = RTCOutboundRtpStreamStats.Cast(stats);
                         if (outboundRtpStreamStats != null)
                         {
                             TrackStatsData tsd =
-                                statsData.GetTrackStatsData(outboundRtpStreamStats.RtpStreamStats.MediaTrackId);
+                                statsData.GetTrackStatsData(outboundRtpStreamStats.MediaTrackId);
 
                             if (tsd != null)
                             {
@@ -438,7 +435,7 @@ namespace PeerConnectionClient.Ortc
                         }
                         break;
                     case RTCStatsType.Track:
-                        RTCMediaStreamTrackStats mediaStreamTrackStats = stats.ToTrack();
+                        RTCMediaStreamTrackStats mediaStreamTrackStats = RTCMediaStreamTrackStats.Cast(stats);
                         if (mediaStreamTrackStats != null)
                         {
                             try
@@ -494,7 +491,7 @@ namespace PeerConnectionClient.Ortc
             switch (stats.StatsType)
             {
                 case RTCStatsType.Track:
-                    RTCMediaStreamTrackStats mediaStreamTrackStats = stats.ToTrack();
+                    RTCMediaStreamTrackStats mediaStreamTrackStats = RTCMediaStreamTrackStats.Cast(stats);
                     if (mediaStreamTrackStats != null && !mediaStreamTrackStats.TrackId.Contains("audio"))
                     {
                         if (mediaStreamTrackStats.RemoteSource)
@@ -516,7 +513,7 @@ namespace PeerConnectionClient.Ortc
             CallDuration += ScheduleTimeInSeconds;
             StatsData statsData = CallsStatsDictionary[_currentId];
             statsData.Timestamps.Add(CallDuration);
-            RTCStatsReport report = await StatsProviderPeerConnectionCall.GetStats();
+            RTCStatsReport report = await _peerConnection.GetStats(StatsSet);
             if (report != null)
             {
                 foreach (var statId in report.StatsIds)
