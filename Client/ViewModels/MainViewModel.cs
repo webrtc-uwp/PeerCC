@@ -83,24 +83,36 @@ namespace PeerConnectionClient.ViewModels
             // Prepare Hockey app to collect the crash logs and send to the server
             LoadHockeyAppSettings();
 
-            // Display a permission dialog to request access to the microphone and camera
-            WebRTC.RequestAccessForMediaCapture().AsTask().ContinueWith(antecedent =>
+            if (Org.Ortc.Ortc.IsMRPInstalled())
             {
-                if (antecedent.Result)
+                // Display a permission dialog to request access to the microphone and camera
+                WebRTC.RequestAccessForMediaCapture().AsTask().ContinueWith(antecedent =>
                 {
-                    Initialize(uiDispatcher);
-                }
-                else
-                {
-                    RunOnUiThread(async () =>
+                    if (antecedent.Result)
                     {
-                        var msgDialog = new MessageDialog(
-                            "Failed to obtain access to multimedia devices!");
-                        await msgDialog.ShowAsync();
-                    });
-                }
-            });
-
+                        Initialize(uiDispatcher);
+                    }
+                    else
+                    {
+                        RunOnUiThread(async () =>
+                        {
+                            var msgDialog = new MessageDialog(
+                                "Failed to obtain access to multimedia devices!");
+                            await msgDialog.ShowAsync();
+                        });
+                    }
+                });
+            }
+            else
+            {
+                RunOnUiThread(async () =>
+                {
+                    OnInitialized?.Invoke();
+                    var msgDialog = new MessageDialog(
+                        "Media Resource Pack is installed on the system!");
+                    await msgDialog.ShowAsync();
+                });
+            }
         }
 
         /// <summary>
@@ -2318,7 +2330,7 @@ namespace PeerConnectionClient.ViewModels
         /// <returns>True if the application is ready to connect to server.</returns>
         private bool ConnectCommandCanExecute(object obj)
         {
-            return !IsConnected && !IsConnecting && Ip.Valid && Port.Valid;
+            return !IsConnected && !IsConnecting && Ip != null && Ip.Valid && Port != null && Port.Valid;
         }
 
         /// <summary>
