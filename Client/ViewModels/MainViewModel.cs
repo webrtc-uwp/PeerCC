@@ -1905,7 +1905,7 @@ namespace PeerConnectionClient.ViewModels
                     else
                     {
                         // This is a hack/workaround for destroying the internal stream source (RTMediaStreamSource)
-                        // instance inside webrtc winrt api when loopback is disabled.
+                        // instance inside webrtc winuwp api when loopback is disabled.
                         // For some reason, the RTMediaStreamSource instance is not destroyed when only SelfVideo.Source
                         // is set to null.
                         // For unknown reasons, when executing the above sequence (set to null, stop, set to null), the
