@@ -1625,12 +1625,11 @@ namespace PeerConnectionClient.ViewModels
 #else
                 if (_tracingEnabled)
                 {
-                    WebRTC.StartTracing();
+                    WebRTC.StartTracing("webrtc-trace.txt");
                 }
                 else
                 {
                     WebRTC.StopTracing();
-                    WebRTC.SaveTrace(_traceServerIp, Int32.Parse(_traceServerPort));
                 }
 #endif
                 AppPerformanceCheck();
