@@ -116,14 +116,15 @@ namespace PeerConnectionClient.ViewModels
           {
             Debug.WriteLine("Re-establishing peer video");
 
-            var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
-            RunOnUiThread(() =>
-            {
-              PeerVideo.SetMediaStreamSource(source);
-              Debug.WriteLine("Peer video re-established");
-            });
+            Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
+            //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
+            //RunOnUiThread(() =>
+            //{
+            //  PeerVideo.SetMediaStreamSource(source);
+            //  Debug.WriteLine("Peer video re-established");
+            //});
 
-          }
+            }
         }
 
         /// <summary>
@@ -139,14 +140,15 @@ namespace PeerConnectionClient.ViewModels
           {
             Debug.WriteLine("Re-establishing self video");
 
-            var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
-            RunOnUiThread(() =>
-            {
-                SelfVideo.SetMediaStreamSource(source);
-                Debug.WriteLine("Self video re-established");
-            });
+                Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
+                //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
+                //RunOnUiThread(() =>
+                //{
+                //    SelfVideo.SetMediaStreamSource(source);
+                //    Debug.WriteLine("Self video re-established");
+                //});
 
-          }
+            }
         }
 
         // Help to make sure the screen is not locked while on call
@@ -435,11 +437,13 @@ namespace PeerConnectionClient.ViewModels
                 RunOnUiThread(() =>
                 {
                     IsConnectedToPeer = false;
-                    PeerVideo.Source = null;
+                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
+                    //PeerVideo.Source = null;
 
-                    SelfVideo.Stop();
-                    SelfVideo.ClearValue(MediaElement.SourceProperty);
-                    SelfVideo.Source = null;
+                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
+                    //SelfVideo.Stop();
+                    //SelfVideo.ClearValue(MediaElement.SourceProperty);
+                    //SelfVideo.Source = null;
 
                     _peerVideoTrack = null;
                     _selfVideoTrack = null;
@@ -1050,8 +1054,9 @@ namespace PeerConnectionClient.ViewModels
             _peerVideoTrack = evt.Track;
             if (evt.Track != null && evt.Track.Kind == MediaStreamTrackKind.Video)
             {
-                var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
-                RunOnUiThread(() => { PeerVideo.SetMediaStreamSource(source); });
+                Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
+                //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
+                //RunOnUiThread(() => { PeerVideo.SetMediaStreamSource(source); });
             }
 
             IsReadyToDisconnect = true;
@@ -1074,11 +1079,12 @@ namespace PeerConnectionClient.ViewModels
             _peerVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
             if (_peerVideoTrack != null)
             {
-                var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
-                RunOnUiThread(() =>
-                {
-                  PeerVideo.SetMediaStreamSource(source);
-                });
+                Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
+                //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
+                //RunOnUiThread(() =>
+                //{
+                //  PeerVideo.SetMediaStreamSource(source);
+                //});
             }
 
             IsReadyToDisconnect = true;
@@ -1092,7 +1098,8 @@ namespace PeerConnectionClient.ViewModels
         {
             RunOnUiThread(() =>
             {
-                PeerVideo.SetMediaStreamSource(null);
+                Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
+                //PeerVideo.SetMediaStreamSource(null);
             });
         }
 #endif
@@ -1106,31 +1113,31 @@ namespace PeerConnectionClient.ViewModels
           _selfVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
           if (_selfVideoTrack != null)
             {
-                var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
+                //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
                 RunOnUiThread(() =>
-                  {
-                      if (_cameraEnabled)
-                      {
-                          Conductor.Instance.EnableLocalVideoStream();
-                      }
-                      else
-                      {
-                          Conductor.Instance.DisableLocalVideoStream();
-                      }
+                    {
+                        if (_cameraEnabled)
+                        {
+                            Conductor.Instance.EnableLocalVideoStream();
+                        }
+                        else
+                        {
+                            Conductor.Instance.DisableLocalVideoStream();
+                        }
 
-                      if (_microphoneIsOn)
-                      {
-                          Conductor.Instance.UnmuteMicrophone();
-                      }
-                      else
-                      {
-                          Conductor.Instance.MuteMicrophone();
-                      }
-                      if (VideoLoopbackEnabled)
-                      {
-                          SelfVideo.SetMediaStreamSource(source);
-                      }
-                  });
+                        if (_microphoneIsOn)
+                        {
+                            Conductor.Instance.UnmuteMicrophone();
+                        }
+                        else
+                        {
+                            Conductor.Instance.MuteMicrophone();
+                        }
+                    });
+                if (VideoLoopbackEnabled)
+                {
+                    Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
+                }
             }
         }
 #if !ORTCLIB
@@ -1893,12 +1900,13 @@ namespace PeerConnectionClient.ViewModels
                         {
                             Debug.WriteLine("Enabling video loopback");
 
-                            var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
-                            RunOnUiThread(() =>
-                            {
-                                SelfVideo.SetMediaStreamSource(source);
-                                Debug.WriteLine("Video loopback enabled");
-                            });
+                            Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
+                            //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
+                            //RunOnUiThread(() =>
+                            //{
+                            //    SelfVideo.SetMediaStreamSource(source);
+                            //    Debug.WriteLine("Video loopback enabled");
+                            //});
                         }
                     }
                     else
@@ -1911,9 +1919,10 @@ namespace PeerConnectionClient.ViewModels
                         // internal stream source is destroyed.
                         // Apparently, with webrtc package version < 1.1.175, the internal stream source was destroyed
                         // corectly, only by setting SelfVideo.Source to null.
-                        SelfVideo.Source = null;
-                        SelfVideo.Stop();
-                        SelfVideo.Source = null;
+                        Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
+                        //SelfVideo.Source = null;
+                        //SelfVideo.Stop();
+                        //SelfVideo.Source = null;
                         GC.Collect(); // Ensure all references are truly dropped.
                     }
                 }
