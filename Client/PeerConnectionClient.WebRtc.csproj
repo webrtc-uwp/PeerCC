@@ -135,6 +135,12 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\..\..\..\..\webrtc\xplatform\webrtc\WEBRTC_BUILD\webrtc\$(Configuration)\$(Platform)\boringssl.dll" Condition="'$(Configuration)' == 'Debug'">
+      <Link>boringssl.dll</Link>
+    </Content>
+    <Content Include="..\..\..\..\..\webrtc\xplatform\webrtc\WEBRTC_BUILD\webrtc\$(Configuration)\$(Platform)\protobuf_lite.dll" Condition="'$(Configuration)' == 'Debug'">
+      <Link>protobuf_lite.dll</Link>
+    </Content>
     <Content Include="Assets\Logo.scale-100.png" />
     <Content Include="Assets\Microphone-100.png" />
     <Content Include="Assets\No Microphone-100.png" />
