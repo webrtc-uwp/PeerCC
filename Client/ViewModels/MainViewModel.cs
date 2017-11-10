@@ -278,6 +278,16 @@ namespace PeerConnectionClient.ViewModels
                 });
             };
 
+            DecibelFullScaleHelper.DecibelFullScaleComputed += (decibel) =>
+            {
+                RunOnUiThread(() =>
+                {
+                    Debug.WriteLine(String.Format("{0} {1:N2}", DateTime.Now.ToString("mm:ss.fff"), decibel));
+                    PeerAudioDbFullScale = String.Format("{0:N2}", decibel);
+                });
+            };
+
+
             // Handler for Peer/Self video resolution changed event 
             ResolutionHelper.ResolutionChanged += (id, width, height) =>
             {
@@ -1025,6 +1035,17 @@ namespace PeerConnectionClient.ViewModels
         {
             get { return _peerVideoFps; }
             set { SetProperty(ref _peerVideoFps, value); }
+        }
+
+        private String _peerAudioDbFullScale;
+
+        /// <summary>
+        /// Decibel full scale of local microphone
+        /// </summary>
+        public String PeerAudioDbFullScale
+        {
+            get { return _peerAudioDbFullScale; }
+            set { SetProperty(ref _peerAudioDbFullScale, value); }
         }
 
         private String _selfVideoFps;

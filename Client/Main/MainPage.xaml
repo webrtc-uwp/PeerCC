@@ -201,7 +201,7 @@
                             </ToggleButton>
                         </StackPanel>
                     </Border>
-                    <Border Background="White" Width="110"
+                    <Border Background="White" Width="auto"
                             RelativePanel.AlignBottomWithPanel="True"
                             RelativePanel.AlignLeftWithPanel="True"
                             Name="RemoteResFPSLabel">
@@ -250,13 +250,16 @@
                         RealTimePlayback="True"
                         Name="SelfVideo"
                         MediaFailed="SelfVideo_MediaFailed"/>
-                    <Border Background="White" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="110">
+                    <Border Background="White" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="auto">
                         <TextBlock Foreground="Black" VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Run Text="{Binding SelfWidth}"/>
                             <Run Text="x"/>
                             <Run Text="{Binding SelfHeight}"/>
                             <Run Text="@"/>
                             <Run Text="{Binding SelfVideoFps}"/>
+                            <Run Text="_"/>
+                            <Run Text="{Binding PeerAudioDbFullScale}"/>
+                            <Run Text=" dBFS"/>
                         </TextBlock>
                     </Border>
                 </Grid>
