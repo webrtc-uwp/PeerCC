@@ -160,6 +160,7 @@ namespace PeerConnectionClient.ViewModels
 
         private readonly NtpService _ntpService;
 
+        private readonly TimeSpan _maxWaitForSocketToBeAvailable = new TimeSpan(0, 0, 60);
 
         /// <summary>
         /// The initializer for MainViewModel.
@@ -555,7 +556,7 @@ namespace PeerConnectionClient.ViewModels
         /// </summary>
         private async void OnMediaDevicesChanged()
         {
-            IList<MediaDeviceInfo> devices = await MediaDevices.EnumerateDevices();
+            IReadOnlyList<MediaDeviceInfo> devices = await MediaDevices.EnumerateDevices();
             //contentAsync.AsTask().Wait();
             //var devices = contentAsync.GetResults();
 
@@ -759,7 +760,7 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="evt">Details about Media stream event.</param>
         private void Conductor_OnAddLocalStream(MediaStreamEvent evt)
         {
-          _selfVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
+          _selfVideoTrack = evt.Stream.VideoTracks.FirstOrDefault();
           if (_selfVideoTrack != null)
             {
                 //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
@@ -1503,7 +1504,7 @@ namespace PeerConnectionClient.ViewModels
                 if (_loggingEnabled)
                 {
 #if ORTCLIB
-                    Logger.InstallTelnetLogger(UInt16.Parse(_traceServerPort), 60, true);
+                    Logger.InstallTelnetLogger(UInt16.Parse(_traceServerPort), _maxWaitForSocketToBeAvailable, true);
                     Logger.SetLogLevel(Org.Ortc.Log.Level.Debug);
                     Logger.SetLogLevel(Org.Ortc.Log.Component.OrtcLibWebrtc, Org.Ortc.Log.Level.Detail);
                     var message = "ORTC logging enabled, connect to TCP port " + _traceServerPort +
@@ -1886,7 +1887,7 @@ namespace PeerConnectionClient.ViewModels
 #if ORTCLIB
                 if (value)
                 {
-                    Logger.InstallEventingListener("", 0, 60);
+                    Logger.InstallEventingListener("", 0, _maxWaitForSocketToBeAvailable);
                 }
                 else
                 {

@@ -418,7 +418,7 @@ namespace PeerConnectionClient.Ortc
                                 tsd.AddAverage(RtcStatsValueName.StatsValueNamePacketsLost, inboundRtpStreamStats.PacketsLost);
 
                                 tsd.AddData(RtcStatsValueName.StatsValueNameCurrentEndToEndDelayMs,
-                                    inboundRtpStreamStats.EndToEndDelay);
+                                    inboundRtpStreamStats.EndToEndDelay.TotalMilliseconds);
                             }
                         }
                         break;
