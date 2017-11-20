@@ -760,7 +760,7 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="evt">Details about Media stream event.</param>
         private void Conductor_OnAddLocalStream(MediaStreamEvent evt)
         {
-          _selfVideoTrack = evt.Stream.VideoTracks.FirstOrDefault();
+          _selfVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
           if (_selfVideoTrack != null)
             {
                 //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
