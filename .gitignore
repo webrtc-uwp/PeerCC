@@ -1,6 +1,8 @@
 bin/
 obj/
 packages/
+/Client/AppPackages/
+/Client/BundleArtifacts/
 *.suo
 *.csproj.user
 project.lock.json
