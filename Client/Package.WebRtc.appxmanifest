@@ -29,4 +29,12 @@
     <DeviceCapability Name="microphone" />
     <DeviceCapability Name="webcam" />
   </Capabilities>
+  <Extensions>
+    <Extension Category="windows.activatableClass.inProcessServer">
+      <InProcessServer>
+        <Path>WebRtcScheme.dll</Path>
+        <ActivatableClass ActivatableClassId="WebRtcScheme.SchemeHandler" ThreadingModel="both" />
+      </InProcessServer>
+    </Extension>
+  </Extensions>
 </Package>

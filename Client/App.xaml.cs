@@ -19,6 +19,8 @@ using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Graphics.Display;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -26,6 +28,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using UnityPlayer;
 
 namespace PeerConnectionClient
 {
@@ -34,6 +37,9 @@ namespace PeerConnectionClient
     /// </summary>
     sealed partial class App : Application
     {
+        private AppCallbacks appCallbacks;
+        public SplashScreen splashScreen;
+
         /// <summary>
         /// Allows tracking page views, exceptions and other telemetry through the Microsoft Application Insights service.
         /// </summary>
@@ -50,16 +56,57 @@ namespace PeerConnectionClient
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            SetupOrientation();
+            appCallbacks = new AppCallbacks();
+        }
+
+        /// <summary>
+        /// Invoked when application is launched through protocol.
+        /// </summary>
+        /// <param name="args">Arguments</param>
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            string appArgs = "";
+
+            switch (args.Kind)
+            {
+                case ActivationKind.Protocol:
+                    ProtocolActivatedEventArgs eventArgs = args as ProtocolActivatedEventArgs;
+                    splashScreen = eventArgs.SplashScreen;
+                    appArgs += string.Format("Uri={0}", eventArgs.Uri.AbsoluteUri);
+                    break;
+            }
+            InitializeUnity(appArgs);
+        }
+
+        /// <summary>
+        /// Invoked when application is launched via file
+        /// </summary>
+        /// <param name="args">Arguments</param>
+        protected override void OnFileActivated(FileActivatedEventArgs args)
+        {
+            string appArgs = "";
+
+            splashScreen = args.SplashScreen;
+            appArgs += "File=";
+            bool firstFileAdded = false;
+            foreach (var file in args.Files)
+            {
+                if (firstFileAdded) appArgs += ";";
+                appArgs += file.Path;
+                firstFileAdded = true;
+            }
+
+            InitializeUnity(appArgs);
         }
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
         /// will be used such as when the application is launched to open a specific file.
         /// </summary>
-        /// <param name="e">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        /// <param name="args">Details about the launch request and process.</param>
+        protected override void OnLaunched(LaunchActivatedEventArgs args)
         {
-
 #if DEBUG
             if (System.Diagnostics.Debugger.IsAttached)
             {
@@ -67,20 +114,27 @@ namespace PeerConnectionClient
             }
 #endif
 
+            splashScreen = args.SplashScreen;
+            InitializeUnity(args.Arguments);
+        }
+
+        private void InitializeUnity(string args)
+        {
+#if UNITY_UWP
+            ApplicationView.GetForCurrentView().SuppressSystemOverlays = true;
+#endif
+
+            appCallbacks.SetAppArguments(args);
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active
-            if (rootFrame == null)
+            if (rootFrame == null && !appCallbacks.IsInitialized())
             {
-                // Create a Frame to act as the navigation context and navigate to the first page
                 rootFrame = new Frame();
                 // Set the default language
                 rootFrame.Language = Windows.Globalization.ApplicationLanguages.Languages[0];
-
                 rootFrame.NavigationFailed += OnNavigationFailed;
-
-                // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
             }
 
@@ -95,6 +149,14 @@ namespace PeerConnectionClient
             //asynchronously and there is no guaranteed way to predict when rendering will be complete."
             mainViewModel = new ViewModels.MainViewModel(CoreApplication.MainView.CoreWindow.Dispatcher);
             mainViewModel.OnInitialized += OnMainViewModelInitialized;
+        }
+
+        void SetupOrientation()
+        {
+#if UNITY_UWP
+            DisplayInformation.AutoRotationPreferences = DisplayOrientations.Landscape | DisplayOrientations.LandscapeFlipped | DisplayOrientations.Portrait | DisplayOrientations.PortraitFlipped;
+            ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.FullScreen;
+#endif
         }
 
         /// <summary>
@@ -122,7 +184,7 @@ namespace PeerConnectionClient
             new System.Threading.Tasks.Task(async () =>
             {
                 await mainViewModel.OnAppSuspending();
-            deferral.Complete();
+                deferral.Complete();
             }).Start();
         }
 

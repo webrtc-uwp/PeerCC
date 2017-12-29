@@ -6,3 +6,12 @@ packages/
 project.lock.json
 *.sdf
 *.bak
+Client/*.dll
+Client/*.pdb
+Client/Unity/UnityVideoSurface/Assets/Plugins/WSA/x86/*.dll
+Client/Unity/UnityVideoSurface/Assets/Plugins/WSA/x86/*.pdb
+Client/Unity/UnityVideoSurface/Assets/Plugins/WSA/x64/*.dll
+Client/Unity/UnityVideoSurface/Assets/Plugins/WSA/x64/*.pdb
+Client/Unity/UnityVideoSurface/Library
+Client/Unity/UnityVideoSurface/UnityPackageManager
+Client/Unity/UnityVideoSurface/UWP
