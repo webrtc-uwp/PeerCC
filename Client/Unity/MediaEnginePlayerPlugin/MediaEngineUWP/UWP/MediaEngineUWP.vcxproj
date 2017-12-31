@@ -131,8 +131,8 @@
       mkdir "%TARGET_PLUGIN_PATH%Plugins\WSA"
       mkdir "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)"
 
-      copy /Y "$(TargetPath)" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)\MediaEngineUWP$(TargetExt)"
-      copy /Y "$(TargetPath)" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)\MediaEngineUWP.pdb"
+      copy /Y "$(TargetDir)$(TargetFileName)" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)\$(TargetFileName)"
+      copy /Y "$(TargetDir)$(TargetName).pdb" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)\$(TargetName).pdb"
 ENDLOCAL
       </Command>
     </PostBuildEvent>
@@ -165,8 +165,8 @@ ENDLOCAL
       mkdir "%TARGET_PLUGIN_PATH%Plugins\WSA"
       mkdir "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)"
 
-      copy /Y "$(TargetPath)" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)\MediaEngineUWP$(TargetExt)"
-      copy /Y "$(TargetPath)" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)\MediaEngineUWP.pdb"
+      copy /Y "$(TargetDir)$(TargetFileName)" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)\$(TargetFileName)"
+      copy /Y "$(TargetDir)$(TargetName).pdb" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)\$(TargetName).pdb"
 ENDLOCAL
       </Command>
     </PostBuildEvent>

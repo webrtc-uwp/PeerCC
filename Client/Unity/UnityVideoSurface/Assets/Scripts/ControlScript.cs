@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.UI;
 
 #if !UNITY_EDITOR
 using Org.WebRtc;
-using Windows.Media.Playback;
 using Windows.Media.Core;
 #endif
 
@@ -22,8 +17,6 @@ public class ControlScript : MonoBehaviour
     public RawImage Canvas;
 
     public Camera Camera;
-    
-    private bool enabledStereo = false;
 
 	void Awake()
     {

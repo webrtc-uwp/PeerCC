@@ -8,9 +8,12 @@ project.lock.json
 *.bak
 Client/*.dll
 Client/*.pdb
+Client/*.winmd
 Client/Unity/UnityVideoSurface/Assets/Plugins/WSA/x86/*.dll
+Client/Unity/UnityVideoSurface/Assets/Plugins/WSA/x86/*.winmd
 Client/Unity/UnityVideoSurface/Assets/Plugins/WSA/x86/*.pdb
 Client/Unity/UnityVideoSurface/Assets/Plugins/WSA/x64/*.dll
+Client/Unity/UnityVideoSurface/Assets/Plugins/WSA/x64/*.winmd
 Client/Unity/UnityVideoSurface/Assets/Plugins/WSA/x64/*.pdb
 Client/Unity/UnityVideoSurface/Library
 Client/Unity/UnityVideoSurface/UnityPackageManager
