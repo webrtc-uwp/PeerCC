@@ -10,13 +10,13 @@ using Windows.Media.Core;
 
 public class ControlScript : MonoBehaviour
 {
-    public uint TextureWidth = 640;
-    public uint TextureHeight = 480;
-    public uint FrameRate = 30;
+    public uint LocalTextureWidth = 160;
+    public uint LocalTextureHeight = 120;
+    public uint RemoteTextureWidth = 640;
+    public uint RemoteTextureHeight = 480;
     
-    public RawImage Canvas;
-
-    public Camera Camera;
+    public RawImage LocalVideoImage;
+    public RawImage RemoteVideoImage;
 
 	void Awake()
     {
@@ -32,67 +32,92 @@ public class ControlScript : MonoBehaviour
 
     private void OnEnable()
     {
-        Plugin.CreateMediaPlayback();
-        GetPlaybackTextureFromPlugin();
+        Plugin.CreateLocalMediaPlayback();
+        Plugin.CreateRemoteMediaPlayback();
+        GetPlaybackTexturesFromPlugin();
     }
 
     private void OnDisable()
     {
-        Plugin.ReleaseMediaPlayback();
+        Plugin.ReleaseLocalMediaPlayback();
+        Plugin.ReleaseRemoteMediaPlayback();
     }
 
     void Update()
     {
     }
 
-    public void CreateMediaStreamSource(object track, string type, string id)
+    public void CreateLocalMediaStreamSource(object track, string type, string id)
     {
 #if !UNITY_EDITOR
         MediaVideoTrack videoTrack = (MediaVideoTrack)track;
         var source = Media.CreateMedia().CreateMediaStreamSource(videoTrack, type, id);
-        Plugin.LoadMediaStreamSource((MediaStreamSource)source);
-        Plugin.Play();
+        Plugin.LoadLocalMediaStreamSource((MediaStreamSource)source);
+        Plugin.LocalPlay();
 #endif
     }
 
-    private void GetPlaybackTextureFromPlugin()
+    public void CreateRemoteMediaStreamSource(object track, string type, string id)
     {
-        IntPtr nativeTex = IntPtr.Zero;
-        Plugin.GetPrimaryTexture(TextureWidth, TextureHeight, out nativeTex);
-        var primaryPlaybackTexture = Texture2D.CreateExternalTexture((int)TextureWidth, (int)TextureHeight, TextureFormat.BGRA32, false, false, nativeTex);
+#if !UNITY_EDITOR
+        MediaVideoTrack videoTrack = (MediaVideoTrack)track;
+        var source = Media.CreateMedia().CreateMediaStreamSource(videoTrack, type, id);
+        Plugin.LoadRemoteMediaStreamSource((MediaStreamSource)source);
+        Plugin.RemotePlay();
+#endif
+    }
 
-        Canvas.texture = primaryPlaybackTexture;
+    private void GetPlaybackTexturesFromPlugin()
+    {
+        IntPtr localNativeTex = IntPtr.Zero;
+        IntPtr remoteNativeTex = IntPtr.Zero;
+        Plugin.GetLocalPrimaryTexture(LocalTextureWidth, LocalTextureHeight, out localNativeTex);
+        Plugin.GetRemotePrimaryTexture(RemoteTextureWidth, RemoteTextureHeight, out remoteNativeTex);
+        var localPrimaryPlaybackTexture = Texture2D.CreateExternalTexture((int)LocalTextureWidth, (int)LocalTextureHeight, TextureFormat.BGRA32, false, false, localNativeTex);
+        var remotePrimaryPlaybackTexture = Texture2D.CreateExternalTexture((int)RemoteTextureWidth, (int)RemoteTextureHeight, TextureFormat.BGRA32, false, false, remoteNativeTex);
+
+        LocalVideoImage.texture = localPrimaryPlaybackTexture;
+        RemoteVideoImage.texture = remotePrimaryPlaybackTexture;
     }
 
 	private static class Plugin
     {
-        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "CreateMediaPlayback")]
-        internal static extern void CreateMediaPlayback();
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "CreateLocalMediaPlayback")]
+        internal static extern void CreateLocalMediaPlayback();
 
-        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "ReleaseMediaPlayback")]
-        internal static extern void ReleaseMediaPlayback();
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "CreateRemoteMediaPlayback")]
+        internal static extern void CreateRemoteMediaPlayback();
 
-        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "GetPrimaryTexture")]
-        internal static extern void GetPrimaryTexture(UInt32 width, UInt32 height, out System.IntPtr playbackTexture);
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "ReleaseLocalMediaPlayback")]
+        internal static extern void ReleaseLocalMediaPlayback();
 
-        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LoadContent")]
-        internal static extern void LoadContent([MarshalAs(UnmanagedType.BStr)] string sourceURL);
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "ReleaseRemoteMediaPlayback")]
+        internal static extern void ReleaseRemoteMediaPlayback();
+
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "GetLocalPrimaryTexture")]
+        internal static extern void GetLocalPrimaryTexture(UInt32 width, UInt32 height, out System.IntPtr playbackTexture);
+
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "GetRemotePrimaryTexture")]
+        internal static extern void GetRemotePrimaryTexture(UInt32 width, UInt32 height, out System.IntPtr playbackTexture);
+
 #if !UNITY_EDITOR
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LoadLocalMediaStreamSource")]
+        internal static extern void LoadLocalMediaStreamSource(MediaStreamSource IMediaSourceHandler);
 
-        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LoadMediaSource")]
-        internal static extern void LoadMediaSource(IMediaSource IMediaSourceHandler);
-
-        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LoadMediaStreamSource")]
-        internal static extern void LoadMediaStreamSource(MediaStreamSource IMediaSourceHandler);
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LoadRemoteMediaStreamSource")]
+        internal static extern void LoadRemoteMediaStreamSource(MediaStreamSource IMediaSourceHandler);
 #endif
-    
-        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "Play")]
-        internal static extern void Play();
 
-        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "Pause")]
-        internal static extern void Pause();
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LocalPlay")]
+        internal static extern void LocalPlay();
 
-        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "Stop")]
-        internal static extern void Stop();
-	}
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "RemotePlay")]
+        internal static extern void RemotePlay();
+
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LocalPause")]
+        internal static extern void LocalPause();
+
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "RemotePause")]
+        internal static extern void RemotePause();
+    }
 }

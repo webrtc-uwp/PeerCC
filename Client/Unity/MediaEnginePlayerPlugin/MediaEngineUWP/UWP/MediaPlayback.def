@@ -6,10 +6,15 @@ LIBRARY
 EXPORTS
    UnityPluginLoad
    UnityPluginUnload   
-   CreateMediaPlayback   
-   ReleaseMediaPlayback
-   GetPrimaryTexture
-   LoadContent
-   LoadMediaStreamSource
-   Play
-   Pause
+   CreateLocalMediaPlayback   
+   CreateRemoteMediaPlayback   
+   ReleaseLocalMediaPlayback
+   ReleaseRemoteMediaPlayback
+   GetLocalPrimaryTexture
+   GetRemotePrimaryTexture
+   LoadLocalMediaStreamSource
+   LoadRemoteMediaStreamSource
+   LocalPlay
+   RemotePlay
+   LocalPause
+   RemotePause

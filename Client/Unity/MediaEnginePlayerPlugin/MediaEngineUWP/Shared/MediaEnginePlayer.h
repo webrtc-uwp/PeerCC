@@ -75,6 +75,8 @@ ref class MEPlayer: public MediaEngineNotifyCallback
 	MFVideoNormalizedRect					m_nRect;
     DXGI_FORMAT                             m_d3dFormat;
     MFARGB                                  m_bkgColor;
+	LPWSTR                                  m_pszTextureName;
+	LPWSTR                                  m_pszMediaSourceURL;
 
     HANDLE                                  m_TimerThreadHandle;
     CRITICAL_SECTION                        m_critSec;
@@ -89,7 +91,8 @@ internal:
 
 	delegate void VideoFrameTransferred(MEPlayer^ sender, int width, int height);
 
-    MEPlayer(Microsoft::WRL::ComPtr<ID3D11Device> unityD3DDevice);
+    MEPlayer(Microsoft::WRL::ComPtr<ID3D11Device> unityD3DDevice, Platform::String^ textureName,
+		Microsoft::WRL::ComPtr<ABI::Windows::Foundation::Collections::IMap<HSTRING, IInspectable*>> extensionManagerProperties);
 
     // DX11 related
     void CreateDX11Device();
@@ -110,10 +113,7 @@ internal:
 		UINT32 height,
 		_COM_Outptr_ ID3D11Texture2D** primaryTexture);
 
-	HRESULT SetMediaSourceFromPath(LPCWSTR pszContentLocation);
-	HRESULT SetMediaSource(ABI::Windows::Media::Core::IMediaSource* mediaSource);
 	HRESULT SetMediaStreamSource(Windows::Media::Core::IMediaStreamSource^ streamSource);
-	//HRESULT SetMediaStreamSource(ABI::Windows::Media::Core::IMediaStreamSource* mediaSource);
 
     // Media Engine related
     virtual void OnMediaEngineEvent(DWORD meEvent) override;
@@ -198,9 +198,7 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_primaryTextureSRV;
 
-	void SetupSchemeHandler();
-	Microsoft::WRL::ComPtr<ABI::Windows::Media::IMediaExtensionManager> _mediaExtensionManager;
-	Microsoft::WRL::ComPtr<ABI::Windows::Foundation::Collections::IMap<HSTRING, IInspectable*>> _extensionManagerProperties;
+	Microsoft::WRL::ComPtr<ABI::Windows::Foundation::Collections::IMap<HSTRING, IInspectable*>> m_extensionManagerProperties;
 };
 
 #endif /* MEPLAYER_H */

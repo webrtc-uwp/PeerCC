@@ -32,8 +32,6 @@ using namespace Windows::Foundation;
 using namespace Platform;
 
 using Microsoft::WRL::Wrappers::HStringReference;
-using ABI::Windows::Foundation::Collections::IMap;
-using ABI::Windows::Foundation::Collections::IPropertySet;
 
 // MediaEngineNotify: Implements the callback for Media Engine event notification.
 class MediaEngineNotify : public IMFMediaEngineNotify
@@ -100,7 +98,8 @@ public:
 	}
 };
 
-MEPlayer::MEPlayer(Microsoft::WRL::ComPtr<ID3D11Device> unityD3DDevice) :
+MEPlayer::MEPlayer(Microsoft::WRL::ComPtr<ID3D11Device> unityD3DDevice, Platform::String^ textureName,
+	Microsoft::WRL::ComPtr<ABI::Windows::Foundation::Collections::IMap<HSTRING, IInspectable*>> extensionManagerProperties) :
 	m_spDX11Device(nullptr),
 	m_spDX11UnityDevice(unityD3DDevice),
 	m_spDX11DeviceContext(nullptr),
@@ -116,13 +115,25 @@ MEPlayer::MEPlayer(Microsoft::WRL::ComPtr<ID3D11Device> unityD3DDevice) :
 	m_fEOS(FALSE),
 	m_fStopTimer(TRUE),
 	m_d3dFormat(DXGI_FORMAT_B8G8R8A8_UNORM),
+	m_pszMediaSourceURL(nullptr),
 	m_fInitSuccess(FALSE),
 	m_fExitApp(FALSE),
-	m_fUseDX(TRUE)
+	m_fUseDX(TRUE),
+	m_extensionManagerProperties(extensionManagerProperties)
 {
 	memset(&m_bkgColor, 0, sizeof(MFARGB));
 
 	InitializeCriticalSectionEx(&m_critSec, 0, 0);
+
+	size_t cchAllocationSize = 1 + ::wcslen(textureName->Data());
+	m_pszTextureName = (LPWSTR)::CoTaskMemAlloc(sizeof(WCHAR)*(cchAllocationSize));
+
+	if (m_pszTextureName == 0)
+	{
+		MEDIA::ThrowIfFailed(E_OUTOFMEMORY);
+	}
+
+	StringCchCopyW(m_pszTextureName, cchAllocationSize, textureName->Data());
 }
 
 MEPlayer::~MEPlayer()
@@ -266,7 +277,7 @@ void MEPlayer::CreateBackBuffers()
 		HRESULT hr = spDXGIResource->CreateSharedHandle(
 			nullptr,
 			DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE,
-			L"SharedTextureHandle",
+			m_pszTextureName,
 			&sharedHandle);
 		if (SUCCEEDED(hr))
 		{
@@ -378,8 +389,6 @@ void MEPlayer::Initialize(float width, float height)
 		UpdateForWindowSizeChange(width, height);
 
 		m_fInitSuccess = TRUE;
-
-		SetupSchemeHandler();
 	}
 	catch (Platform::Exception^)
 	{
@@ -397,6 +406,12 @@ void MEPlayer::Shutdown()
 
 	StopTimer();
 
+	HRESULT hr = m_extensionManagerProperties->Remove(HStringReference(m_pszMediaSourceURL).Get());
+	if (FAILED(hr))
+	{
+		throw ref new COMException(hr, ref new String(L"Failed to remove a media stream from media properties"));
+	}
+
 	if (m_spMediaEngine)
 	{
 		m_spMediaEngine->Shutdown();
@@ -406,6 +421,13 @@ void MEPlayer::Shutdown()
 	{
 		::CoTaskMemFree(m_bstrURL);
 	}
+
+	if (nullptr != m_pszMediaSourceURL)
+	{
+		::CoTaskMemFree(m_pszMediaSourceURL);
+	}
+
+	::CoTaskMemFree(m_pszTextureName);
 
 	LeaveCriticalSection(&m_critSec);
 
@@ -451,31 +473,6 @@ void MEPlayer::SetBytestream(IRandomAccessStream^ streamHandle)
 	return;
 }
 
-HRESULT MEPlayer::SetMediaSourceFromPath(LPCWSTR pszContentLocation)
-{
-	// create the media source for content (fromUri)
-	ComPtr<IMediaSource2> spMediaSource2;
-	IFR(CreateMediaSource(pszContentLocation, &spMediaSource2));
-
-	// create playbackitem from source
-	ComPtr<IMediaPlaybackItemFactory> spItemFactory;
-	IFR(ABI::Windows::Foundation::GetActivationFactory(
-		Wrappers::HStringReference(RuntimeClass_Windows_Media_Playback_MediaPlaybackItem).Get(),
-		&spItemFactory));
-
-	ComPtr<IMediaPlaybackItem> spItem;
-	IFR(spItemFactory->Create(spMediaSource2.Get(), &spItem));
-
-	ComPtr<IMediaPlaybackSource> spMediaPlaybackSource;
-	IFR(spItem.As(&spMediaPlaybackSource));
-
-	//ComPtr<IMediaEnginePlaybackSource> spEngineSource;
-	//IFR(m_spEngineEx.As(&spEngineSource));
-	//IFR(spEngineSource->SetPlaybackSource(spMediaPlaybackSource.Get()));
-
-	return S_OK;
-}
-
 HRESULT MEPlayer::GetPrimaryTexture(UINT32 width, UINT32 height, void ** primarySRV)
 {
 	if (width < 1 || height < 1 || nullptr == primarySRV)
@@ -506,84 +503,8 @@ HRESULT MEPlayer::GetPrimary2DTexture(UINT32 width, UINT32 height, ID3D11Texture
 	return S_OK;
 }
 
-HRESULT MEPlayer::SetMediaSource(ABI::Windows::Media::Core::IMediaSource * mediaSource)
-{
-	 // create the media source for content (from MediaSource)
-	 ComPtr<IMediaSource2> spMediaSource2;
-	IFR(CreateMediaSource2FromMediaSource(mediaSource, &spMediaSource2));
-
-	// create playbackitem from source
-	ComPtr<IMediaPlaybackItemFactory> spItemFactory;
-	IFR(ABI::Windows::Foundation::GetActivationFactory(
-		Wrappers::HStringReference(RuntimeClass_Windows_Media_Playback_MediaPlaybackItem).Get(),
-		&spItemFactory));
-
-	ComPtr<IMediaPlaybackItem> spItem;
-	IFR(spItemFactory->Create(spMediaSource2.Detach(), &spItem));
-
-	ComPtr<IMediaPlaybackSource> spMediaPlaybackSource;
-	IFR(spItem.As(&spMediaPlaybackSource));
-
-	//ComPtr<IMediaEnginePlaybackSource> spEngineSource;
-	//IFR(m_spEngineEx.As(&spEngineSource));
-	//IFR(spEngineSource->SetPlaybackSource(spMediaPlaybackSource.Get()));
-
-	return S_OK;
-}
-
-void MEPlayer::SetupSchemeHandler()
-{
-	using Windows::Foundation::ActivateInstance;
-	// Create a media extension manager.  It's used to register a scheme handler.
-	HRESULT hr = ActivateInstance(HStringReference(RuntimeClass_Windows_Media_MediaExtensionManager).Get(), &_mediaExtensionManager);
-	if (FAILED(hr))
-	{
-		throw ref new COMException(hr, ref new String(L"Failed to create media extension manager"));
-	}
-	// Create an IMap container.  It maps a source URL with an IMediaSource so it can be retrieved by the scheme handler.
-	ComPtr<IMap<HSTRING, IInspectable*>> props;
-	hr = ActivateInstance(HStringReference(RuntimeClass_Windows_Foundation_Collections_PropertySet).Get(), &props);
-	if (FAILED(hr))
-	{
-		throw ref new COMException(hr, ref new String(L"Failed to create collection property set"));
-	}
-	// Register the scheme handler.  It takes the IMap container so it can be passed to the scheme
-	// handler when its invoked with a given source URL.
-	// The SchemeHandler will extract the IMediaSource from the map.
-	ComPtr<IPropertySet> propSet;
-	props.As(&propSet);
-	HStringReference clsid(L"WebRtcScheme.SchemeHandler");
-	HStringReference scheme(L"webrtc:");
-	hr = _mediaExtensionManager->RegisterSchemeHandlerWithSettings(clsid.Get(), scheme.Get(), propSet.Get());
-	if (FAILED(hr))
-	{
-		throw ref new COMException(hr, ref new String(L"Failed to to register scheme handler"));
-	}
-	_extensionManagerProperties = props;
-}
-
 HRESULT MEPlayer::SetMediaStreamSource(Windows::Media::Core::IMediaStreamSource^ streamSource)
 {
-	// create the media source for content (from MediaSource)
-	//ComPtr<IMediaSource2> spMediaSource2;
-	//IFR(CreateMediaSource2FromMediaStreamSource(mediaSource, &spMediaSource2));
-
-	// create playbackitem from source
-	//ComPtr<IMediaPlaybackItemFactory> spItemFactory;
-	//IFR(ABI::Windows::Foundation::GetActivationFactory(
-	//	Wrappers::HStringReference(RuntimeClass_Windows_Media_Playback_MediaPlaybackItem).Get(),
-	//	&spItemFactory));
-
-	//ComPtr<IMediaPlaybackItem> spItem;
-	//IFR(spItemFactory->Create(spMediaSource2.Detach(), &spItem));
-
-	//ComPtr<IMediaPlaybackSource> spMediaPlaybackSource;
-	//IFR(spItem.As(&spMediaPlaybackSource));
-
-	//ComPtr<IMediaEnginePlaybackSource> spEngineSource;
-	//IFR(m_spEngineEx.As(&spEngineSource));
-	//IFR(spEngineSource->SetPlaybackSource(spMediaPlaybackSource.Get()));
-
 	boolean replaced;
 	auto streamInspect = reinterpret_cast<IInspectable*>(streamSource);
 	// Create a random URL that we'll use to map to the media source.
@@ -597,11 +518,19 @@ HRESULT MEPlayer::SetMediaStreamSource(Windows::Media::Core::IMediaStreamSource^
 	Guid gd(result);
 	url += gd.ToString()->Data();
 	// Insert the url and the media source in the map.
-	hr = _extensionManagerProperties->Insert(HStringReference(url.c_str()).Get(), streamInspect, &replaced);
+	hr = m_extensionManagerProperties->Insert(HStringReference(url.c_str()).Get(), streamInspect, &replaced);
 	if (FAILED(hr))
 	{
 		throw ref new COMException(hr, ref new String(L"Failed to insert a media stream into media properties"));
 	}
+	size_t cchAllocationSize = 1 + ::wcslen(url.c_str());
+	m_pszMediaSourceURL = (LPWSTR)::CoTaskMemAlloc(sizeof(WCHAR)*(cchAllocationSize));
+	if (m_pszMediaSourceURL == 0)
+	{
+		MEDIA::ThrowIfFailed(E_OUTOFMEMORY);
+	}
+	StringCchCopyW(m_pszMediaSourceURL, cchAllocationSize, url.c_str());
+
 	// Set the source URL on the media engine.
 	// The scheme handler will find the media source for the given URL and
 	// return it to the media engine.

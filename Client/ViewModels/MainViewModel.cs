@@ -734,7 +734,7 @@ namespace PeerConnectionClient.ViewModels
                     UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
                     {
                         UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                        go.GetComponent<ControlScript>().CreateMediaStreamSource(_peerVideoTrack, "I420", "PEER");
+                        go.GetComponent<ControlScript>().CreateRemoteMediaStreamSource(_peerVideoTrack, "I420", "PEER");
                     }
                     ), false);
                 }
@@ -795,17 +795,15 @@ namespace PeerConnectionClient.ViewModels
                     });
                 if (VideoLoopbackEnabled)
                 {
-                    /*
                     if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
                     {
                         UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
                         {
                             UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                            go.GetComponent<ControlScript>().CreateMediaStreamSource(_selfVideoTrack, "I420", "SELF");
+                            go.GetComponent<ControlScript>().CreateLocalMediaStreamSource(_selfVideoTrack, "I420", "SELF");
                         }
                         ), false);
                     }
-                    */
                     //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
                 }
             }
