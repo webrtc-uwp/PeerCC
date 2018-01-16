@@ -32,15 +32,10 @@ public class ControlScript : MonoBehaviour
 
     private void OnEnable()
     {
-        Plugin.CreateLocalMediaPlayback();
-        Plugin.CreateRemoteMediaPlayback();
-        GetPlaybackTexturesFromPlugin();
     }
 
     private void OnDisable()
     {
-        Plugin.ReleaseLocalMediaPlayback();
-        Plugin.ReleaseRemoteMediaPlayback();
     }
 
     void Update()
@@ -49,6 +44,11 @@ public class ControlScript : MonoBehaviour
 
     public void CreateLocalMediaStreamSource(object track, string type, string id)
     {
+        Plugin.CreateLocalMediaPlayback();
+        IntPtr nativeTex = IntPtr.Zero;
+        Plugin.GetLocalPrimaryTexture(LocalTextureWidth, LocalTextureHeight, out nativeTex);
+        var primaryPlaybackTexture = Texture2D.CreateExternalTexture((int)LocalTextureWidth, (int)LocalTextureHeight, TextureFormat.BGRA32, false, false, nativeTex);
+        LocalVideoImage.texture = primaryPlaybackTexture;
 #if !UNITY_EDITOR
         MediaVideoTrack videoTrack = (MediaVideoTrack)track;
         var source = Media.CreateMedia().CreateMediaStreamSource(videoTrack, type, id);
@@ -57,8 +57,19 @@ public class ControlScript : MonoBehaviour
 #endif
     }
 
+    public void DestroyLocalMediaStreamSource()
+    {
+        LocalVideoImage.texture = null;
+        Plugin.ReleaseLocalMediaPlayback();
+    }
+
     public void CreateRemoteMediaStreamSource(object track, string type, string id)
     {
+        Plugin.CreateRemoteMediaPlayback();
+        IntPtr nativeTex = IntPtr.Zero;
+        Plugin.GetRemotePrimaryTexture(RemoteTextureWidth, RemoteTextureHeight, out nativeTex);
+        var primaryPlaybackTexture = Texture2D.CreateExternalTexture((int)RemoteTextureWidth, (int)RemoteTextureHeight, TextureFormat.BGRA32, false, false, nativeTex);
+        RemoteVideoImage.texture = primaryPlaybackTexture;
 #if !UNITY_EDITOR
         MediaVideoTrack videoTrack = (MediaVideoTrack)track;
         var source = Media.CreateMedia().CreateMediaStreamSource(videoTrack, type, id);
@@ -67,20 +78,13 @@ public class ControlScript : MonoBehaviour
 #endif
     }
 
-    private void GetPlaybackTexturesFromPlugin()
+    public void DestroyRemoteMediaStreamSource()
     {
-        IntPtr localNativeTex = IntPtr.Zero;
-        IntPtr remoteNativeTex = IntPtr.Zero;
-        Plugin.GetLocalPrimaryTexture(LocalTextureWidth, LocalTextureHeight, out localNativeTex);
-        Plugin.GetRemotePrimaryTexture(RemoteTextureWidth, RemoteTextureHeight, out remoteNativeTex);
-        var localPrimaryPlaybackTexture = Texture2D.CreateExternalTexture((int)LocalTextureWidth, (int)LocalTextureHeight, TextureFormat.BGRA32, false, false, localNativeTex);
-        var remotePrimaryPlaybackTexture = Texture2D.CreateExternalTexture((int)RemoteTextureWidth, (int)RemoteTextureHeight, TextureFormat.BGRA32, false, false, remoteNativeTex);
-
-        LocalVideoImage.texture = localPrimaryPlaybackTexture;
-        RemoteVideoImage.texture = remotePrimaryPlaybackTexture;
+        RemoteVideoImage.texture = null;
+        Plugin.ReleaseRemoteMediaPlayback();
     }
 
-	private static class Plugin
+    private static class Plugin
     {
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "CreateLocalMediaPlayback")]
         internal static extern void CreateLocalMediaPlayback();

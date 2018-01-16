@@ -411,6 +411,18 @@ namespace PeerConnectionClient.ViewModels
                 RunOnUiThread(() =>
                 {
                     IsConnectedToPeer = false;
+
+                    if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
+                    {
+                        UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
+                        {
+                            UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
+                            go.GetComponent<ControlScript>().DestroyLocalMediaStreamSource();
+                            go.GetComponent<ControlScript>().DestroyRemoteMediaStreamSource();
+                        }
+                        ), false);
+                    }
+
                     //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
                     //PeerVideo.Source = null;
 
@@ -755,6 +767,16 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="evt">Details about Media stream event.</param>
         private void Conductor_OnRemoveRemoteStream(MediaStreamEvent evt)
         {
+            if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
+            {
+                UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
+                {
+                    UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
+                    go.GetComponent<ControlScript>().DestroyRemoteMediaStreamSource();
+                }
+                ), false);
+            }
+
             RunOnUiThread(() =>
             {
                 //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);

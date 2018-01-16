@@ -76,7 +76,7 @@ ref class MEPlayer: public MediaEngineNotifyCallback
     DXGI_FORMAT                             m_d3dFormat;
     MFARGB                                  m_bkgColor;
 	LPWSTR                                  m_pszTextureName;
-	LPWSTR                                  m_pszMediaSourceURL;
+	HANDLE                                  m_sharedTextureHandle;
 
     HANDLE                                  m_TimerThreadHandle;
     CRITICAL_SECTION                        m_critSec;

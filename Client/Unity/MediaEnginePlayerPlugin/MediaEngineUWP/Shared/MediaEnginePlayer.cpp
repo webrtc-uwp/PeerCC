@@ -115,7 +115,7 @@ MEPlayer::MEPlayer(Microsoft::WRL::ComPtr<ID3D11Device> unityD3DDevice, Platform
 	m_fEOS(FALSE),
 	m_fStopTimer(TRUE),
 	m_d3dFormat(DXGI_FORMAT_B8G8R8A8_UNORM),
-	m_pszMediaSourceURL(nullptr),
+	m_sharedTextureHandle(0),
 	m_fInitSuccess(FALSE),
 	m_fExitApp(FALSE),
 	m_fUseDX(TRUE),
@@ -281,6 +281,7 @@ void MEPlayer::CreateBackBuffers()
 			&sharedHandle);
 		if (SUCCEEDED(hr))
 		{
+			m_sharedTextureHandle = sharedHandle;
 			ComPtr<ID3D11Device1> spMediaDevice;
 			hr = spDevice.As(&spMediaDevice);
 			if (SUCCEEDED(hr))
@@ -329,7 +330,6 @@ void MEPlayer::Initialize(float width, float height)
 
 	try
 	{
-
 		// Create DX11 device.    
 		CreateDX11Device();
 
@@ -406,11 +406,7 @@ void MEPlayer::Shutdown()
 
 	StopTimer();
 
-	HRESULT hr = m_extensionManagerProperties->Remove(HStringReference(m_pszMediaSourceURL).Get());
-	if (FAILED(hr))
-	{
-		throw ref new COMException(hr, ref new String(L"Failed to remove a media stream from media properties"));
-	}
+	CloseHandle(m_sharedTextureHandle);
 
 	if (m_spMediaEngine)
 	{
@@ -420,11 +416,6 @@ void MEPlayer::Shutdown()
 	if (nullptr != m_bstrURL)
 	{
 		::CoTaskMemFree(m_bstrURL);
-	}
-
-	if (nullptr != m_pszMediaSourceURL)
-	{
-		::CoTaskMemFree(m_pszMediaSourceURL);
 	}
 
 	::CoTaskMemFree(m_pszTextureName);
@@ -523,13 +514,6 @@ HRESULT MEPlayer::SetMediaStreamSource(Windows::Media::Core::IMediaStreamSource^
 	{
 		throw ref new COMException(hr, ref new String(L"Failed to insert a media stream into media properties"));
 	}
-	size_t cchAllocationSize = 1 + ::wcslen(url.c_str());
-	m_pszMediaSourceURL = (LPWSTR)::CoTaskMemAlloc(sizeof(WCHAR)*(cchAllocationSize));
-	if (m_pszMediaSourceURL == 0)
-	{
-		MEDIA::ThrowIfFailed(E_OUTOFMEMORY);
-	}
-	StringCchCopyW(m_pszMediaSourceURL, cchAllocationSize, url.c_str());
 
 	// Set the source URL on the media engine.
 	// The scheme handler will find the media source for the given URL and
