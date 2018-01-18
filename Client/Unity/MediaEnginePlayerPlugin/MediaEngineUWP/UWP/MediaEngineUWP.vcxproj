@@ -123,7 +123,7 @@
     </Link>
     <PostBuildEvent>
       <Command>SETLOCAL
-      set TARGET_PLUGIN_PATH=$(ProjectDir)..\..\..\UnityVideoSurface\Assets\
+      set TARGET_PLUGIN_PATH=$(ProjectDir)..\..\..\UnityVideoControl\Assets\
 
       echo Target Plugin Path is %TARGET_PLUGIN_PATH%
 
@@ -157,7 +157,7 @@ ENDLOCAL
     </Link>
     <PostBuildEvent>
       <Command>SETLOCAL
-      set TARGET_PLUGIN_PATH=$(ProjectDir)..\..\..\UnityVideoSurface\Assets\
+      set TARGET_PLUGIN_PATH=$(ProjectDir)..\..\..\UnityVideoControl\Assets\
 
       echo Target Plugin Path is %TARGET_PLUGIN_PATH%
 

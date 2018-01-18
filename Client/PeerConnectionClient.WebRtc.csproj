@@ -385,15 +385,15 @@
   </_GenerateAppxManifestDependsOn>
   </PropertyGroup>
   <Target Name="BeforeResolveReferences" Condition="'$(BuildingProject)' == 'true'">
-    <Copy SourceFiles="$(ProjectDir)Unity\UnityVideoSurface\Assets\Plugins\WSA\$(PlatformShortName)\Org.WebRtc.dll" DestinationFiles="$(ProjectDir)Org.WebRtc.dll" />
-    <Copy SourceFiles="$(ProjectDir)Unity\UnityVideoSurface\Assets\Plugins\WSA\$(PlatformShortName)\Org.WebRtc.winmd" DestinationFiles="$(ProjectDir)Org.WebRtc.winmd" />
+    <Copy SourceFiles="$(ProjectDir)Unity\UnityVideoControl\Assets\Plugins\WSA\$(PlatformShortName)\Org.WebRtc.dll" DestinationFiles="$(ProjectDir)Org.WebRtc.dll" />
+    <Copy SourceFiles="$(ProjectDir)Unity\UnityVideoControl\Assets\Plugins\WSA\$(PlatformShortName)\Org.WebRtc.winmd" DestinationFiles="$(ProjectDir)Org.WebRtc.winmd" />
     <Delete Files="$(ProjectDir)Org.WebRtc.pdb" Condition="Exists('$(ProjectDir)Org.WebRtc.pdb')" />
     <Delete Files="$(ProjectDir)Org.WebRtc.dll.mdb" Condition="Exists('$(ProjectDir)Org.WebRtc.dll.mdb')" />
-    <Copy SourceFiles="$(ProjectDir)Unity\UnityVideoSurface\Assets\Plugins\WSA\$(PlatformShortName)\Org.WebRtc.pdb" DestinationFiles="$(ProjectDir)Org.WebRtc.pdb" Condition="Exists('$(ProjectDir)Unity\UnityVideoSurface\Assets\Plugins\WSA\$(PlatformShortName)\Org.WebRtc.pdb')" />
-    <Copy SourceFiles="$(ProjectDir)Unity\UnityVideoSurface\Assets\Plugins\WSA\$(PlatformShortName)\MediaEngineUWP.dll" DestinationFiles="$(ProjectDir)MediaEngineUWP.dll" />
+    <Copy SourceFiles="$(ProjectDir)Unity\UnityVideoControl\Assets\Plugins\WSA\$(PlatformShortName)\Org.WebRtc.pdb" DestinationFiles="$(ProjectDir)Org.WebRtc.pdb" Condition="Exists('$(ProjectDir)Unity\UnityVideoControl\Assets\Plugins\WSA\$(PlatformShortName)\Org.WebRtc.pdb')" />
+    <Copy SourceFiles="$(ProjectDir)Unity\UnityVideoControl\Assets\Plugins\WSA\$(PlatformShortName)\MediaEngineUWP.dll" DestinationFiles="$(ProjectDir)MediaEngineUWP.dll" />
     <Delete Files="$(ProjectDir)MediaEngineUWP.pdb" Condition="Exists('$(ProjectDir)MediaEngineUWP.pdb')" />
     <Delete Files="$(ProjectDir)MediaEngineUWP.dll.mdb" Condition="Exists('$(ProjectDir)MediaEngineUWP.dll.mdb')" />
-    <Copy SourceFiles="$(ProjectDir)Unity\UnityVideoSurface\Assets\Plugins\WSA\$(PlatformShortName)\MediaEngineUWP.pdb" DestinationFiles="$(ProjectDir)MediaEngineUWP.pdb" Condition="Exists('$(ProjectDir)Unity\UnityVideoSurface\Assets\Plugins\WSA\$(PlatformShortName)\MediaEngineUWP.pdb')" />
+    <Copy SourceFiles="$(ProjectDir)Unity\UnityVideoControl\Assets\Plugins\WSA\$(PlatformShortName)\MediaEngineUWP.pdb" DestinationFiles="$(ProjectDir)MediaEngineUWP.pdb" Condition="Exists('$(ProjectDir)Unity\UnityVideoControl\Assets\Plugins\WSA\$(PlatformShortName)\MediaEngineUWP.pdb')" />
   </Target>
   <Target Name="ModifyAppXPackage" Condition="'$(BuildingProject)' == 'true'">
     <Message Importance="high" Text="UnityWSAPlayerDir &quot;$(UnityWSAPlayerDir)&quot;." />
