@@ -159,14 +159,14 @@
                                RelativePanel.AlignTopWithPanel="True">
                     <SwapChainPanel x:Name="DXSwapChainPanel" MinWidth="1024" MinHeight="768">
                     </SwapChainPanel>
-                    <!-- MediaElement 
+                    <MediaElement 
                         Name="PeerVideo"
                         RealTimePlayback="True"
                         RelativePanel.AlignLeftWithPanel="True"
                         RelativePanel.AlignRightWithPanel="True"
                         RelativePanel.AlignBottomWithPanel="True"
                         RelativePanel.AlignTopWithPanel="True"
-                        MediaFailed="PeerVideo_MediaFailed"/ -->
+                        MediaFailed="PeerVideo_MediaFailed"/>
                     <Border Width="38" Background="White">
                         <StackPanel VerticalAlignment="Bottom"
                                     Visibility="{Binding IsConnectedToPeer, Converter={StaticResource BoolToVisConverter}}"
@@ -246,17 +246,12 @@
                 RelativePanel.AlignBottomWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True">
                 <Grid>
-                    <!-- SwapChainPanel x:Name="DXSwapChainPanel" Grid.RowSpan="1" Grid.ColumnSpan="1">
-                        <Grid x:Name="ExtendedSplashGrid" Background="#FFFFFF">
-                            <Image x:Name="ExtendedSplashImage" Source="Assets/SplashScreen.png" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                        </Grid>
-                    </SwapChainPanel -->
-                    <!--MediaElement 
+                    <MediaElement 
                         Width="200"
                         Height="200"
                         RealTimePlayback="True"
                         Name="SelfVideo"
-                        MediaFailed="SelfVideo_MediaFailed"/ -->
+                        MediaFailed="SelfVideo_MediaFailed"/>
                     <Border Background="White" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="110">
                         <TextBlock Foreground="Black" VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Run Text="{Binding SelfWidth}"/>

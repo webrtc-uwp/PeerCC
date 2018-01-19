@@ -28,7 +28,9 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+#if UNITY
 using UnityPlayer;
+#endif
 
 namespace PeerConnectionClient
 {
@@ -39,12 +41,14 @@ namespace PeerConnectionClient
     {
         private MainViewModel _mainViewModel;
 
+#if UNITY
         private WinRTBridge.WinRTBridge _bridge;
 
         private SplashScreen splash;
         private Rect splashImageRect;
         private WindowSizeChangedEventHandler onResizeHandler;
         private bool isPhone = false;
+#endif
 
         /// <summary>
         /// Constructor.
@@ -54,6 +58,7 @@ namespace PeerConnectionClient
             this.InitializeComponent();
             NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Required;
 
+#if UNITY
             AppCallbacks appCallbacks = AppCallbacks.Instance;
             // Setup scripting bridge
             _bridge = new WinRTBridge.WinRTBridge();
@@ -91,6 +96,11 @@ namespace PeerConnectionClient
                 onResizeHandler = new WindowSizeChangedEventHandler((o, e) => OnResize());
                 Window.Current.SizeChanged += onResizeHandler;
             }
+            PeerVideo.Visibility = Visibility.Collapsed;
+            SelfVideo.Visibility = Visibility.Collapsed;
+#else
+            DXSwapChainPanel.Visibility = Visibility.Collapsed;
+#endif // UNITY
         }
 
         /// <summary>
@@ -102,13 +112,17 @@ namespace PeerConnectionClient
         {
             _mainViewModel = (MainViewModel)e.Parameter;
             this.DataContext = _mainViewModel;
-            //_mainViewModel.PeerVideo = PeerVideo;
-            //_mainViewModel.SelfVideo = SelfVideo;
-
+#if UNITY
             //splash = (SplashScreen)e.Parameter;
             OnResize();
+#else
+            _mainViewModel.PeerVideo = PeerVideo;
+            _mainViewModel.SelfVideo = SelfVideo;
+#endif
+
         }
 
+#if UNITY
         private void OnResize()
         {
             if (splash != null)
@@ -191,6 +205,7 @@ namespace PeerConnectionClient
         {
             return new UnityPlayer.XamlPageAutomationPeer(this);
         }
+#endif
 
         /// <summary>
         /// Invoked when the Add button is clicked 

@@ -412,6 +412,7 @@ namespace PeerConnectionClient.ViewModels
                 {
                     IsConnectedToPeer = false;
 
+#if UNITY
                     if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
                     {
                         UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
@@ -422,15 +423,15 @@ namespace PeerConnectionClient.ViewModels
                         }
                         ), false);
                     }
-
-                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
+#else
+                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
                     //PeerVideo.Source = null;
 
-                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
+                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
                     //SelfVideo.Stop();
                     //SelfVideo.ClearValue(MediaElement.SourceProperty);
                     //SelfVideo.Source = null;
-
+#endif
                     _peerVideoTrack = null;
                     _selfVideoTrack = null;
                     GC.Collect(); // Ensure all references are truly dropped.
@@ -741,6 +742,7 @@ namespace PeerConnectionClient.ViewModels
             _peerVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
             if (_peerVideoTrack != null)
             {
+#if UNITY
                 if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
                 {
                     UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
@@ -750,12 +752,14 @@ namespace PeerConnectionClient.ViewModels
                     }
                     ), false);
                 }
-                //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
+#else
+                Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
                 //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
                 //RunOnUiThread(() =>
                 //{
-                //  PeerVideo.SetMediaStreamSource(source);
+                //    PeerVideo.SetMediaStreamSource(source);
                 //});
+#endif
             }
 
             IsReadyToDisconnect = true;
@@ -767,6 +771,7 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="evt">Details about Media stream event.</param>
         private void Conductor_OnRemoveRemoteStream(MediaStreamEvent evt)
         {
+#if UNITY
             if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
             {
                 UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
@@ -776,20 +781,21 @@ namespace PeerConnectionClient.ViewModels
                 }
                 ), false);
             }
-
+#else
             RunOnUiThread(() =>
             {
-                //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
+                Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
                 //PeerVideo.SetMediaStreamSource(null);
             });
+#endif
         }
 #endif
 
-        /// <summary>
-        /// Add local stream event handler.
-        /// </summary>
-        /// <param name="evt">Details about Media stream event.</param>
-        private void Conductor_OnAddLocalStream(MediaStreamEvent evt)
+            /// <summary>
+            /// Add local stream event handler.
+            /// </summary>
+            /// <param name="evt">Details about Media stream event.</param>
+            private void Conductor_OnAddLocalStream(MediaStreamEvent evt)
         {
           _selfVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
           if (_selfVideoTrack != null)
@@ -817,6 +823,7 @@ namespace PeerConnectionClient.ViewModels
                     });
                 if (VideoLoopbackEnabled)
                 {
+#if UNITY
                     if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
                     {
                         UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
@@ -826,7 +833,9 @@ namespace PeerConnectionClient.ViewModels
                         }
                         ), false);
                     }
-                    //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
+#else
+                    Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
+#endif
                 }
             }
         }
@@ -861,7 +870,8 @@ namespace PeerConnectionClient.ViewModels
             });
         }
 #endif
-                    #region Bindings
+
+#region Bindings
 
         private ValidableNonEmptyString _ntpServer;
 
@@ -1586,13 +1596,25 @@ namespace PeerConnectionClient.ViewModels
                         {
                             Debug.WriteLine("Enabling video loopback");
 
-                            //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
+#if UNITY
+                            if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
+                            {
+                                UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
+                                {
+                                    UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
+                                    go.GetComponent<ControlScript>().CreateRemoteMediaStreamSource(_peerVideoTrack, "I420", "PEER");
+                                }
+                                ), false);
+                            }
+#else
+                            Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
                             //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
                             //RunOnUiThread(() =>
                             //{
                             //    SelfVideo.SetMediaStreamSource(source);
                             //    Debug.WriteLine("Video loopback enabled");
                             //});
+#endif
                         }
                     }
                     else
@@ -1605,10 +1627,22 @@ namespace PeerConnectionClient.ViewModels
                         // internal stream source is destroyed.
                         // Apparently, with webrtc package version < 1.1.175, the internal stream source was destroyed
                         // corectly, only by setting SelfVideo.Source to null.
-                        //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
+#if UNITY
+                        if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
+                        {
+                            UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
+                            {
+                                UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
+                                go.GetComponent<ControlScript>().DestroyRemoteMediaStreamSource();
+                            }
+                            ), false);
+                        }
+#else
+                        Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
                         //SelfVideo.Source = null;
                         //SelfVideo.Stop();
                         //SelfVideo.Source = null;
+#endif
                         GC.Collect(); // Ensure all references are truly dropped.
                     }
                 }
@@ -1996,8 +2030,10 @@ namespace PeerConnectionClient.ViewModels
             set { SetProperty(ref _showLoopbackVideo, value); }
         }
 
+#if !UNITY
         public MediaElement SelfVideo;
         public MediaElement PeerVideo;
+#endif
 
 #endregion
 
@@ -2154,7 +2190,7 @@ namespace PeerConnectionClient.ViewModels
 /*#if !WINDOWS_UAP // Disable on Win10 for now.
             HockeyClient.Current.ShowFeedback();
 #endif*/
-            }
+    }
 
     private bool _settingsButtonChecked;
 
