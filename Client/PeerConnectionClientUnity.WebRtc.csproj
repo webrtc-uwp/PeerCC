@@ -26,7 +26,7 @@
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\Output\PeerCC.Client\WebRtc\bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>..\Output\PeerCC.Client\WebRtc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;UNITY_METRO;UNITY_WSA;UNITY;UNITY_UWP;UNITY_WSA_10_0;CODE_ANALYSIS</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;UNITY;UNITY_METRO;UNITY_WSA;UNITY;UNITY_UWP;UNITY_WSA_10_0;CODE_ANALYSIS</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -37,7 +37,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>..\Output\PeerCC.Client\WebRtc\bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>..\Output\PeerCC.Client\WebRtc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;UNITY_METRO;UNITY_WSA;UNITY_UWP;UNITY_WSA_10_0</DefineConstants>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;UNITY;UNITY_METRO;UNITY_WSA;UNITY_UWP;UNITY_WSA_10_0</DefineConstants>
     <Optimize>true</Optimize>
     <NoWarn>;2008</NoWarn>
     <DebugType>pdbonly</DebugType>
@@ -51,7 +51,7 @@
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\Output\PeerCC.Client\WebRtc\bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>..\Output\PeerCC.Client\WebRtc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP;UNITY_METRO;UNITY_WSA;UNITY_UWP;UNITY_WSA_10_0</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP;UNITY;UNITY_METRO;UNITY_WSA;UNITY_UWP;UNITY_WSA_10_0</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>ARM</PlatformTarget>
@@ -62,7 +62,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
     <OutputPath>..\Output\PeerCC.Client\WebRtc\bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>..\Output\PeerCC.Client\WebRtc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;UNITY_METRO;UNITY_WSA;UNITY_UWP;UNITY_WSA_10_0</DefineConstants>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;UNITY;UNITY_METRO;UNITY_WSA;UNITY_UWP;UNITY_WSA_10_0</DefineConstants>
     <Optimize>true</Optimize>
     <NoWarn>;2008</NoWarn>
     <DebugType>pdbonly</DebugType>
@@ -76,7 +76,7 @@
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\Output\PeerCC.Client\WebRtc\bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>..\Output\PeerCC.Client\WebRtc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP;UNITY_METRO;UNITY_WSA;UNITY_UWP;UNITY_WSA_10_0</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP;UNITY;UNITY_METRO;UNITY_WSA;UNITY_UWP;UNITY_WSA_10_0</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -87,7 +87,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>..\Output\PeerCC.Client\WebRtc\bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>..\Output\PeerCC.Client\WebRtc\obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;UNITY_METRO;UNITY_WSA;UNITY_UWP;UNITY_WSA_10_0</DefineConstants>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;UNITY;UNITY_METRO;UNITY_WSA;UNITY_UWP;UNITY_WSA_10_0</DefineConstants>
     <Optimize>true</Optimize>
     <NoWarn>;2008</NoWarn>
     <DebugType>pdbonly</DebugType>
@@ -224,9 +224,6 @@
     <Reference Include="UnityEngine.AccessibilityModule">
       <HintPath>.\Unity\Unprocessed\UnityEngine.AccessibilityModule.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>.\Unity\Unprocessed\Assembly-CSharp.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEngine.ARModule">
       <HintPath>.\Unity\Unprocessed\UnityEngine.ARModule.dll</HintPath>
     </Reference>
@@ -330,6 +327,10 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\Unity\Unprocessed\$(PlatformShortName)\Assembly-CSharp.dll</HintPath>
+    </Reference>
     <Reference Include="UnityPlayer">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(UnityWSAPlayerDir)Players\UAP\dotnet\$(PlatformTarget)\$(Configuration)\UnityPlayer.winmd</HintPath>
@@ -360,6 +361,7 @@
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <ItemGroup>
     <UnprocessedFile Include="$(ProjectDir)Unity\Unprocessed\*" />
+	<UnprocessedFilePlatform Include="$(ProjectDir)Unity\Unprocessed\$(PlatformShortName)\*" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
@@ -400,6 +402,7 @@
     <Message Importance="high" Text="UnityProjectDir &quot;$(UnityProjectDir)&quot;." />
     <Message Importance="high" Text="Copying unprocessed assemblies..." />
     <Copy SourceFiles="@(UnprocessedFile)" DestinationFolder="$(ProjectDir)" />
+	<Copy SourceFiles="@(UnprocessedFilePlatform)" DestinationFolder="$(ProjectDir)" />
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <RemoveDebuggableAttribute>True</RemoveDebuggableAttribute>
     </PropertyGroup>
