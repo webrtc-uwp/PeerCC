@@ -172,9 +172,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
+    <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Uwp\Org.WebRtc.Uwp.vcxproj">
       <Project>{32a4abd8-eb1c-4198-b261-425e6caddbef}</Project>
-      <Name>Org.WebRtc</Name>
+      <Name>Org.WebRtc.Uwp</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
