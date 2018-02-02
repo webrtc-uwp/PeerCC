@@ -729,7 +729,7 @@ namespace PeerConnectionClient.ViewModels
                     UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
                     {
                         UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                        if (VideoCodecs.First().Name == "H264")
+                        if (SelectedVideoCodec.Name == "H264")
                         {
                             go.GetComponent<ControlScript>().CreateRemoteMediaStreamSource(_peerVideoTrack, "H264", "PEER");
                         } else

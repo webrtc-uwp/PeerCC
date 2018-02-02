@@ -103,7 +103,7 @@
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
     <OutDir>$(SolutionDir)Build\Output\$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</OutDir>
     <IntDir>$(SolutionDir)Build\Intermediate\$(PlatformTarget)\$(Configuration)\$(MSBuildProjectName)\</IntDir>
-    <TargetName>$(SolutionName)</TargetName>
+    <TargetName>MediaEngineUWP</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
