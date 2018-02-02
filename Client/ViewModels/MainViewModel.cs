@@ -483,11 +483,7 @@ namespace PeerConnectionClient.ViewModels
             {
                 foreach (var audioCodec in audioCodecList)
                 {
-#if ORTCLIB
                     if (!incompatibleAudioCodecs.Contains(audioCodec.Name + audioCodec.ClockRate))
-#else
-                    if (!incompatibleAudioCodecs.Contains(audioCodec.Name + audioCodec.ClockRate))
-#endif
                     {
                         AudioCodecs.Add(audioCodec);
                     }
@@ -495,21 +491,13 @@ namespace PeerConnectionClient.ViewModels
 
                 if (AudioCodecs.Count > 0)
                 {
-                    if (settings.Values["SelectedAudioCodecId"] != null)
+                    if (settings.Values["SelectedAudioCodecName"] != null)
                     {
-#if ORTCLIB
-                        byte id = Convert.ToByte(settings.Values["SelectedAudioCodecId"]);
-#else
-                        int id = Convert.ToInt32(settings.Values["SelectedAudioCodecId"]);
-#endif
+                        string name = Convert.ToString(settings.Values["SelectedAudioCodecName"]);
                         foreach (var audioCodec in AudioCodecs)
                         {
-#if ORTCLIB
-                            byte audioCodecId = audioCodec.PreferredPayloadType;
-#else
-                            int audioCodecId = audioCodec.Id;
-#endif
-                            if (audioCodecId == id)
+                            string audioCodecName = audioCodec.Name;
+                            if (audioCodecName == name)
                             {
                                 SelectedAudioCodec = audioCodec;
                                 break;
@@ -520,7 +508,7 @@ namespace PeerConnectionClient.ViewModels
                     {
                         SelectedAudioCodec = AudioCodecs.First();
                     }
-                }
+}
 
                 foreach (var videoCodec in videoCodecList)
                 {
@@ -529,21 +517,13 @@ namespace PeerConnectionClient.ViewModels
 
                 if (VideoCodecs.Count > 0)
                 {
-                    if (settings.Values["SelectedVideoCodecId"] != null)
+                    if (settings.Values["SelectedVideoCodecName"] != null)
                     {
-#if ORTCLIB
-                        byte id = Convert.ToByte(settings.Values["SelectedVideoCodecId"]);
-#else
-                        int id = Convert.ToInt32(settings.Values["SelectedVideoCodecId"]);
-#endif
+                        string name = Convert.ToString(settings.Values["SelectedVideoCodecName"]);
                         foreach (var videoCodec in VideoCodecs)
                         {
-#if ORTCLIB
-                            byte videoCodecId = videoCodec.PreferredPayloadType;
-#else
-                            int videoCodecId = videoCodec.Id;
-#endif
-                            if (videoCodecId == id)
+                            string videoCodecName = videoCodec.Name;
+                            if (videoCodecName == name)
                             {
                                 SelectedVideoCodec = videoCodec;
                                 break;
@@ -555,6 +535,7 @@ namespace PeerConnectionClient.ViewModels
                         SelectedVideoCodec = VideoCodecs.First();
                     }
                 }
+                
             });
             LoadSettings();
             RunOnUiThread(() =>
@@ -748,7 +729,13 @@ namespace PeerConnectionClient.ViewModels
                     UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
                     {
                         UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                        go.GetComponent<ControlScript>().CreateRemoteMediaStreamSource(_peerVideoTrack, "I420", "PEER");
+                        if (VideoCodecs.First().Name == "H264")
+                        {
+                            go.GetComponent<ControlScript>().CreateRemoteMediaStreamSource(_peerVideoTrack, "H264", "PEER");
+                        } else
+                        {
+                            go.GetComponent<ControlScript>().CreateRemoteMediaStreamSource(_peerVideoTrack, "I420", "PEER");
+                        }
                     }
                     ), false);
                 }
@@ -1772,11 +1759,7 @@ namespace PeerConnectionClient.ViewModels
                 Conductor.Instance.AudioCodec = value;
                 OnPropertyChanged(() => SelectedAudioCodec);
                 var localSettings = ApplicationData.Current.LocalSettings;
-#if ORTCLIB
-                localSettings.Values["SelectedAudioCodecId"] = Conductor.Instance.AudioCodec.PreferredPayloadType;
-#else
-                localSettings.Values["SelectedAudioCodecId"] = Conductor.Instance.AudioCodec.Id;
-#endif
+                localSettings.Values["SelectedAudioCodecName"] = Conductor.Instance.AudioCodec.Name;
             }
         }
 
@@ -1905,11 +1888,7 @@ namespace PeerConnectionClient.ViewModels
                 Conductor.Instance.VideoCodec = value;
                 OnPropertyChanged(() => SelectedVideoCodec);
                 var localSettings = ApplicationData.Current.LocalSettings;
-#if ORTCLIB
-                localSettings.Values["SelectedVideoCodecId"] = Conductor.Instance.VideoCodec.PreferredPayloadType;
-#else
-                localSettings.Values["SelectedVideoCodecId"] = Conductor.Instance.VideoCodec.Id;
-#endif
+                localSettings.Values["SelectedVideoCodecName"] = Conductor.Instance.VideoCodec.Name;
             }
         }
 
@@ -2250,7 +2229,7 @@ namespace PeerConnectionClient.ViewModels
             // Default values:
             var configTraceServerIp = "127.0.0.1";
             var configTraceServerPort = "55000";
-            var peerCcServerIp = new ValidableNonEmptyString("127.0.0.1");
+            var peerCcServerIp = new ValidableNonEmptyString("40.74.241.212");
             var ntpServerAddress = new ValidableNonEmptyString("time.windows.com");
             var peerCcPortInt = 8888;
 
@@ -2298,6 +2277,10 @@ namespace PeerConnectionClient.ViewModels
                 configIceServers.Add(new IceServer("stun2.l.google.com:19302", IceServer.ServerType.STUN));
                 configIceServers.Add(new IceServer("stun3.l.google.com:19302", IceServer.ServerType.STUN));
                 configIceServers.Add(new IceServer("stun4.l.google.com:19302", IceServer.ServerType.STUN));
+                IceServer myTurn = new IceServer("turnserver3dstreaming.centralus.cloudapp.azure.com:5349", IceServer.ServerType.TURN);
+                myTurn.Credential = "3Dtoolkit072017";
+                myTurn.Username = "user";
+                configIceServers.Add(myTurn);
             }
 
             if (settings.Values["NTPServer"] != null && (string)settings.Values["NTPServer"] !="" )

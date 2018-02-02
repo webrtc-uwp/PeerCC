@@ -12,8 +12,8 @@
     <AssemblyName>PeerConnectionClientUnity.WebRtc</AssemblyName>
     <DefaultLanguage>en</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.16299.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.16299.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.10586.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -21,6 +21,9 @@
     <AppxBundlePlatforms>$(Platform)</AppxBundlePlatforms>
     <PackageCertificateThumbprint>BB8A06CAEDBC89DD4FD493DAE421659FB98BEEB9</PackageCertificateThumbprint>
     <PlatformShortName>$(Platform)</PlatformShortName>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+    <AppxBundle>Always</AppxBundle>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -358,7 +361,7 @@
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <ItemGroup>
     <UnprocessedFile Include="$(ProjectDir)Unity\Unprocessed\*" />
-	<UnprocessedFilePlatform Include="$(ProjectDir)Unity\Unprocessed\$(PlatformShortName)\*" />
+    <UnprocessedFilePlatform Include="$(ProjectDir)Unity\Unprocessed\$(PlatformShortName)\*" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
@@ -399,7 +402,7 @@
     <Message Importance="high" Text="UnityProjectDir &quot;$(UnityProjectDir)&quot;." />
     <Message Importance="high" Text="Copying unprocessed assemblies..." />
     <Copy SourceFiles="@(UnprocessedFile)" DestinationFolder="$(ProjectDir)" />
-	<Copy SourceFiles="@(UnprocessedFilePlatform)" DestinationFolder="$(ProjectDir)" />
+    <Copy SourceFiles="@(UnprocessedFilePlatform)" DestinationFolder="$(ProjectDir)" />
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <RemoveDebuggableAttribute>True</RemoveDebuggableAttribute>
     </PropertyGroup>
