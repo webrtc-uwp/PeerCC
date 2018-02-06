@@ -146,19 +146,22 @@
             </RelativePanel>
 
             <Border 
+                Name="VideoBorder"
                 BorderThickness="1"
                 BorderBrush="Blue"
                 Margin="5" 
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 Visibility="{Binding IsConnectedToPeer, Converter={StaticResource BoolToVisConverter}}"
-                RelativePanel.RightOf="ControlPanel">
+                RelativePanel.RightOf="ControlPanel"
+                RelativePanel.AlignTopWithPanel="True"
+                RelativePanel.AlignBottomWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True">
                 <RelativePanel RelativePanel.AlignLeftWithPanel="True"
                                RelativePanel.AlignRightWithPanel="True"
                                RelativePanel.AlignBottomWithPanel="True"
                                RelativePanel.AlignTopWithPanel="True">
-                    <SwapChainPanel x:Name="DXSwapChainPanel" MinWidth="1024" MinHeight="768">
-                    </SwapChainPanel>
+                    <SwapChainPanel x:Name="DXSwapChainPanel" />
                     <MediaElement 
                         Name="PeerVideo"
                         RealTimePlayback="True"
@@ -203,11 +206,12 @@
                             </ToggleButton>
                         </StackPanel>
                     </Border>
-                    <Border Background="White" Width="110"
+                    <Border Background="White" Width="170"
                             RelativePanel.AlignBottomWithPanel="True"
                             RelativePanel.AlignLeftWithPanel="True"
                             Name="RemoteResFPSLabel">
                         <TextBlock Foreground="Black" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Run Text="Remote: "/>
                             <Run Text="{Binding PeerWidth}"/>
                             <Run Text="x"/>
                             <Run Text="{Binding PeerHeight}"/>
@@ -252,8 +256,9 @@
                         RealTimePlayback="True"
                         Name="SelfVideo"
                         MediaFailed="SelfVideo_MediaFailed"/>
-                    <Border Background="White" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="110">
+                    <Border Background="White" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="170">
                         <TextBlock Foreground="Black" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Run Text="Local: "/>
                             <Run Text="{Binding SelfWidth}"/>
                             <Run Text="x"/>
                             <Run Text="{Binding SelfHeight}"/>
