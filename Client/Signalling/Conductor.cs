@@ -259,7 +259,7 @@ namespace PeerConnectionClient.Signalling
                 // Always include audio/video enabled in the media stream,
                 // so it will be possible to enable/disable audio/video if 
                 // the call was initiated without microphone/camera
-                audioEnabled = true,
+                audioEnabled = false,
                 videoEnabled = true
             };
 
@@ -529,8 +529,7 @@ namespace PeerConnectionClient.Signalling
                     return;
                 }
 
-                JsonObject jMessage;
-                if (!JsonObject.TryParse(message, out jMessage))
+                if (!JsonObject.TryParse(message, out JsonObject jMessage))
                 {
                     Debug.WriteLine("[Error] Conductor: Received unknown message." + message);
                     return;
@@ -842,9 +841,11 @@ namespace PeerConnectionClient.Signalling
                 };
             }
 #else
-            json = new JsonObject();
-            json.Add(kSessionDescriptionTypeName, JsonValue.CreateStringValue(description.Type.GetValueOrDefault().ToString().ToLower()));
-            json.Add(kSessionDescriptionSdpName, JsonValue.CreateStringValue(description.Sdp));
+            json = new JsonObject
+            {
+                { kSessionDescriptionTypeName, JsonValue.CreateStringValue(description.Type.GetValueOrDefault().ToString().ToLower()) },
+                { kSessionDescriptionSdpName, JsonValue.CreateStringValue(description.Sdp) }
+            };
 #endif
             SendMessage(json);
         }

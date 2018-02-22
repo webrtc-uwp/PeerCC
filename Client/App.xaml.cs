@@ -131,6 +131,7 @@ namespace PeerConnectionClient
             ApplicationView.GetForCurrentView().SuppressSystemOverlays = true;
 #endif
             appCallbacks.SetAppArguments(args);
+            appCallbacks.AddCommandLineArg("-force-d3d11-no-singlethreaded");
 #endif // UNITY
             Frame rootFrame = Window.Current.Content as Frame;
 

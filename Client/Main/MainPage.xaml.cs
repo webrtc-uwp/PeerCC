@@ -66,12 +66,6 @@ namespace PeerConnectionClient
 
             bool isWindowsHolographic = false;
 
-            VideoBorder.SizeChanged += (object sender, SizeChangedEventArgs e) =>
-            {
-                DXSwapChainPanel.Width = e.NewSize.Width;
-                DXSwapChainPanel.Height = e.NewSize.Height;
-            };
-
 #if UNITY_HOLOGRAPHIC
             // If application was exported as Holographic check if the deviceFamily actually supports it,
             // otherwise we treat this as a normal XAML application

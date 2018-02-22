@@ -1565,7 +1565,7 @@ namespace PeerConnectionClient.ViewModels
             }
         }
 
-        private bool _videoLoopbackEnabled = true;
+        private bool _videoLoopbackEnabled = false;
 
         /// <summary>
         /// Video loopback indicator/control.
