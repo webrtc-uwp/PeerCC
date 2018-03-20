@@ -33,7 +33,7 @@ namespace PeerConnectionClient.Signalling
     /// <summary>
     /// Signaller instance is used to fire connection events.
     /// </summary>
-    class Signaller
+    public class Signaller
     {
         // Connection events
         public event SignedInDelegate OnSignedIn;

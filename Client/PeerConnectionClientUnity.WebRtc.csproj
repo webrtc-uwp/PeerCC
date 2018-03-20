@@ -12,8 +12,8 @@
     <AssemblyName>PeerConnectionClientUnity.WebRtc</AssemblyName>
     <DefaultLanguage>en</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.10586.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion>10.0.16299.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.16299.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -114,15 +114,11 @@
     <Compile Include="Model\Peer.cs" />
     <Compile Include="MVVM\BindableBase.cs" />
     <Compile Include="MVVM\DispatcherBindableBase.cs" />
-    <Compile Include="Signalling\Conductor.cs" />
-    <Compile Include="Signalling\Signalling.cs" />
     <Compile Include="Utilities\ActionCommand.cs" />
-    <Compile Include="Utilities\AppPerf.cs" />
     <Compile Include="Utilities\BoolToVisConverter.cs" />
     <Compile Include="Utilities\InvertedBooleanConverter.cs" />
     <Compile Include="Utilities\NtpService.cs" />
     <Compile Include="Utilities\NullToVisibleConverter.cs" />
-    <Compile Include="Utilities\SdpUtils.cs" />
     <Compile Include="Utilities\ToggleImageConverter.cs" />
     <Compile Include="Utilities\UI\ErrorControl.xaml.cs">
       <DependentUpon>ErrorControl.xaml</DependentUpon>
@@ -131,7 +127,6 @@
     <Compile Include="Utilities\ValidableIntegerString.cs" />
     <Compile Include="Utilities\ValidableNonEmptyString.cs" />
     <Compile Include="Utilities\VideoCaptureFormat.cs" />
-    <Compile Include="Utilities\XmlSerializer.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Reference Include="UnityEngine.TilemapModule">
@@ -308,7 +303,9 @@
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Video-100.png" />
     <Content Include="Assets\WideLogo.scale-100.png" />
-    <Content Include="Properties\Default.rd.xml" />
+    <Content Include="Properties\Default.rd.xml">
+      <SubType>Designer</SubType>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -364,9 +361,9 @@
     <UnprocessedFilePlatform Include="$(ProjectDir)Unity\Unprocessed\$(PlatformShortName)\*" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Uwp\Org.WebRtc.Uwp.vcxproj">
-      <Project>{32a4abd8-eb1c-4198-b261-425e6caddbef}</Project>
-      <Name>Org.WebRtc.Uwp</Name>
+    <ProjectReference Include="..\Core\PeerConnectionClientCore.csproj">
+      <Project>{217faa3a-8fc1-4663-ba00-2f842b3ff4e1}</Project>
+      <Name>PeerConnectionClientCore</Name>
     </ProjectReference>
     <ProjectReference Include="Unity\MediaEnginePlayerPlugin\WebRtcScheme\WebRtcScheme.vcxproj">
       <Project>{b02463bf-335c-4d04-a8cd-975a875223ee}</Project>
