@@ -111,148 +111,148 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine.TilemapModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.TilemapModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.TilemapModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UNETModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.UNETModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.UNETModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.UIElementsModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.StyleSheetsModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.StyleSheetsModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.StyleSheetsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SpriteMaskModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.SpriteMaskModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.SpriteMaskModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ScreenCaptureModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.ScreenCaptureModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.ScreenCaptureModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TerrainPhysicsModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.TerrainPhysicsModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.TerrainPhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TerrainModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.TerrainModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.TerrainModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VRModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.VRModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.VRModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VideoModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.VideoModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.VideoModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VehiclesModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.VehiclesModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.VehiclesModule.dll</HintPath>
     </Reference>
     <Reference Include="WinRTLegacy">
-      <HintPath>..\Client\Unity\Unprocessed\WinRTLegacy.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\WinRTLegacy.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.WindModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.WindModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.WindModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.WebModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.WebModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.WebModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestAudioModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityConnectModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.UnityConnectModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.UnityConnectModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityAnalyticsModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.UnityAnalyticsModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.UnityAnalyticsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestWWWModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestTextureModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.UnityWebRequestModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ClothModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.ClothModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.ClothModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AudioModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.AudioModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.AudioModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.DirectorModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.DirectorModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.DirectorModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CrashReportingModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.CrashReportingModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.CrashReportingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AccessibilityModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.AccessibilityModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.AccessibilityModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ARModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.ARModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.ARModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AnimationModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.AnimationModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.AnimationModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.AIModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.AIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ParticlesLegacyModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.ParticlesLegacyModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.ParticlesLegacyModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.JSONSerializeModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Physics2DModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.Physics2DModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.Physics2DModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PerformanceReportingModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.PerformanceReportingModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.PerformanceReportingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ParticleSystemModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.ParticleSystemModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.ParticleSystemModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.GridModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.GridModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.GridModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.GameCenterModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.GameCenterModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.GameCenterModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.InputModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.InputModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.ImageConversionModule.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Timeline">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.Timeline.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.Timeline.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
-      <HintPath>..\Client\Unity\Unprocessed\nunit.framework.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.HoloLens">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.HoloLens.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.HoloLens.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Networking">
-      <HintPath>..\Client\Unity\Unprocessed\UnityEngine.Networking.dll</HintPath>
+      <HintPath>..\Unity\Unprocessed\UnityEngine.Networking.dll</HintPath>
     </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
@@ -290,11 +290,10 @@ SETLOCAL
 
       mkdir "%TARGET_PLUGIN_PATH%Plugins"
       mkdir "%TARGET_PLUGIN_PATH%Plugins\WSA"
-      mkdir "%TARGET_PLUGIN_PATH_%Plugins\WSA\$(PlatformShortName)"
 
-      copy /Y "$(TargetDir)$(TargetFileName)" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)\$(TargetFileName)"
-      copy /Y "$(TargetDir)$(TargetName).winmd" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)\$(TargetName).winmd"
-      copy /Y "$(TargetDir)$(TargetName).pdb" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(PlatformShortName)\$(TargetName).pdb"
+      copy /Y "$(TargetDir)$(TargetFileName)" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(TargetFileName)"
+      copy /Y "$(TargetDir)$(TargetName).winmd" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(TargetName).winmd"
+      copy /Y "$(TargetDir)$(TargetName).pdb" "%TARGET_PLUGIN_PATH%Plugins\WSA\$(TargetName).pdb"
 ENDLOCAL
     </PostBuildEvent>
   </PropertyGroup>

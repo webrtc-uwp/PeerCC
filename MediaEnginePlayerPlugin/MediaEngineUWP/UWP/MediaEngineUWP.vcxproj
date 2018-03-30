@@ -135,7 +135,7 @@ SETLOCAL
       copy /Y "$(TargetDir)$(TargetFileName)" "%TARGET_PLUGIN_PATH_1%Plugins\WSA\$(PlatformShortName)\$(TargetFileName)"
       copy /Y "$(TargetDir)$(TargetName).pdb" "%TARGET_PLUGIN_PATH_1%Plugins\WSA\$(PlatformShortName)\$(TargetName).pdb"
 
-      set TARGET_PLUGIN_PATH_2=$(ProjectDir)..\..\..\Client\Unity\PeerCCUnity\Assets\
+      set TARGET_PLUGIN_PATH_2=$(ProjectDir)..\..\..\ClientUnity\Unity\PeerCCUnity\Assets\
 
       echo Target Plugin Path is %TARGET_PLUGIN_PATH_2%
 
@@ -181,7 +181,7 @@ SETLOCAL
       copy /Y "$(TargetDir)$(TargetFileName)" "%TARGET_PLUGIN_PATH_1%Plugins\WSA\$(PlatformShortName)\$(TargetFileName)"
       copy /Y "$(TargetDir)$(TargetName).pdb" "%TARGET_PLUGIN_PATH_1%Plugins\WSA\$(PlatformShortName)\$(TargetName).pdb"
 
-      set TARGET_PLUGIN_PATH_2=$(ProjectDir)..\..\..\Client\Unity\PeerCCUnity\Assets\
+      set TARGET_PLUGIN_PATH_2=$(ProjectDir)..\..\..\ClientUnity\Unity\PeerCCUnity\Assets\
 
       echo Target Plugin Path is %TARGET_PLUGIN_PATH_2%
 
@@ -228,7 +228,7 @@ SETLOCAL
       copy /Y "$(TargetDir)$(TargetFileName)" "%TARGET_PLUGIN_PATH_1%Plugins\WSA\$(PlatformShortName)\$(TargetFileName)"
       copy /Y "$(TargetDir)$(TargetName).pdb" "%TARGET_PLUGIN_PATH_1%Plugins\WSA\$(PlatformShortName)\$(TargetName).pdb"
 
-      set TARGET_PLUGIN_PATH_2=$(ProjectDir)..\..\..\Client\Unity\PeerCCUnity\Assets\
+      set TARGET_PLUGIN_PATH_2=$(ProjectDir)..\..\..\ClientUnity\Unity\PeerCCUnity\Assets\
 
       echo Target Plugin Path is %TARGET_PLUGIN_PATH_2%
 
@@ -275,7 +275,7 @@ SETLOCAL
       copy /Y "$(TargetDir)$(TargetFileName)" "%TARGET_PLUGIN_PATH_1%Plugins\WSA\$(PlatformShortName)\$(TargetFileName)"
       copy /Y "$(TargetDir)$(TargetName).pdb" "%TARGET_PLUGIN_PATH_1%Plugins\WSA\$(PlatformShortName)\$(TargetName).pdb"
 
-      set TARGET_PLUGIN_PATH_2=$(ProjectDir)..\..\..\Client\Unity\PeerCCUnity\Assets\
+      set TARGET_PLUGIN_PATH_2=$(ProjectDir)..\..\..\ClientUnity\Unity\PeerCCUnity\Assets\
 
       echo Target Plugin Path is %TARGET_PLUGIN_PATH_2%
 

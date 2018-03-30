@@ -411,10 +411,10 @@
     <Delete Files="$(ProjectDir)WebRtcScheme.pdb" Condition="Exists('$(ProjectDir)WebRtcScheme.pdb')" />
     <Delete Files="$(ProjectDir)WebRtcScheme.dll.mdb" Condition="Exists('$(ProjectDir)WebRtcScheme.dll.mdb')" />
     <Copy SourceFiles="$(ProjectDir)Unity\PeerCCUnity\Assets\Plugins\WSA\$(PlatformShortName)\WebRtcScheme.pdb" DestinationFiles="$(ProjectDir)WebRtcScheme.pdb" Condition="Exists('$(ProjectDir)Unity\PeerCCUnity\Assets\Plugins\WSA\$(PlatformShortName)\WebRtcScheme.pdb')" />
-    <Copy SourceFiles="$(ProjectDir)Unity\PeerCCUnity\Assets\Plugins\WSA\$(PlatformShortName)\PeerConnectionClientCore.dll" DestinationFiles="$(ProjectDir)PeerConnectionClientCore.dll" />
+    <Copy SourceFiles="$(ProjectDir)Unity\PeerCCUnity\Assets\Plugins\WSA\PeerConnectionClientCore.dll" DestinationFiles="$(ProjectDir)PeerConnectionClientCore.dll" />
     <Delete Files="$(ProjectDir)PeerConnectionClientCore.pdb" Condition="Exists('$(ProjectDir)PeerConnectionClientCore.pdb')" />
     <Delete Files="$(ProjectDir)PeerConnectionClientCore.dll.mdb" Condition="Exists('$(ProjectDir)PeerConnectionClientCore.dll.mdb')" />
-    <Copy SourceFiles="$(ProjectDir)Unity\PeerCCUnity\Assets\Plugins\WSA\$(PlatformShortName)\PeerConnectionClientCore.pdb" DestinationFiles="$(ProjectDir)PeerConnectionClientCore.pdb" Condition="Exists('$(ProjectDir)Unity\PeerCCUnity\Assets\Plugins\WSA\$(PlatformShortName)\PeerConnectionClientCore.pdb')" />
+    <Copy SourceFiles="$(ProjectDir)Unity\PeerCCUnity\Assets\Plugins\WSA\PeerConnectionClientCore.pdb" DestinationFiles="$(ProjectDir)PeerConnectionClientCore.pdb" Condition="Exists('$(ProjectDir)Unity\PeerCCUnity\Assets\Plugins\WSA\PeerConnectionClientCore.pdb')" />
   </Target>
   <Target Name="ModifyAppXPackage" Condition="'$(BuildingProject)' == 'true'">
     <Message Importance="high" Text="UnityWSAPlayerDir &quot;$(UnityWSAPlayerDir)&quot;." />

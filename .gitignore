@@ -21,6 +21,8 @@ Client/Unity/UnityVideoControl/UWP
 ClientUnity/*.dll
 ClientUnity/*.pdb
 ClientUnity/*.winmd
+ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/*.dll
+ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/*.pdb
 ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/x86/*.dll
 ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/x86/*.winmd
 ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/x86/*.pdb
