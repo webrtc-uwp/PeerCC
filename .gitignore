@@ -18,3 +18,15 @@ Client/Unity/UnityVideoControl/Assets/Plugins/WSA/x64/*.pdb
 Client/Unity/UnityVideoControl/Library
 Client/Unity/UnityVideoControl/UnityPackageManager
 Client/Unity/UnityVideoControl/UWP
+ClientUnity/*.dll
+ClientUnity/*.pdb
+ClientUnity/*.winmd
+ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/x86/*.dll
+ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/x86/*.winmd
+ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/x86/*.pdb
+ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/x64/*.dll
+ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/x64/*.winmd
+ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/x64/*.pdb
+ClientUnity/Unity/PeerCCUnity/Library
+ClientUnity/Unity/PeerCCUnity/UnityPackageManager
+ClientUnity/Unity/PeerCCUnity/UWP

@@ -506,7 +506,7 @@ namespace PeerConnectionClient.ViewModels
                     {
                         SelectedAudioCodec = AudioCodecs.First();
                     }
-}
+                }
 
                 foreach (var videoCodec in videoCodecList)
                 {
