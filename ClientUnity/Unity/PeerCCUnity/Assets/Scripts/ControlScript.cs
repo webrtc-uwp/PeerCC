@@ -37,6 +37,8 @@ public class ControlScript : MonoBehaviour
     public RawImage LocalVideoImage;
     public RawImage RemoteVideoImage;
 
+    public InputField ServerAddressInputField;
+
     private List<Peer> peers;
 
     public ControlScript()
@@ -55,6 +57,7 @@ public class ControlScript : MonoBehaviour
         Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
         Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
 #endif
+        ServerAddressInputField.text = "127.0.0.1";
 
         {
             Plugin.CreateLocalMediaPlayback();
@@ -104,7 +107,7 @@ public class ControlScript : MonoBehaviour
         {
             new Task(() =>
             {
-                Conductor.Instance.StartLogin("127.0.0.1", "8888");
+                Conductor.Instance.StartLogin(ServerAddressInputField.text, "8888");
             }).Start();
         }
         else
