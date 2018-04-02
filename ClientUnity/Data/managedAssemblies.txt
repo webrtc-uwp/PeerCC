@@ -43,6 +43,6 @@ UnityEngine.ImageConversionModule.dll
 UnityEngine.Timeline.dll
 nunit.framework.dll
 UnityEngine.UI.dll
-PeerConnectionClientCore.dll
 UnityEngine.HoloLens.dll
 UnityEngine.Networking.dll
+PeerConnectionClientCore.dll

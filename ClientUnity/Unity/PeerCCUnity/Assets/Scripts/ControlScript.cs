@@ -58,7 +58,10 @@ public class ControlScript : MonoBehaviour
         Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
 #endif
         ServerAddressInputField.text = "127.0.0.1";
+    }
 
+    private void OnEnable()
+    {
         {
             Plugin.CreateLocalMediaPlayback();
             IntPtr nativeTex = IntPtr.Zero;
@@ -76,15 +79,15 @@ public class ControlScript : MonoBehaviour
         }
     }
 
-    private void OnEnable()
-    {
-    }
-
     private void OnDisable()
     {
+        LocalVideoImage.texture = null;
+        Plugin.ReleaseLocalMediaPlayback();
+        RemoteVideoImage.texture = null;
+        Plugin.ReleaseRemoteMediaPlayback();
     }
 
-    void Update()
+    private void Update()
     {
     }
 
@@ -230,9 +233,6 @@ public class ControlScript : MonoBehaviour
         {
             RunOnUiThread(() =>
             {
-                DestroyLocalMediaStreamSource();
-                DestroyRemoteMediaStreamSource();
-                GC.Collect(); // Ensure all references are truly dropped.
             }).AsTask().Wait();
         };
 
@@ -253,7 +253,7 @@ public class ControlScript : MonoBehaviour
                 default: return 99;
             }
         });
-        Conductor.Instance.VideoCodec = videoCodecList.First();
+        Conductor.Instance.VideoCodec = videoCodecList.ElementAt(2);
 
 #endif
     }
@@ -263,7 +263,7 @@ public class ControlScript : MonoBehaviour
 #if !UNITY_EDITOR
         RunOnUiThread(() =>
         {
-            var source = Conductor.Instance.CreateRemoteMediaStreamSource("I420");
+            var source = Conductor.Instance.CreateRemoteMediaStreamSource("H264");
             Plugin.LoadRemoteMediaStreamSource((MediaStreamSource)source);
             Plugin.RemotePlay();
         }).AsTask();

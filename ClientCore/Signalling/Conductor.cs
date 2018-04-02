@@ -745,7 +745,6 @@ namespace PeerConnectionClient.Signalling
                     _peerConnection = null;
 
                     OnReadyToConnect?.Invoke();
-
                     
                     GC.Collect(); // Ensure all references are truly dropped.
                 }
