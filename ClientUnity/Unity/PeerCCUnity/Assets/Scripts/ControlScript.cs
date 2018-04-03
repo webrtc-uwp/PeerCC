@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 #if !UNITY_EDITOR
 using Org.WebRtc;
@@ -28,7 +29,6 @@ public class ControlScript : MonoBehaviour
         }
     }
 
-
     public uint LocalTextureWidth = 160;
     public uint LocalTextureHeight = 120;
     public uint RemoteTextureWidth = 640;
@@ -38,12 +38,41 @@ public class ControlScript : MonoBehaviour
     public RawImage RemoteVideoImage;
 
     public InputField ServerAddressInputField;
+    public Button ConnectButton;
+    public Button CallButton;
+    public RectTransform PeerContent;
+    public GameObject TextItemPreftab;
 
-    private List<Peer> peers;
+    private enum Status
+    {
+        NotConnected,
+        Connecting,
+        Disconnecting,
+        Connected,
+        Calling,
+        EndingCall,
+        InCall
+    }
+
+    private enum Command
+    {
+        Empty,
+        SetNotConnected,
+        SetConnected,
+        SetInCall,
+        SetRemotePeers
+    }
+
+    private List<Peer> remotePeers;
+
+    private Status status;
+    private Command command;
 
     public ControlScript()
     {
-        peers = new List<Peer>();
+        remotePeers = new List<Peer>();
+        status = Status.NotConnected;
+        command = Command.Empty;
     }
 
     void Awake()
@@ -89,9 +118,102 @@ public class ControlScript : MonoBehaviour
 
     private void Update()
     {
+#if !UNITY_EDITOR
+        lock (this)
+        {
+            switch (status)
+            {
+                case Status.NotConnected:
+                    if (command == Command.SetNotConnected)
+                    {
+                        ConnectButton.GetComponentInChildren<Text>().text = "Connect";
+                        CallButton.GetComponentInChildren<Text>().text = "Call";
+                    }
+                    if (!ServerAddressInputField.enabled)
+                        ServerAddressInputField.enabled = true;
+                    if (!ConnectButton.enabled)
+                        ConnectButton.enabled = true;
+                    if (CallButton.enabled)
+                        CallButton.enabled = false;
+                    break;
+                case Status.Connecting:
+                    if (ServerAddressInputField.enabled)
+                        ServerAddressInputField.enabled = false;
+                    if (ConnectButton.enabled)
+                        ConnectButton.enabled = false;
+                    if (CallButton.enabled)
+                        CallButton.enabled = false;
+                    break;
+                case Status.Disconnecting:
+                    if (ServerAddressInputField.enabled)
+                        ServerAddressInputField.enabled = false;
+                    if (ConnectButton.enabled)
+                        ConnectButton.enabled = false;
+                    if (CallButton.enabled)
+                        CallButton.enabled = false;
+                    break;
+                case Status.Connected:
+                    if (command == Command.SetConnected)
+                    {
+                        ConnectButton.GetComponentInChildren<Text>().text = "Disconnect";
+                        CallButton.GetComponentInChildren<Text>().text = "Call";
+                    }
+                    if (ServerAddressInputField.enabled)
+                        ServerAddressInputField.enabled = false;
+                    if (!ConnectButton.enabled)
+                        ConnectButton.enabled = true;
+                    if (!CallButton.enabled)
+                        CallButton.enabled = true;
+                    break;
+                case Status.Calling:
+                    if (ServerAddressInputField.enabled)
+                        ServerAddressInputField.enabled = false;
+                    if (ConnectButton.enabled)
+                        ConnectButton.enabled = false;
+                    if (CallButton.enabled)
+                        CallButton.enabled = false;
+                    break;
+                case Status.EndingCall:
+                    if (ServerAddressInputField.enabled)
+                        ServerAddressInputField.enabled = false;
+                    if (ConnectButton.enabled)
+                        ConnectButton.enabled = false;
+                    if (CallButton.enabled)
+                        CallButton.enabled = false;
+                    break;
+                case Status.InCall:
+                    if (command == Command.SetInCall)
+                    {
+                        ConnectButton.GetComponentInChildren<Text>().text = "Disconnect";
+                        CallButton.GetComponentInChildren<Text>().text = "Hang Up";
+                    }
+                    if (ServerAddressInputField.enabled)
+                        ServerAddressInputField.enabled = false;
+                    if (ConnectButton.enabled)
+                        ConnectButton.enabled = false;
+                    if (!CallButton.enabled)
+                        CallButton.enabled = true;
+                    break;
+                default:
+                    break;
+            }
+            if (command == Command.SetRemotePeers)
+            {
+                GameObject textItem = (GameObject)Instantiate(TextItemPreftab);
+                textItem.transform.SetParent(PeerContent);
+                textItem.GetComponent<Text>().text = remotePeers.FirstOrDefault().Name;
+                EventTrigger trigger = textItem.GetComponentInChildren<EventTrigger>();
+                EventTrigger.Entry entry = new EventTrigger.Entry();
+                entry.eventID = EventTriggerType.PointerDown;
+                entry.callback.AddListener((data) => { OnRemotePeerItemClick((PointerEventData)data); });
+                trigger.triggers.Add(entry);
+            }
+            command = Command.Empty;
+        }
+#endif
     }
 
-    private void Conductor_Initialized(bool succeeded)
+        private void Conductor_Initialized(bool succeeded)
     {
         if (succeeded)
         {
@@ -106,21 +228,30 @@ public class ControlScript : MonoBehaviour
     public void OnConnectClick()
     {
 #if !UNITY_EDITOR
-        if (true)
+        lock (this)
         {
-            new Task(() =>
+            if (status == Status.NotConnected)
             {
-                Conductor.Instance.StartLogin(ServerAddressInputField.text, "8888");
-            }).Start();
-        }
-        else
-        {
-            new Task(() =>
+                new Task(() =>
+                {
+                    Conductor.Instance.StartLogin(ServerAddressInputField.text, "8888");
+                }).Start();
+                status = Status.Connecting;
+            }
+            else if (status == Status.Connected)
             {
-                var task = Conductor.Instance.DisconnectFromServer();
-            }).Start();
+                new Task(() =>
+                {
+                    var task = Conductor.Instance.DisconnectFromServer();
+                }).Start();
 
-            peers?.Clear();
+                remotePeers?.Clear();
+                status = Status.Disconnecting;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("OnConnectClick() - wrong status - " + status);
+            }
         }
 #endif
     }
@@ -128,24 +259,40 @@ public class ControlScript : MonoBehaviour
     public void OnCallClick()
     {
 #if !UNITY_EDITOR
-        if (true)
+        lock (this)
         {
-            new Task(() =>
+            if (status == Status.Connected)
             {
-                Conductor.Peer conductorPeer = new Conductor.Peer();
-                Peer peer = peers.FirstOrDefault();
-                if (peer != null)
+                new Task(() =>
                 {
-                    conductorPeer.Id = peers.FirstOrDefault().Id;
-                    conductorPeer.Name = peers.FirstOrDefault().Name;
-                    Conductor.Instance.ConnectToPeer(conductorPeer);
-                }
-            }).Start();
+                    Conductor.Peer conductorPeer = new Conductor.Peer();
+                    Peer peer = remotePeers.FirstOrDefault();
+                    if (peer != null)
+                    {
+                        conductorPeer.Id = remotePeers.FirstOrDefault().Id;
+                        conductorPeer.Name = remotePeers.FirstOrDefault().Name;
+                        Conductor.Instance.ConnectToPeer(conductorPeer);
+                    }
+                }).Start();
+                status = Status.Calling;
+            }
+            else if (status == Status.InCall)
+            {
+                new Task(() => { var task = Conductor.Instance.DisconnectFromPeer(); }).Start();
+                status = Status.EndingCall;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("OnCallClick() - wrong status - " + status);
+            }
         }
-        else
-        {
-            new Task(() => { var task = Conductor.Instance.DisconnectFromPeer(); }).Start();
-        }
+#endif
+    }
+
+    public void OnRemotePeerItemClick(PointerEventData data)
+    {
+#if !UNITY_EDITOR
+        int i = 0;
 #endif
     }
 
@@ -174,9 +321,13 @@ public class ControlScript : MonoBehaviour
         {
             RunOnUiThread(() =>
             {
-                peers.Add(new Peer { Id = peerId, Name = peerName });
-                Conductor.Peer peer = new Conductor.Peer { Id = peerId, Name = peerName };
-                Conductor.Instance.AddPeer(peer);
+                lock (this)
+                {
+                    remotePeers.Add(new Peer { Id = peerId, Name = peerName });
+                    Conductor.Peer peer = new Conductor.Peer { Id = peerId, Name = peerName };
+                    Conductor.Instance.AddPeer(peer);
+                    command = Command.SetRemotePeers;
+                }
             }).AsTask().Wait();
         };
 
@@ -185,9 +336,12 @@ public class ControlScript : MonoBehaviour
         {
             RunOnUiThread(() =>
             {
-                var peerToRemove = peers?.FirstOrDefault(p => p.Id == peerId);
-                if (peerToRemove != null)
-                    peers.Remove(peerToRemove);
+                lock (this)
+                {
+                    var peerToRemove = remotePeers?.FirstOrDefault(p => p.Id == peerId);
+                    if (peerToRemove != null)
+                        remotePeers.Remove(peerToRemove);
+                }
             }).AsTask().Wait();
         };
 
@@ -196,6 +350,18 @@ public class ControlScript : MonoBehaviour
         {
             RunOnUiThread(() =>
             {
+                lock (this)
+                {
+                    if (status == Status.Connecting)
+                    {
+                        status = Status.Connected;
+                        command = Command.SetConnected;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Signaller.OnSignedIn() - wrong status - " + status);
+                    }
+                }
             }).AsTask().Wait();
         };
 
@@ -204,6 +370,18 @@ public class ControlScript : MonoBehaviour
         {
             RunOnUiThread(() =>
             {
+                lock (this)
+                {
+                    if (status == Status.Connecting)
+                    {
+                        status = Status.NotConnected;
+                        command = Command.SetNotConnected;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Signaller.OnServerConnectionFailure() - wrong status - " + status);
+                    }
+                }
             }).AsTask().Wait();
         };
 
@@ -212,7 +390,19 @@ public class ControlScript : MonoBehaviour
         {
             RunOnUiThread(() =>
             {
-                peers?.Clear();
+                lock (this)
+                {
+                    if (status == Status.Disconnecting)
+                    {
+                        remotePeers?.Clear();
+                        status = Status.NotConnected;
+                        command = Command.SetNotConnected;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Signaller.OnDisconnected() - wrong status - " + status);
+                    }
+                }
             }).AsTask().Wait();
         };
 
@@ -225,6 +415,18 @@ public class ControlScript : MonoBehaviour
         {
             RunOnUiThread(() =>
             {
+                lock (this)
+                {
+                    if (status == Status.Calling)
+                    {
+                        status = Status.InCall;
+                        command = Command.SetInCall;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Conductor.OnPeerConnectionCreated() - wrong status - " + status);
+                    }
+                }
             }).AsTask().Wait();
         };
 
@@ -233,6 +435,18 @@ public class ControlScript : MonoBehaviour
         {
             RunOnUiThread(() =>
             {
+                lock (this)
+                {
+                    if (status == Status.EndingCall)
+                    {
+                        status = Status.Connected;
+                        command = Command.SetConnected;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("Conductor.OnPeerConnectionClosed() - wrong status - " + status);
+                    }
+                }
             }).AsTask().Wait();
         };
 
@@ -263,15 +477,40 @@ public class ControlScript : MonoBehaviour
 #if !UNITY_EDITOR
         RunOnUiThread(() =>
         {
-            var source = Conductor.Instance.CreateRemoteMediaStreamSource("H264");
-            Plugin.LoadRemoteMediaStreamSource((MediaStreamSource)source);
-            Plugin.RemotePlay();
+            lock (this)
+            {
+                if (status == Status.InCall)
+                {
+                    var source = Conductor.Instance.CreateRemoteMediaStreamSource("H264");
+                    Plugin.LoadRemoteMediaStreamSource((MediaStreamSource)source);
+                    Plugin.RemotePlay();
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Conductor.OnAddRemoteStream() - wrong status - " + status);
+                }
+            }
         }).AsTask();
 #endif
     }
 
     private void Conductor_OnRemoveRemoteStream()
     {
+#if !UNITY_EDITOR
+        RunOnUiThread(() =>
+        {
+            lock (this)
+            {
+                if (status == Status.InCall)
+                {
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Conductor.OnRemoveRemoteStream() - wrong status - " + status);
+                }
+            }
+        }).AsTask();
+#endif
     }
 
     private void Conductor_OnAddLocalStream()
@@ -279,56 +518,24 @@ public class ControlScript : MonoBehaviour
 #if !UNITY_EDITOR
         RunOnUiThread(() =>
         {
-            var source = Conductor.Instance.CreateLocalMediaStreamSource("I420");
-            Plugin.LoadLocalMediaStreamSource((MediaStreamSource)source);
-            Plugin.LocalPlay();
+            lock (this)
+            {
+                if (status == Status.InCall)
+                {
+                    var source = Conductor.Instance.CreateLocalMediaStreamSource("I420");
+                    Plugin.LoadLocalMediaStreamSource((MediaStreamSource)source);
+                    Plugin.LocalPlay();
 
-            Conductor.Instance.EnableLocalVideoStream();
-            Conductor.Instance.UnmuteMicrophone();
+                    Conductor.Instance.EnableLocalVideoStream();
+                    Conductor.Instance.UnmuteMicrophone();
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Conductor.OnAddLocalStream() - wrong status - " + status);
+                }
+            }
         }).AsTask().Wait();
 #endif
-    }
-
-    public void CreateLocalMediaStreamSource(object track, string type, string id)
-    {
-        Plugin.CreateLocalMediaPlayback();
-        IntPtr nativeTex = IntPtr.Zero;
-        Plugin.GetLocalPrimaryTexture(LocalTextureWidth, LocalTextureHeight, out nativeTex);
-        var primaryPlaybackTexture = Texture2D.CreateExternalTexture((int)LocalTextureWidth, (int)LocalTextureHeight, TextureFormat.BGRA32, false, false, nativeTex);
-        LocalVideoImage.texture = primaryPlaybackTexture;
-#if !UNITY_EDITOR
-        MediaVideoTrack videoTrack = (MediaVideoTrack)track;
-        var source = Media.CreateMedia().CreateMediaStreamSource(videoTrack, type, id);
-        Plugin.LoadLocalMediaStreamSource((MediaStreamSource)source);
-        Plugin.LocalPlay();
-#endif
-    }
-
-    public void DestroyLocalMediaStreamSource()
-    {
-        LocalVideoImage.texture = null;
-        Plugin.ReleaseLocalMediaPlayback();
-    }
-
-    public void CreateRemoteMediaStreamSource(object track, string type, string id)
-    {
-        Plugin.CreateRemoteMediaPlayback();
-        IntPtr nativeTex = IntPtr.Zero;
-        Plugin.GetRemotePrimaryTexture(RemoteTextureWidth, RemoteTextureHeight, out nativeTex);
-        var primaryPlaybackTexture = Texture2D.CreateExternalTexture((int)RemoteTextureWidth, (int)RemoteTextureHeight, TextureFormat.BGRA32, false, false, nativeTex);
-        RemoteVideoImage.texture = primaryPlaybackTexture;
-#if !UNITY_EDITOR
-        MediaVideoTrack videoTrack = (MediaVideoTrack)track;
-        var source = Media.CreateMedia().CreateMediaStreamSource(videoTrack, type, id);
-        Plugin.LoadRemoteMediaStreamSource((MediaStreamSource)source);
-        Plugin.RemotePlay();
-#endif
-    }
-
-    public void DestroyRemoteMediaStreamSource()
-    {
-        RemoteVideoImage.texture = null;
-        Plugin.ReleaseRemoteMediaPlayback();
     }
 
     private static class Plugin
