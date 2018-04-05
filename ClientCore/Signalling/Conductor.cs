@@ -543,11 +543,6 @@ namespace PeerConnectionClient.Signalling
         public event Action OnPeerConnectionClosed;
         public event Action OnReadyToConnect;
 
-        public void AddPeer(Peer peer)
-        {
-            _peers.Add(peer);
-        }
-
         /// <summary>
         /// Updates the preferred video frame rate and resolution.
         /// </summary>
@@ -759,6 +754,21 @@ namespace PeerConnectionClient.Signalling
         public IMediaSource CreateRemoteMediaStreamSource(String type)
         {
             return Media.CreateMedia().CreateMediaStreamSource(_peerVideoTrack, type, "PEER");
+        }
+
+        public void AddPeer(Peer peer)
+        {
+            _peers.Add(peer);
+        }
+
+        public void RemovePeer(Peer peer)
+        {
+            _peers.RemoveAll(p => p.Id == peer.Id);
+        }
+
+        public List<Peer> GetPeers()
+        {
+            return new List<Peer>(_peers);
         }
 
         /// <summary>
@@ -1175,6 +1185,7 @@ namespace PeerConnectionClient.Signalling
             if (_signaller.IsConnected())
             {
                 await _signaller.SignOut();
+                _peers.Clear();
             }
         }
 

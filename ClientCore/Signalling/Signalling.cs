@@ -518,7 +518,7 @@ namespace PeerConnectionClient.Signalling
                     }
                     catch (Exception e)
                     {
-                        Debug.WriteLine("[Error] Signaling: Long-polling exception: {0}", e.Message);
+                        Debug.WriteLine("[Error] Signaling: Long-polling exception: " + e.Message);
                     }
                 }
             }

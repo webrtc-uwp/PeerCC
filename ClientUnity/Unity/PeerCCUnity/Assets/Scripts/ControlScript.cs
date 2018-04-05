@@ -18,17 +18,6 @@ using Windows.ApplicationModel.Core;
 
 public class ControlScript : MonoBehaviour
 {
-    public class Peer
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-
-        public override string ToString()
-        {
-            return Id + ": " + Name;
-        }
-    }
-
     public uint LocalTextureWidth = 160;
     public uint LocalTextureHeight = 120;
     public uint RemoteTextureWidth = 640;
@@ -54,25 +43,28 @@ public class ControlScript : MonoBehaviour
         InCall
     }
 
-    private enum Command
+    private enum CommandType
     {
         Empty,
         SetNotConnected,
         SetConnected,
         SetInCall,
-        SetRemotePeers
+        AddRemotePeer,
+        RemoveRemotePeer
     }
 
-    private List<Peer> remotePeers;
+    private struct Command
+    {
+        public CommandType type;
+        public Conductor.Peer remotePeer;
+    }
 
-    private Status status;
-    private Command command;
+    private Status status = Status.NotConnected;
+    private List<Command> commandQueue = new List<Command>();
+    private int selectedPeerIndex = -1;
 
     public ControlScript()
     {
-        remotePeers = new List<Peer>();
-        status = Status.NotConnected;
-        command = Command.Empty;
     }
 
     void Awake()
@@ -124,11 +116,6 @@ public class ControlScript : MonoBehaviour
             switch (status)
             {
                 case Status.NotConnected:
-                    if (command == Command.SetNotConnected)
-                    {
-                        ConnectButton.GetComponentInChildren<Text>().text = "Connect";
-                        CallButton.GetComponentInChildren<Text>().text = "Call";
-                    }
                     if (!ServerAddressInputField.enabled)
                         ServerAddressInputField.enabled = true;
                     if (!ConnectButton.enabled)
@@ -153,11 +140,6 @@ public class ControlScript : MonoBehaviour
                         CallButton.enabled = false;
                     break;
                 case Status.Connected:
-                    if (command == Command.SetConnected)
-                    {
-                        ConnectButton.GetComponentInChildren<Text>().text = "Disconnect";
-                        CallButton.GetComponentInChildren<Text>().text = "Call";
-                    }
                     if (ServerAddressInputField.enabled)
                         ServerAddressInputField.enabled = false;
                     if (!ConnectButton.enabled)
@@ -182,11 +164,6 @@ public class ControlScript : MonoBehaviour
                         CallButton.enabled = false;
                     break;
                 case Status.InCall:
-                    if (command == Command.SetInCall)
-                    {
-                        ConnectButton.GetComponentInChildren<Text>().text = "Disconnect";
-                        CallButton.GetComponentInChildren<Text>().text = "Hang Up";
-                    }
                     if (ServerAddressInputField.enabled)
                         ServerAddressInputField.enabled = false;
                     if (ConnectButton.enabled)
@@ -197,23 +174,67 @@ public class ControlScript : MonoBehaviour
                 default:
                     break;
             }
-            if (command == Command.SetRemotePeers)
+
+            while (commandQueue.Count != 0)
             {
-                GameObject textItem = (GameObject)Instantiate(TextItemPreftab);
-                textItem.transform.SetParent(PeerContent);
-                textItem.GetComponent<Text>().text = remotePeers.FirstOrDefault().Name;
-                EventTrigger trigger = textItem.GetComponentInChildren<EventTrigger>();
-                EventTrigger.Entry entry = new EventTrigger.Entry();
-                entry.eventID = EventTriggerType.PointerDown;
-                entry.callback.AddListener((data) => { OnRemotePeerItemClick((PointerEventData)data); });
-                trigger.triggers.Add(entry);
+                Command command = commandQueue.First();
+                commandQueue.RemoveAt(0);
+                switch (status)
+                {
+                    case Status.NotConnected:
+                        if (command.type == CommandType.SetNotConnected)
+                        {
+                            ConnectButton.GetComponentInChildren<Text>().text = "Connect";
+                            CallButton.GetComponentInChildren<Text>().text = "Call";
+                        }
+                        break;
+                    case Status.Connected:
+                        if (command.type == CommandType.SetConnected)
+                        {
+                            ConnectButton.GetComponentInChildren<Text>().text = "Disconnect";
+                            CallButton.GetComponentInChildren<Text>().text = "Call";
+                        }
+                        break;
+                    case Status.InCall:
+                        if (command.type == CommandType.SetInCall)
+                        {
+                            ConnectButton.GetComponentInChildren<Text>().text = "Disconnect";
+                            CallButton.GetComponentInChildren<Text>().text = "Hang Up";
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                if (command.type == CommandType.AddRemotePeer)
+                {
+                    GameObject textItem = (GameObject)Instantiate(TextItemPreftab);
+                    textItem.transform.SetParent(PeerContent);
+                    textItem.GetComponent<Text>().text = command.remotePeer.Name;
+                    EventTrigger trigger = textItem.GetComponentInChildren<EventTrigger>();
+                    EventTrigger.Entry entry = new EventTrigger.Entry();
+                    entry.eventID = EventTriggerType.PointerDown;
+                    entry.callback.AddListener((data) => { OnRemotePeerItemClick((PointerEventData)data); });
+                    trigger.triggers.Add(entry);
+                }
+                else if (command.type == CommandType.RemoveRemotePeer)
+                {
+                    for (int i = 0; i < PeerContent.GetChildCount(); i++)
+                    {
+                        if (PeerContent.GetChild(i).GetComponent<Text>().text == command.remotePeer.Name)
+                        {
+                            PeerContent.GetChild(i).SetParent(null);
+                            if (selectedPeerIndex == i)
+                                selectedPeerIndex = -1;
+                            break;
+                        }
+                    }
+                }
             }
-            command = Command.Empty;
         }
 #endif
     }
 
-        private void Conductor_Initialized(bool succeeded)
+    private void Conductor_Initialized(bool succeeded)
     {
         if (succeeded)
         {
@@ -245,8 +266,9 @@ public class ControlScript : MonoBehaviour
                     var task = Conductor.Instance.DisconnectFromServer();
                 }).Start();
 
-                remotePeers?.Clear();
                 status = Status.Disconnecting;
+                selectedPeerIndex = -1;
+                PeerContent.DetachChildren();
             }
             else
             {
@@ -263,14 +285,13 @@ public class ControlScript : MonoBehaviour
         {
             if (status == Status.Connected)
             {
+                if (selectedPeerIndex == -1)
+                    return;
                 new Task(() =>
                 {
-                    Conductor.Peer conductorPeer = new Conductor.Peer();
-                    Peer peer = remotePeers.FirstOrDefault();
-                    if (peer != null)
+                    Conductor.Peer conductorPeer = Conductor.Instance.GetPeers()[selectedPeerIndex];
+                    if (conductorPeer != null)
                     {
-                        conductorPeer.Id = remotePeers.FirstOrDefault().Id;
-                        conductorPeer.Name = remotePeers.FirstOrDefault().Name;
                         Conductor.Instance.ConnectToPeer(conductorPeer);
                     }
                 }).Start();
@@ -292,7 +313,18 @@ public class ControlScript : MonoBehaviour
     public void OnRemotePeerItemClick(PointerEventData data)
     {
 #if !UNITY_EDITOR
-        int i = 0;
+        for (int i = 0; i < PeerContent.GetChildCount(); i++)
+        {
+            if (PeerContent.GetChild(i) == data.selectedObject.transform)
+            {
+                data.selectedObject.GetComponent<Text>().fontStyle = FontStyle.Bold;
+                selectedPeerIndex = i;
+            }
+            else
+            {
+                PeerContent.GetChild(i).GetComponent<Text>().fontStyle = FontStyle.Normal;
+            }
+        }
 #endif
     }
 
@@ -323,10 +355,9 @@ public class ControlScript : MonoBehaviour
             {
                 lock (this)
                 {
-                    remotePeers.Add(new Peer { Id = peerId, Name = peerName });
                     Conductor.Peer peer = new Conductor.Peer { Id = peerId, Name = peerName };
                     Conductor.Instance.AddPeer(peer);
-                    command = Command.SetRemotePeers;
+                    commandQueue.Add(new Command { type = CommandType.AddRemotePeer, remotePeer = peer });
                 }
             }).AsTask().Wait();
         };
@@ -338,9 +369,13 @@ public class ControlScript : MonoBehaviour
             {
                 lock (this)
                 {
-                    var peerToRemove = remotePeers?.FirstOrDefault(p => p.Id == peerId);
+                    var peerToRemove = Conductor.Instance.GetPeers().FirstOrDefault(p => p.Id == peerId);
                     if (peerToRemove != null)
-                        remotePeers.Remove(peerToRemove);
+                    {
+                        Conductor.Peer peer = new Conductor.Peer { Id = peerToRemove.Id, Name = peerToRemove.Name };
+                        Conductor.Instance.RemovePeer(peer);
+                        commandQueue.Add(new Command { type = CommandType.RemoveRemotePeer, remotePeer = peer });
+                    }
                 }
             }).AsTask().Wait();
         };
@@ -355,7 +390,7 @@ public class ControlScript : MonoBehaviour
                     if (status == Status.Connecting)
                     {
                         status = Status.Connected;
-                        command = Command.SetConnected;
+                        commandQueue.Add(new Command { type = CommandType.SetConnected });
                     }
                     else
                     {
@@ -375,7 +410,7 @@ public class ControlScript : MonoBehaviour
                     if (status == Status.Connecting)
                     {
                         status = Status.NotConnected;
-                        command = Command.SetNotConnected;
+                        commandQueue.Add(new Command { type = CommandType.SetNotConnected });
                     }
                     else
                     {
@@ -394,9 +429,8 @@ public class ControlScript : MonoBehaviour
                 {
                     if (status == Status.Disconnecting)
                     {
-                        remotePeers?.Clear();
                         status = Status.NotConnected;
-                        command = Command.SetNotConnected;
+                        commandQueue.Add(new Command { type = CommandType.SetNotConnected });
                     }
                     else
                     {
@@ -420,7 +454,7 @@ public class ControlScript : MonoBehaviour
                     if (status == Status.Calling)
                     {
                         status = Status.InCall;
-                        command = Command.SetInCall;
+                        commandQueue.Add(new Command { type = CommandType.SetInCall });
                     }
                     else
                     {
@@ -440,7 +474,7 @@ public class ControlScript : MonoBehaviour
                     if (status == Status.EndingCall)
                     {
                         status = Status.Connected;
-                        command = Command.SetConnected;
+                        commandQueue.Add(new Command { type = CommandType.SetConnected });
                     }
                     else
                     {
