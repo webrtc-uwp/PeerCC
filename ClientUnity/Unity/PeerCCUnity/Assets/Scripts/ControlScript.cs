@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using UnityEngine.EventSystems;
 
 #if !UNITY_EDITOR
-using Org.WebRtc;
 using Windows.UI.Core;
 using Windows.Foundation;
 using Windows.Media.Core;
@@ -56,7 +55,9 @@ public class ControlScript : MonoBehaviour
     private struct Command
     {
         public CommandType type;
+#if !UNITY_EDITOR
         public Conductor.Peer remotePeer;
+#endif
     }
 
     private Status status = Status.NotConnected;
@@ -218,7 +219,7 @@ public class ControlScript : MonoBehaviour
                 }
                 else if (command.type == CommandType.RemoveRemotePeer)
                 {
-                    for (int i = 0; i < PeerContent.GetChildCount(); i++)
+                    for (int i = 0; i < PeerContent.transform.childCount; i++)
                     {
                         if (PeerContent.GetChild(i).GetComponent<Text>().text == command.remotePeer.Name)
                         {
@@ -313,7 +314,7 @@ public class ControlScript : MonoBehaviour
     public void OnRemotePeerItemClick(PointerEventData data)
     {
 #if !UNITY_EDITOR
-        for (int i = 0; i < PeerContent.GetChildCount(); i++)
+        for (int i = 0; i < PeerContent.transform.childCount; i++)
         {
             if (PeerContent.GetChild(i) == data.selectedObject.transform)
             {
@@ -502,6 +503,28 @@ public class ControlScript : MonoBehaviour
             }
         });
         Conductor.Instance.VideoCodec = videoCodecList.ElementAt(2);
+
+        Conductor.CaptureCapability selectedCapability = null;
+        var videoDeviceList = Conductor.Instance.GetVideoCaptureDevices();
+        foreach (Conductor.MediaDevice device in videoDeviceList)
+        {
+            Conductor.Instance.GetVideoCaptureCapabilities(device.Id).AsTask().ContinueWith(capabilities =>
+            {
+                foreach (Conductor.CaptureCapability capability in capabilities.Result)
+                {
+                    if (selectedCapability == null)
+                        selectedCapability = capability;
+                    System.Diagnostics.Debug.WriteLine("Video device capability - " + device.Name + " - " + capability.Width + "x" + capability.Height + "@" + capability.FrameRate);
+                }
+            }).Wait();
+        }
+
+        if (selectedCapability != null)
+        {
+            Conductor.Instance.VideoCaptureProfile = selectedCapability;
+            Conductor.Instance.UpdatePreferredFrameFormat();
+            System.Diagnostics.Debug.WriteLine("Selected video device capability - " + selectedCapability.Width + "x" + selectedCapability.Height + "@" + selectedCapability.FrameRate);
+        }
 
 #endif
     }

@@ -279,9 +279,6 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\Unity\Unprocessed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>.\Unity\Unprocessed\$(PlatformShortName)\Assembly-CSharp.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEngine.AnimationModule">
       <HintPath>..\Unity\Unprocessed\UnityEngine.AnimationModule.dll</HintPath>
     </Reference>
@@ -385,11 +382,13 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <ItemGroup>
-    <UnprocessedFile Include="$(ProjectDir)Unity\Unprocessed\*" />
     <UnprocessedFileCommon Include="$(ProjectDir)..\Unity\Unprocessed\*" />
-    <UnprocessedFilePlatform Include="$(ProjectDir)Unity\Unprocessed\$(PlatformShortName)\*" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Assembly-CSharp\Assembly-CSharp.csproj">
+      <Project>{661efde0-ed45-41a2-8e83-d8c6473d8988}</Project>
+      <Name>Assembly-CSharp</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ClientCore\PeerConnectionClientCore.csproj">
       <Project>{217faa3a-8fc1-4663-ba00-2f842b3ff4e1}</Project>
       <Name>PeerConnectionClientCore</Name>
@@ -435,9 +434,9 @@
     <Message Importance="high" Text="UnityWSAPlayerDir &quot;$(UnityWSAPlayerDir)&quot;." />
     <Message Importance="high" Text="UnityProjectDir &quot;$(UnityProjectDir)&quot;." />
     <Message Importance="high" Text="Copying unprocessed assemblies..." />
-    <Copy SourceFiles="@(UnprocessedFile)" DestinationFolder="$(ProjectDir)" />
     <Copy SourceFiles="@(UnprocessedFileCommon)" DestinationFolder="$(ProjectDir)" />
-    <Copy SourceFiles="@(UnprocessedFilePlatform)" DestinationFolder="$(ProjectDir)" />
+    <Copy SourceFiles="..\Output\PeerCC.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.dll" DestinationFiles="$(ProjectDir)Assembly-CSharp.dll" />
+    <Copy SourceFiles="..\Output\PeerCC.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.pdb" DestinationFiles="$(ProjectDir)Assembly-CSharp.pdb" Condition="Exists('..\Output\PeerCC.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.pdb')" />
     <PropertyGroup Condition=" '$(Configuration)' == 'Master' ">
       <RemoveDebuggableAttribute>True</RemoveDebuggableAttribute>
     </PropertyGroup>
