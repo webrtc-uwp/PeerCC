@@ -216,6 +216,11 @@ public class ControlScript : MonoBehaviour
                     entry.eventID = EventTriggerType.PointerDown;
                     entry.callback.AddListener((data) => { OnRemotePeerItemClick((PointerEventData)data); });
                     trigger.triggers.Add(entry);
+                    if (selectedPeerIndex == -1)
+                    {
+                        textItem.GetComponent<Text>().fontStyle = FontStyle.Bold;
+                        selectedPeerIndex = PeerContent.transform.childCount - 1;
+                    }
                 }
                 else if (command.type == CommandType.RemoveRemotePeer)
                 {
@@ -225,7 +230,17 @@ public class ControlScript : MonoBehaviour
                         {
                             PeerContent.GetChild(i).SetParent(null);
                             if (selectedPeerIndex == i)
-                                selectedPeerIndex = -1;
+                            {
+                                if (PeerContent.transform.childCount > 0)
+                                {
+                                    PeerContent.GetChild(0).GetComponent<Text>().fontStyle = FontStyle.Bold;
+                                    selectedPeerIndex = 0;
+                                }
+                                else
+                                {
+                                    selectedPeerIndex = -1;
+                                }
+                            }
                             break;
                         }
                     }
@@ -503,6 +518,7 @@ public class ControlScript : MonoBehaviour
             }
         });
         Conductor.Instance.VideoCodec = videoCodecList.ElementAt(2);
+        System.Diagnostics.Debug.WriteLine("Selected video codec - " + Conductor.Instance.VideoCodec.Name);
 
         Conductor.CaptureCapability selectedCapability = null;
         var videoDeviceList = Conductor.Instance.GetVideoCaptureDevices();
