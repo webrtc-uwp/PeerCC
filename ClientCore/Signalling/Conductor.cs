@@ -622,7 +622,7 @@ namespace PeerConnectionClient.Signalling
                 // Always include audio/video enabled in the media stream,
                 // so it will be possible to enable/disable audio/video if 
                 // the call was initiated without microphone/camera
-                audioEnabled = false,
+                audioEnabled = true,
                 videoEnabled = true
             };
 
@@ -733,8 +733,8 @@ namespace PeerConnectionClient.Signalling
 
                     _peerConnection.Close(); // Slow, so do this after UI updated and camera turned off
 
-                    SessionId = null;
 #if ORTCLIB
+                    SessionId = null;
                     OrtcStatsManager.Instance.CallEnded();
 #endif
                     _peerConnection = null;
