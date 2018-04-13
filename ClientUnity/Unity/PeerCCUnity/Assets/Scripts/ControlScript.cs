@@ -315,7 +315,12 @@ public class ControlScript : MonoBehaviour
             }
             else if (status == Status.InCall)
             {
-                new Task(() => { var task = Conductor.Instance.DisconnectFromPeer(); }).Start();
+                new Task(() =>
+                {
+                    Plugin.UnloadLocalMediaStreamSource();
+                    Plugin.UnloadRemoteMediaStreamSource();
+                    var task = Conductor.Instance.DisconnectFromPeer();
+                }).Start();
                 status = Status.EndingCall;
             }
             else
@@ -367,7 +372,7 @@ public class ControlScript : MonoBehaviour
         // A Peer is connected to the server event handler
         Conductor.Instance.Signaller.OnPeerConnected += (peerId, peerName) =>
         {
-            RunOnUiThread(() =>
+            var task = RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -375,13 +380,13 @@ public class ControlScript : MonoBehaviour
                     Conductor.Instance.AddPeer(peer);
                     commandQueue.Add(new Command { type = CommandType.AddRemotePeer, remotePeer = peer });
                 }
-            }).AsTask().Wait();
+            });
         };
 
         // A Peer is disconnected from the server event handler
         Conductor.Instance.Signaller.OnPeerDisconnected += peerId =>
         {
-            RunOnUiThread(() =>
+            var task = RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -393,13 +398,13 @@ public class ControlScript : MonoBehaviour
                         commandQueue.Add(new Command { type = CommandType.RemoveRemotePeer, remotePeer = peer });
                     }
                 }
-            }).AsTask().Wait();
+            });
         };
 
         // The user is Signed in to the server event handler
         Conductor.Instance.Signaller.OnSignedIn += () =>
         {
-            RunOnUiThread(() =>
+            var task = RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -413,13 +418,13 @@ public class ControlScript : MonoBehaviour
                         System.Diagnostics.Debug.WriteLine("Signaller.OnSignedIn() - wrong status - " + status);
                     }
                 }
-            }).AsTask().Wait();
+            });
         };
 
         // Failed to connect to the server event handler
         Conductor.Instance.Signaller.OnServerConnectionFailure += () =>
         {
-            RunOnUiThread(() =>
+            var task = RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -433,13 +438,13 @@ public class ControlScript : MonoBehaviour
                         System.Diagnostics.Debug.WriteLine("Signaller.OnServerConnectionFailure() - wrong status - " + status);
                     }
                 }
-            }).AsTask().Wait();
+            });
         };
 
         // The current user is disconnected from the server event handler
         Conductor.Instance.Signaller.OnDisconnected += () =>
         {
-            RunOnUiThread(() =>
+            var task = RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -453,7 +458,7 @@ public class ControlScript : MonoBehaviour
                         System.Diagnostics.Debug.WriteLine("Signaller.OnDisconnected() - wrong status - " + status);
                     }
                 }
-            }).AsTask().Wait();
+            });
         };
 
         Conductor.Instance.OnAddRemoteStream += Conductor_OnAddRemoteStream;
@@ -463,7 +468,7 @@ public class ControlScript : MonoBehaviour
         // Connected to a peer event handler
         Conductor.Instance.OnPeerConnectionCreated += () =>
         {
-            RunOnUiThread(() =>
+            var task = RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -477,13 +482,13 @@ public class ControlScript : MonoBehaviour
                         System.Diagnostics.Debug.WriteLine("Conductor.OnPeerConnectionCreated() - wrong status - " + status);
                     }
                 }
-            }).AsTask().Wait();
+            });
         };
 
         // Connection between the current user and a peer is closed event handler
         Conductor.Instance.OnPeerConnectionClosed += () =>
         {
-            RunOnUiThread(() =>
+            var task = RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -497,27 +502,19 @@ public class ControlScript : MonoBehaviour
                         System.Diagnostics.Debug.WriteLine("Conductor.OnPeerConnectionClosed() - wrong status - " + status);
                     }
                 }
-            }).AsTask().Wait();
+            });
         };
 
         // Ready to connect to the server event handler
-        Conductor.Instance.OnReadyToConnect += () => { RunOnUiThread(() => { }).AsTask().Wait(); };
+        Conductor.Instance.OnReadyToConnect += () => { var task = RunOnUiThread(() => { }); };
 
         var audioCodecList = Conductor.Instance.GetAudioCodecs();
-        Conductor.Instance.AudioCodec = audioCodecList.First();
+        Conductor.Instance.AudioCodec = audioCodecList.FirstOrDefault(c => c.Name == "opus");
+        System.Diagnostics.Debug.WriteLine("Selected audio codec - " + Conductor.Instance.AudioCodec.Name);
 
         // Order the video codecs so that the stable VP8 is in front.
-        var videoCodecList = Conductor.Instance.GetVideoCodecs().OrderBy(codec =>
-        {
-            switch (codec.Name)
-            {
-                case "VP8": return 1;
-                case "VP9": return 2;
-                case "H264": return 3;
-                default: return 99;
-            }
-        });
-        Conductor.Instance.VideoCodec = videoCodecList.ElementAt(2);
+        var videoCodecList = Conductor.Instance.GetVideoCodecs();
+        Conductor.Instance.VideoCodec = videoCodecList.FirstOrDefault(c => c.Name == "H264");
         System.Diagnostics.Debug.WriteLine("Selected video codec - " + Conductor.Instance.VideoCodec.Name);
 
         Conductor.CaptureCapability selectedCapability = null;
@@ -548,29 +545,32 @@ public class ControlScript : MonoBehaviour
     private void Conductor_OnAddRemoteStream()
     {
 #if !UNITY_EDITOR
-        RunOnUiThread(() =>
+        var task = RunOnUiThread(() =>
         {
             lock (this)
             {
                 if (status == Status.InCall)
                 {
-                    var source = Conductor.Instance.CreateRemoteMediaStreamSource("H264");
+                    IMediaSource source;
+                    if (Conductor.Instance.VideoCodec.Name == "H264")
+                        source = Conductor.Instance.CreateRemoteMediaStreamSource("H264");
+                    else
+                        source = Conductor.Instance.CreateRemoteMediaStreamSource("I420");
                     Plugin.LoadRemoteMediaStreamSource((MediaStreamSource)source);
-                    Plugin.RemotePlay();
                 }
                 else
                 {
                     System.Diagnostics.Debug.WriteLine("Conductor.OnAddRemoteStream() - wrong status - " + status);
                 }
             }
-        }).AsTask();
+        });
 #endif
     }
 
     private void Conductor_OnRemoveRemoteStream()
     {
 #if !UNITY_EDITOR
-        RunOnUiThread(() =>
+        var task = RunOnUiThread(() =>
         {
             lock (this)
             {
@@ -582,14 +582,14 @@ public class ControlScript : MonoBehaviour
                     System.Diagnostics.Debug.WriteLine("Conductor.OnRemoveRemoteStream() - wrong status - " + status);
                 }
             }
-        }).AsTask();
+        });
 #endif
     }
 
     private void Conductor_OnAddLocalStream()
     {
 #if !UNITY_EDITOR
-        RunOnUiThread(() =>
+        var task = RunOnUiThread(() =>
         {
             lock (this)
             {
@@ -597,7 +597,6 @@ public class ControlScript : MonoBehaviour
                 {
                     var source = Conductor.Instance.CreateLocalMediaStreamSource("I420");
                     Plugin.LoadLocalMediaStreamSource((MediaStreamSource)source);
-                    Plugin.LocalPlay();
 
                     Conductor.Instance.EnableLocalVideoStream();
                     Conductor.Instance.UnmuteMicrophone();
@@ -607,7 +606,7 @@ public class ControlScript : MonoBehaviour
                     System.Diagnostics.Debug.WriteLine("Conductor.OnAddLocalStream() - wrong status - " + status);
                 }
             }
-        }).AsTask().Wait();
+        });
 #endif
     }
 
@@ -635,8 +634,14 @@ public class ControlScript : MonoBehaviour
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LoadLocalMediaStreamSource")]
         internal static extern void LoadLocalMediaStreamSource(MediaStreamSource IMediaSourceHandler);
 
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "UnloadLocalMediaStreamSource")]
+        internal static extern void UnloadLocalMediaStreamSource();
+
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LoadRemoteMediaStreamSource")]
         internal static extern void LoadRemoteMediaStreamSource(MediaStreamSource IMediaSourceHandler);
+
+        [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "UnloadRemoteMediaStreamSource")]
+        internal static extern void UnloadRemoteMediaStreamSource();
 #endif
 
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LocalPlay")]

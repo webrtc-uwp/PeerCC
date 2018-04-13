@@ -13,7 +13,9 @@ EXPORTS
    GetLocalPrimaryTexture
    GetRemotePrimaryTexture
    LoadLocalMediaStreamSource
+   UnloadLocalMediaStreamSource
    LoadRemoteMediaStreamSource
+   UnloadRemoteMediaStreamSource
    LocalPlay
    RemotePlay
    LocalPause

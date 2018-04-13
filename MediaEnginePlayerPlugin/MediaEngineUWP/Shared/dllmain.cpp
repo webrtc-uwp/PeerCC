@@ -166,11 +166,27 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API LoadLocalMediaStreamS
 	}
 }
 
+extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnloadLocalMediaStreamSource()
+{
+	if (s_localPlayer != nullptr)
+	{
+		s_localPlayer->SetMediaStreamSource(nullptr);
+	}
+}
+
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API LoadRemoteMediaStreamSource(Windows::Media::Core::IMediaStreamSource^ mediaSourceHandle)
 {
 	if (mediaSourceHandle != nullptr && s_remotePlayer != nullptr)
 	{
 		s_remotePlayer->SetMediaStreamSource(mediaSourceHandle);
+	}
+}
+
+extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnloadRemoteMediaStreamSource()
+{
+	if (s_remotePlayer != nullptr)
+	{
+		s_remotePlayer->SetMediaStreamSource(nullptr);
 	}
 }
 

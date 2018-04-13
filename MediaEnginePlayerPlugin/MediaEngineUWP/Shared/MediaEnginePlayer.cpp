@@ -496,12 +496,19 @@ HRESULT MEPlayer::GetPrimary2DTexture(UINT32 width, UINT32 height, ID3D11Texture
 
 HRESULT MEPlayer::SetMediaStreamSource(Windows::Media::Core::IMediaStreamSource^ streamSource)
 {
+	HRESULT hr;
+	if (streamSource == nullptr)
+	{
+		hr = m_spEngineEx->SetSource(nullptr);
+		return S_OK;
+	}
+
 	boolean replaced;
 	auto streamInspect = reinterpret_cast<IInspectable*>(streamSource);
 	// Create a random URL that we'll use to map to the media source.
 	std::wstring url(L"webrtc://");
 	GUID result;
-	HRESULT hr = CoCreateGuid(&result);
+	hr = CoCreateGuid(&result);
 	if (FAILED(hr))
 	{
 		throw ref new COMException(hr, ref new String(L"Failed to create a GUID"));
