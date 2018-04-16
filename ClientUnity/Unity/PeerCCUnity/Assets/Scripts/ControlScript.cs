@@ -317,8 +317,6 @@ public class ControlScript : MonoBehaviour
             {
                 new Task(() =>
                 {
-                    Plugin.UnloadLocalMediaStreamSource();
-                    Plugin.UnloadRemoteMediaStreamSource();
                     var task = Conductor.Instance.DisconnectFromPeer();
                 }).Start();
                 status = Status.EndingCall;
@@ -477,6 +475,11 @@ public class ControlScript : MonoBehaviour
                         status = Status.InCall;
                         commandQueue.Add(new Command { type = CommandType.SetInCall });
                     }
+                    else if (status == Status.Connected)
+                    {
+                        status = Status.InCall;
+                        commandQueue.Add(new Command { type = CommandType.SetInCall });
+                    }
                     else
                     {
                         System.Diagnostics.Debug.WriteLine("Conductor.OnPeerConnectionCreated() - wrong status - " + status);
@@ -494,6 +497,15 @@ public class ControlScript : MonoBehaviour
                 {
                     if (status == Status.EndingCall)
                     {
+                        Plugin.UnloadLocalMediaStreamSource();
+                        Plugin.UnloadRemoteMediaStreamSource();
+                        status = Status.Connected;
+                        commandQueue.Add(new Command { type = CommandType.SetConnected });
+                    }
+                    else if (status == Status.InCall)
+                    {
+                        Plugin.UnloadLocalMediaStreamSource();
+                        Plugin.UnloadRemoteMediaStreamSource();
                         status = Status.Connected;
                         commandQueue.Add(new Command { type = CommandType.SetConnected });
                     }
@@ -558,6 +570,15 @@ public class ControlScript : MonoBehaviour
                         source = Conductor.Instance.CreateRemoteMediaStreamSource("I420");
                     Plugin.LoadRemoteMediaStreamSource((MediaStreamSource)source);
                 }
+                else if (status == Status.Connected)
+                {
+                    IMediaSource source;
+                    if (Conductor.Instance.VideoCodec.Name == "H264")
+                        source = Conductor.Instance.CreateRemoteMediaStreamSource("H264");
+                    else
+                        source = Conductor.Instance.CreateRemoteMediaStreamSource("I420");
+                    Plugin.LoadRemoteMediaStreamSource((MediaStreamSource)source);
+                }
                 else
                 {
                     System.Diagnostics.Debug.WriteLine("Conductor.OnAddRemoteStream() - wrong status - " + status);
@@ -577,6 +598,9 @@ public class ControlScript : MonoBehaviour
                 if (status == Status.InCall)
                 {
                 }
+                else if (status == Status.Connected)
+                {
+                }
                 else
                 {
                     System.Diagnostics.Debug.WriteLine("Conductor.OnRemoveRemoteStream() - wrong status - " + status);
@@ -594,6 +618,14 @@ public class ControlScript : MonoBehaviour
             lock (this)
             {
                 if (status == Status.InCall)
+                {
+                    var source = Conductor.Instance.CreateLocalMediaStreamSource("I420");
+                    Plugin.LoadLocalMediaStreamSource((MediaStreamSource)source);
+
+                    Conductor.Instance.EnableLocalVideoStream();
+                    Conductor.Instance.UnmuteMicrophone();
+                }
+                else if (status == Status.Connected)
                 {
                     var source = Conductor.Instance.CreateLocalMediaStreamSource("I420");
                     Plugin.LoadLocalMediaStreamSource((MediaStreamSource)source);
