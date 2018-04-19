@@ -520,6 +520,18 @@ public class ControlScript : MonoBehaviour
         // Ready to connect to the server event handler
         Conductor.Instance.OnReadyToConnect += () => { var task = RunOnUiThread(() => { }); };
 
+        List<Conductor.IceServer> iceServers = new List<Conductor.IceServer>();
+        iceServers.Add(new Conductor.IceServer { Host = "stun.l.google.com:19302", Type = Conductor.IceServer.ServerType.STUN });
+        iceServers.Add(new Conductor.IceServer { Host = "stun1.l.google.com:19302", Type = Conductor.IceServer.ServerType.STUN });
+        iceServers.Add(new Conductor.IceServer { Host = "stun2.l.google.com:19302", Type = Conductor.IceServer.ServerType.STUN });
+        iceServers.Add(new Conductor.IceServer { Host = "stun3.l.google.com:19302", Type = Conductor.IceServer.ServerType.STUN });
+        iceServers.Add(new Conductor.IceServer { Host = "stun4.l.google.com:19302", Type = Conductor.IceServer.ServerType.STUN });
+        Conductor.IceServer turnServer = new Conductor.IceServer { Host = "turnserver3dstreaming.centralus.cloudapp.azure.com:5349", Type = Conductor.IceServer.ServerType.TURN };
+        turnServer.Credential = "3Dtoolkit072017";
+        turnServer.Username = "user";
+        iceServers.Add(turnServer);
+        Conductor.Instance.ConfigureIceServers(iceServers);
+
         var audioCodecList = Conductor.Instance.GetAudioCodecs();
         Conductor.Instance.AudioCodec = audioCodecList.FirstOrDefault(c => c.Name == "opus");
         System.Diagnostics.Debug.WriteLine("Selected audio codec - " + Conductor.Instance.AudioCodec.Name);
