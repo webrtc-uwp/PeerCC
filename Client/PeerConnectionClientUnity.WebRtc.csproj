@@ -4,7 +4,7 @@
   <Import Project="UnityCommon.props" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A2EA7350-EE59-42C5-9323-C942B058B217}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -357,8 +357,18 @@
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <ItemGroup>
     <UnprocessedFile Include="$(ProjectDir)Unity\Unprocessed\*" />
-	<UnprocessedFileCommon Include="$(ProjectDir)..\Unity\Unprocessed\*" />
+    <UnprocessedFileCommon Include="$(ProjectDir)..\Unity\Unprocessed\*" />
     <UnprocessedFilePlatform Include="$(ProjectDir)Unity\Unprocessed\$(PlatformShortName)\*" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClientCore\PeerConnectionClientCore.csproj">
+      <Project>{217faa3a-8fc1-4663-ba00-2f842b3ff4e1}</Project>
+      <Name>PeerConnectionClientCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MediaEnginePlayerPlugin\WebRtcScheme\WebRtcScheme.vcxproj">
+      <Project>{b02463bf-335c-4d04-a8cd-975a875223ee}</Project>
+      <Name>WebRtcScheme</Name>
+    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

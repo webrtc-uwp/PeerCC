@@ -85,7 +85,6 @@ namespace PeerConnectionClient
                 if (Windows.Foundation.Metadata.ApiInformation.IsApiContractPresent("Windows.Phone.PhoneContract", 1))
                     isPhone = true;
 #endif
-                appCallbacks.SetKeyboardTriggerControl(this);
                 appCallbacks.SetSwapChainPanel(GetSwapChainPanel());
                 appCallbacks.SetCoreWindowEvents(Window.Current.CoreWindow);
                 appCallbacks.InitializeD3DXAML();
@@ -199,11 +198,6 @@ namespace PeerConnectionClient
             //    Window.Current.SizeChanged -= onResizeHandler;
             //    onResizeHandler = null;
             //}
-        }
-
-        protected override Windows.UI.Xaml.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
-        {
-            return new UnityPlayer.XamlPageAutomationPeer(this);
         }
 #endif
 

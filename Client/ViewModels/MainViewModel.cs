@@ -424,10 +424,10 @@ namespace PeerConnectionClient.ViewModels
                         ), false);
                     }
 #else
-                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
+                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
                     //PeerVideo.Source = null;
 
-                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
+                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
                     //SelfVideo.Stop();
                     //SelfVideo.ClearValue(MediaElement.SourceProperty);
                     //SelfVideo.Source = null;

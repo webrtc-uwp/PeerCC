@@ -106,15 +106,11 @@
     <Compile Include="Model\Peer.cs" />
     <Compile Include="MVVM\BindableBase.cs" />
     <Compile Include="MVVM\DispatcherBindableBase.cs" />
-    <Compile Include="Signalling\Conductor.cs" />
-    <Compile Include="Signalling\Signalling.cs" />
     <Compile Include="Utilities\ActionCommand.cs" />
-    <Compile Include="Utilities\AppPerf.cs" />
     <Compile Include="Utilities\BoolToVisConverter.cs" />
     <Compile Include="Utilities\InvertedBooleanConverter.cs" />
     <Compile Include="Utilities\NtpService.cs" />
     <Compile Include="Utilities\NullToVisibleConverter.cs" />
-    <Compile Include="Utilities\SdpUtils.cs" />
     <Compile Include="Utilities\ToggleImageConverter.cs" />
     <Compile Include="Utilities\UI\ErrorControl.xaml.cs">
       <DependentUpon>ErrorControl.xaml</DependentUpon>
@@ -123,7 +119,6 @@
     <Compile Include="Utilities\ValidableIntegerString.cs" />
     <Compile Include="Utilities\ValidableNonEmptyString.cs" />
     <Compile Include="Utilities\VideoCaptureFormat.cs" />
-    <Compile Include="Utilities\XmlSerializer.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -172,9 +167,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Uwp\Org.WebRtc.Uwp.vcxproj">
-      <Project>{32a4abd8-eb1c-4198-b261-425e6caddbef}</Project>
-      <Name>Org.WebRtc.Uwp</Name>
+    <ProjectReference Include="..\ClientCore\PeerConnectionClientCore.csproj">
+      <Project>{217faa3a-8fc1-4663-ba00-2f842b3ff4e1}</Project>
+      <Name>PeerConnectionClientCore</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
