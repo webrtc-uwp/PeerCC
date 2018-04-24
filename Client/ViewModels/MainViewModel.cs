@@ -83,7 +83,7 @@ namespace PeerConnectionClient.ViewModels
             // Prepare Hockey app to collect the crash logs and send to the server
             LoadHockeyAppSettings();
 
-            Conductor.Instance.Initialize(uiDispatcher);
+            Conductor.Instance.Initialize(uiDispatcher, SelfVideo, PeerVideo);
         }
 
         private void Conductor_Initialized(bool succeeded)
@@ -111,21 +111,7 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="e">Details about the exception routed event.</param>
         public void PeerVideo_MediaFailed(object sender, ExceptionRoutedEventArgs e)
         {
-          Debug.WriteLine("PeerVideo_MediaFailed");
-          //if (_peerVideoTrack != null)
-          if (false)
-          {
-            //Debug.WriteLine("Re-establishing peer video");
-
-            //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
-            //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
-            //RunOnUiThread(() =>
-            //{
-            //  PeerVideo.SetMediaStreamSource(source);
-            //  Debug.WriteLine("Peer video re-established");
-            //});
-
-            }
+            Debug.WriteLine("PeerVideo_MediaFailed");
         }
 
         /// <summary>
@@ -136,21 +122,7 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="e">Details about the exception routed event.</param>
         public void SelfVideo_MediaFailed(object sender, ExceptionRoutedEventArgs e)
         {
-          Debug.WriteLine("SelfVideo_MediaFailed");
-          //if (_selfVideoTrack != null && VideoLoopbackEnabled)
-          if (VideoLoopbackEnabled)
-          {
-            Debug.WriteLine("Re-establishing self video");
-
-                //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
-                //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
-                //RunOnUiThread(() =>
-                //{
-                //    SelfVideo.SetMediaStreamSource(source);
-                //    Debug.WriteLine("Self video re-established");
-                //});
-
-            }
+            Debug.WriteLine("SelfVideo_MediaFailed");
         }
 
         // Help to make sure the screen is not locked while on call
@@ -411,28 +383,6 @@ namespace PeerConnectionClient.ViewModels
                 RunOnUiThread(() =>
                 {
                     IsConnectedToPeer = false;
-
-#if UNITY
-                    if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
-                    {
-                        UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
-                        {
-                            UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                            go.GetComponent<ControlScript>().DestroyLocalMediaStreamSource();
-                            go.GetComponent<ControlScript>().DestroyRemoteMediaStreamSource();
-                        }
-                        ), false);
-                    }
-#else
-                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
-                    //PeerVideo.Source = null;
-
-                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
-                    //SelfVideo.Stop();
-                    //SelfVideo.ClearValue(MediaElement.SourceProperty);
-                    //SelfVideo.Source = null;
-#endif
-                    GC.Collect(); // Ensure all references are truly dropped.
                     IsMicrophoneEnabled = true;
                     IsCameraEnabled = true;
                     SelfVideoFps = PeerVideoFps = "";
@@ -762,9 +712,9 @@ namespace PeerConnectionClient.ViewModels
         /// New connection health statistics received.
         /// </summary>
         /// <param name="stats">Connection health statistics.</param>
-        private void Conductor_OnPeerConnectionHealthStats()
+        private void Conductor_OnPeerConnectionHealthStats(Conductor.PeerConnectionHealthStats stats)
         {
-            //PeerConnectionHealthStats = stats; 
+            PeerConnectionHealthStats = stats; 
         }
 #endif
 
@@ -1089,7 +1039,7 @@ namespace PeerConnectionClient.ViewModels
                 ConnectToPeerCommand.RaiseCanExecuteChanged();
                 DisconnectFromPeerCommand.RaiseCanExecuteChanged();
 
-                //PeerConnectionHealthStats = null;
+                PeerConnectionHealthStats = null;
                 UpdatePeerConnHealthStatsVisibilityHelper();
                 UpdateLoopbackVideoVisibilityHelper();
             }
@@ -1814,10 +1764,9 @@ namespace PeerConnectionClient.ViewModels
         /// <summary>
         /// Peer connection health statistics from WebRTC.
         /// </summary>
-#if false
-        private RTCPeerConnectionHealthStats _peerConnectionHealthStats;
+        private Conductor.PeerConnectionHealthStats _peerConnectionHealthStats;
 
-        public RTCPeerConnectionHealthStats PeerConnectionHealthStats
+        public Conductor.PeerConnectionHealthStats PeerConnectionHealthStats
         {
             get { return _peerConnectionHealthStats; }
             set
@@ -1828,7 +1777,7 @@ namespace PeerConnectionClient.ViewModels
                 }
             }
         }
-#endif
+
         /// <summary>
         /// Enable/Disable peer connection health stats.
         /// </summary>
@@ -2402,8 +2351,7 @@ namespace PeerConnectionClient.ViewModels
         /// </summary>
         public void UpdatePeerConnHealthStatsVisibilityHelper()
         {
-            //if (IsConnectedToPeer && PeerConnectionHealthStatsEnabled && PeerConnectionHealthStats != null)
-            if (IsConnectedToPeer && PeerConnectionHealthStatsEnabled)
+            if (IsConnectedToPeer && PeerConnectionHealthStatsEnabled && PeerConnectionHealthStats != null)
             {
                 ShowPeerConnectionHealthStats = true;
             }

@@ -350,6 +350,9 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <None Include="UnityCommon.props">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="WSATestCertificate.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -385,17 +388,13 @@
     <UnprocessedFileCommon Include="$(ProjectDir)..\Unity\Unprocessed\*" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Assembly-CSharp\Assembly-CSharp.csproj">
-      <Project>{661efde0-ed45-41a2-8e83-d8c6473d8988}</Project>
-      <Name>Assembly-CSharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ClientCore\PeerConnectionClientCore.csproj">
-      <Project>{217faa3a-8fc1-4663-ba00-2f842b3ff4e1}</Project>
-      <Name>PeerConnectionClientCore</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MediaEnginePlayerPlugin\WebRtcScheme\WebRtcScheme.vcxproj">
       <Project>{b02463bf-335c-4d04-a8cd-975a875223ee}</Project>
       <Name>WebRtcScheme</Name>
+    </ProjectReference>
+    <ProjectReference Include="Unity\Assembly-CSharp\Assembly-CSharp.csproj">
+      <Project>{661efde0-ed45-41a2-8e83-d8c6473d8988}</Project>
+      <Name>Assembly-CSharp</Name>
     </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
@@ -435,8 +434,8 @@
     <Message Importance="high" Text="UnityProjectDir &quot;$(UnityProjectDir)&quot;." />
     <Message Importance="high" Text="Copying unprocessed assemblies..." />
     <Copy SourceFiles="@(UnprocessedFileCommon)" DestinationFolder="$(ProjectDir)" />
-    <Copy SourceFiles="..\Output\PeerCC.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.dll" DestinationFiles="$(ProjectDir)Assembly-CSharp.dll" />
-    <Copy SourceFiles="..\Output\PeerCC.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.pdb" DestinationFiles="$(ProjectDir)Assembly-CSharp.pdb" Condition="Exists('..\Output\PeerCC.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.pdb')" />
+    <Copy SourceFiles="..\Output\PeerCC.ClientUnityD3D.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.dll" DestinationFiles="$(ProjectDir)Assembly-CSharp.dll" />
+    <Copy SourceFiles="..\Output\PeerCC.ClientUnityD3D.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.pdb" DestinationFiles="$(ProjectDir)Assembly-CSharp.pdb" Condition="Exists('..\Output\PeerCC.ClientUnityD3D.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.pdb')" />
     <PropertyGroup Condition=" '$(Configuration)' == 'Master' ">
       <RemoveDebuggableAttribute>True</RemoveDebuggableAttribute>
     </PropertyGroup>

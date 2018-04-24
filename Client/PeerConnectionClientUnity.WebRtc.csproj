@@ -201,9 +201,6 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\Unity\Unprocessed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>.\Unity\Unprocessed\$(PlatformShortName)\Assembly-CSharp.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEngine.ClothModule">
       <HintPath>..\Unity\Unprocessed\UnityEngine.ClothModule.dll</HintPath>
     </Reference>
@@ -286,6 +283,9 @@
     </AppxManifest>
     <None Include="PeerConnectionClientUnity.WebRtc_TemporaryKey.pfx" />
     <None Include="project.json" />
+    <None Include="UnityCommon.props">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\Logo.scale-100.png" />
@@ -356,14 +356,12 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <ItemGroup>
-    <UnprocessedFile Include="$(ProjectDir)Unity\Unprocessed\*" />
     <UnprocessedFileCommon Include="$(ProjectDir)..\Unity\Unprocessed\*" />
-    <UnprocessedFilePlatform Include="$(ProjectDir)Unity\Unprocessed\$(PlatformShortName)\*" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ClientCore\PeerConnectionClientCore.csproj">
+    <ProjectReference Include="..\ClientCore\PeerConnectionClientUntyXamlCore.csproj">
       <Project>{217faa3a-8fc1-4663-ba00-2f842b3ff4e1}</Project>
-      <Name>PeerConnectionClientCore</Name>
+      <Name>PeerConnectionClientUntyXamlCore</Name>
     </ProjectReference>
     <ProjectReference Include="..\MediaEnginePlayerPlugin\WebRtcScheme\WebRtcScheme.vcxproj">
       <Project>{b02463bf-335c-4d04-a8cd-975a875223ee}</Project>
@@ -398,9 +396,9 @@
     <Message Importance="high" Text="UnityWSAPlayerDir &quot;$(UnityWSAPlayerDir)&quot;." />
     <Message Importance="high" Text="UnityProjectDir &quot;$(UnityProjectDir)&quot;." />
     <Message Importance="high" Text="Copying unprocessed assemblies..." />
-    <Copy SourceFiles="@(UnprocessedFile)" DestinationFolder="$(ProjectDir)" />
     <Copy SourceFiles="@(UnprocessedFileCommon)" DestinationFolder="$(ProjectDir)" />
-    <Copy SourceFiles="@(UnprocessedFilePlatform)" DestinationFolder="$(ProjectDir)" />
+    <Copy SourceFiles="..\Output\PeerCC.ClientUnityXaml.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.dll" DestinationFiles="$(ProjectDir)Assembly-CSharp.dll" />
+    <Copy SourceFiles="..\Output\PeerCC.ClientUnityXaml.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.pdb" DestinationFiles="$(ProjectDir)Assembly-CSharp.pdb" Condition="Exists('..\Output\PeerCC.ClientUnityXaml.Assembly-CSharp\WebRtc\bin\$(PlatformName)\$(ConfigurationName)\Assembly-CSharp.pdb')" />
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <RemoveDebuggableAttribute>True</RemoveDebuggableAttribute>
     </PropertyGroup>

@@ -101,6 +101,16 @@ namespace PeerConnectionClient.Signalling
 			Error
         };
 
+        public class PeerConnectionHealthStats {
+            public long ReceivedBytes { get; set; }
+            public long ReceivedKpbs { get; set; }
+            public long SentBytes { get; set; }
+            public long SentKbps { get; set; }
+            public long RTT { get; set; }
+            public string LocalCandidateType { get; set; }
+            public string RemoteCandidateType { get; set; }
+        };
+
         private static readonly object InstanceLock = new object();
         private static Conductor _instance;
 #if ORTCLIB
@@ -223,9 +233,7 @@ namespace PeerConnectionClient.Signalling
                     if (_selfVideoTrack != null)
                     {
                         Debug.WriteLine("Enabling video loopback");
-
-#if UNITY
-#if false
+#if UNITY_XAML
                         if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
                         {
                             UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
@@ -235,16 +243,10 @@ namespace PeerConnectionClient.Signalling
                             }
                             ), false);
                         }
-#endif
-#else
+#elif !UNITY
                         _media.AddVideoTrackMediaElementPair(_selfVideoTrack, _selfVideo, "SELF");
-                        //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
-                        //RunOnUiThread(() =>
-                        //{
-                        //    SelfVideo.SetMediaStreamSource(source);
-                        //    Debug.WriteLine("Video loopback enabled");
-                        //});
 #endif
+                        Debug.WriteLine("Video loopback enabled");
                     }
                 }
                 else
@@ -257,23 +259,18 @@ namespace PeerConnectionClient.Signalling
                     // internal stream source is destroyed.
                     // Apparently, with webrtc package version < 1.1.175, the internal stream source was destroyed
                     // corectly, only by setting SelfVideo.Source to null.
-#if UNITY
-#if false
-                        if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
+#if UNITY_XAML
+                    if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
+                    {
+                        UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
                         {
-                            UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
-                            {
-                                UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                                go.GetComponent<ControlScript>().DestroyRemoteMediaStreamSource();
-                            }
-                            ), false);
+                            UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
+                            go.GetComponent<ControlScript>().DestroyRemoteMediaStreamSource();
                         }
-#endif
-#else
+                        ), false);
+                    }
+#elif !UNITY
                     _media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
-                    //SelfVideo.Source = null;
-                    //SelfVideo.Stop();
-                    //SelfVideo.Source = null;
 #endif
                     GC.Collect(); // Ensure all references are truly dropped.
                 }
@@ -339,6 +336,27 @@ namespace PeerConnectionClient.Signalling
                 }
             });
 
+            Media.OnMediaDevicesChanged += (type) =>
+            {
+                MediaDeviceType deviceType;
+                switch (type)
+                {
+                    case Org.WebRtc.MediaDeviceType.MediaDeviceType_AudioCapture:
+                        deviceType = MediaDeviceType.AudioCapture;
+                        break;
+                    case Org.WebRtc.MediaDeviceType.MediaDeviceType_AudioPlayout:
+                        deviceType = MediaDeviceType.AudioPlayout;
+                        break;
+                    case Org.WebRtc.MediaDeviceType.MediaDeviceType_VideoCapture:
+                        deviceType = MediaDeviceType.VideoCapture;
+                        break;
+                    default:
+                        deviceType = MediaDeviceType.VideoCapture;
+                        break;
+                }
+                OnMediaDevicesChanged?.Invoke(deviceType);
+            };
+
             // Handler for Peer/Self video frame rate changed event
             FrameCounterHelper.FramesPerSecondChanged += (id, frameRate) =>
             {
@@ -402,7 +420,7 @@ namespace PeerConnectionClient.Signalling
             _media.SelectVideoDevice(mediaDevice);
         }
 
-        public event Action<Conductor.MediaDeviceType> OnMediaDevicesChanged;
+        public event Action<MediaDeviceType> OnMediaDevicesChanged;
 
         public event Action<string, string> FramesPerSecondChanged;
 
@@ -679,8 +697,7 @@ namespace PeerConnectionClient.Signalling
                 //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
                 if (VideoLoopbackEnabled)
                 {
-#if UNITY
-#if false
+#if UNITY_XAML
                     if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
                     {
                         UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
@@ -690,14 +707,12 @@ namespace PeerConnectionClient.Signalling
                         }
                         ), false);
                     }
-#endif
-#else
+#elif !UNITY
                     Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, _selfVideo, "SELF");
 #endif
                 }
             }
 
-            //OnAddLocalStream?.Invoke(new MediaStreamEvent() { Stream = _mediaStream });
             OnAddLocalStream?.Invoke();
 
             if (cancelationToken.IsCancellationRequested)
@@ -726,6 +741,22 @@ namespace PeerConnectionClient.Signalling
                         }
                     }
                     _mediaStream = null;
+
+#if UNITY_XAML
+                    if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
+                    {
+                        UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
+                        {
+                            UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
+                            go.GetComponent<ControlScript>().DestroyLocalMediaStreamSource();
+                            go.GetComponent<ControlScript>().DestroyRemoteMediaStreamSource();
+                        }
+                        ), false);
+                    }
+#elif !UNITY
+                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
+                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
+#endif
                     _peerVideoTrack = null;
                     _selfVideoTrack = null;
 
@@ -833,32 +864,25 @@ namespace PeerConnectionClient.Signalling
             _peerVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
             if (_peerVideoTrack != null)
             {
-#if UNITY
-#if false
+#if UNITY_XAML
                 if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
                 {
                     UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
                     {
                         UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                        //if (SelectedVideoCodec.Name == "H264")
-                        if (true)
+                        if (VideoCodec.Name == "H264")
                         {
                             go.GetComponent<ControlScript>().CreateRemoteMediaStreamSource(_peerVideoTrack, "H264", "PEER");
-                        } else
+                        }
+                        else
                         {
                             go.GetComponent<ControlScript>().CreateRemoteMediaStreamSource(_peerVideoTrack, "I420", "PEER");
                         }
                     }
                     ), false);
                 }
-#endif
-#else
+#elif !UNITY
                 _media.AddVideoTrackMediaElementPair(_peerVideoTrack, _peerVideo, "PEER");
-                //var source = _media.CreateMediaSource(_peerVideoTrack, "PEER");
-                //RunOnUiThread(() =>
-                //{
-                //    PeerVideo.SetMediaStreamSource(source);
-                //});
 #endif
             }
 
@@ -871,8 +895,7 @@ namespace PeerConnectionClient.Signalling
         public event Action OnRemoveRemoteStream;
         private void PeerConnection_OnRemoveStream(MediaStreamEvent evt)
         {
-#if UNITY
-#if false
+#if UNITY_XAML
             if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
             {
                 UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
@@ -882,10 +905,8 @@ namespace PeerConnectionClient.Signalling
                 }
                 ), false);
             }
-#endif
-#else
+#elif !UNITY
             _media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
-            //PeerVideo.SetMediaStreamSource(null);
 #endif
             OnRemoveRemoteStream?.Invoke();
         }
@@ -894,10 +915,18 @@ namespace PeerConnectionClient.Signalling
         /// Invoked when new connection health stats are available.
         /// Use ToggleConnectionHealthStats to turn on/of the connection health stats.
         /// </summary>
-        public event Action OnConnectionHealthStats;
-        private void PeerConnection_OnConnectionHealthStats(RTCPeerConnectionHealthStats stats)
-        {
-            OnConnectionHealthStats?.Invoke();
+        public event Action<PeerConnectionHealthStats> OnConnectionHealthStats;
+        public void PeerConnection_OnConnectionHealthStats(RTCPeerConnectionHealthStats stats)
+        { 
+            OnConnectionHealthStats?.Invoke(new PeerConnectionHealthStats {
+                ReceivedBytes = stats.ReceivedBytes,
+                ReceivedKpbs = stats.ReceivedKpbs,
+                SentBytes = stats.SentBytes,
+                SentKbps = stats.SentKbps,
+                RTT = stats.RTT,
+                LocalCandidateType = stats.LocalCandidateType,
+                RemoteCandidateType = stats.RemoteCandidateType
+            });
         }
 #endif
         /// <summary>
