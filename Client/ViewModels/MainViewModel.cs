@@ -83,7 +83,9 @@ namespace PeerConnectionClient.ViewModels
             // Prepare Hockey app to collect the crash logs and send to the server
             LoadHockeyAppSettings();
 
-            Conductor.Instance.Initialize(uiDispatcher, SelfVideo, PeerVideo);
+            Conductor.Instance.VideoLoopbackEnabled = _videoLoopbackEnabled;
+
+            Conductor.Instance.Initialize(uiDispatcher);
         }
 
         private void Conductor_Initialized(bool succeeded)
@@ -646,9 +648,9 @@ namespace PeerConnectionClient.ViewModels
             _peerVideoTrack = evt.Track;
             if (evt.Track != null && evt.Track.Kind == MediaStreamTrackKind.Video)
             {
-                Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
+                Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, _peerVideo, "PEER");
                 //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
-                //RunOnUiThread(() => { PeerVideo.SetMediaStreamSource(source); });
+                //RunOnUiThread(() => { _peerVideo.SetMediaStreamSource(source); });
             }
 
             IsReadyToDisconnect = true;
@@ -1187,7 +1189,6 @@ namespace PeerConnectionClient.ViewModels
                 {
                     return;
                 }
-                Conductor.Instance.VideoLoopbackEnabled = _tracingEnabled;
                 AppPerformanceCheck();
             }
         }
@@ -1427,7 +1428,7 @@ namespace PeerConnectionClient.ViewModels
             }
         }
 
-        private bool _videoLoopbackEnabled = false;
+        private bool _videoLoopbackEnabled = true;
 
         /// <summary>
         /// Video loopback indicator/control.
@@ -1819,8 +1820,29 @@ namespace PeerConnectionClient.ViewModels
         }
 
 #if !UNITY
-        public MediaElement SelfVideo;
-        public MediaElement PeerVideo;
+        private MediaElement _selfVideo;
+
+        public MediaElement SelfVideo
+        {
+            get { return _selfVideo; }
+            set
+            {
+                _selfVideo = value;
+                Conductor.Instance.SelfVideo = _selfVideo;
+            }
+        }
+
+        private MediaElement _peerVideo;
+
+        public MediaElement PeerVideo
+        {
+            get { return _peerVideo; }
+            set
+            {
+                _peerVideo = value;
+                Conductor.Instance.PeerVideo = _peerVideo;
+            }
+        }
 #endif
 
 #endregion
@@ -2019,9 +2041,9 @@ namespace PeerConnectionClient.ViewModels
 /*#if !WINDOWS_UAP // Disable on Win10 for now.
             HockeyClient.Current.ShowFeedback();
 #endif*/
-    }
+        }
 
-    private bool _settingsButtonChecked;
+        private bool _settingsButtonChecked;
 
         /// <summary>
         /// Indicator if Settings button is checked

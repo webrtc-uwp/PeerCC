@@ -148,8 +148,8 @@ namespace PeerConnectionClient.Signalling
         private MediaVideoTrack _peerVideoTrack;
         private MediaVideoTrack _selfVideoTrack;
 
-        private MediaElement _selfVideo;
-        private MediaElement _peerVideo;
+        public MediaElement SelfVideo { get; set; }
+        public MediaElement PeerVideo { get; set; }
 
         /// <summary>
         /// Video codec used in WebRTC session.
@@ -188,6 +188,8 @@ namespace PeerConnectionClient.Signalling
         private MediaStream _mediaStream;
         readonly List<RTCIceServer> _iceServers;
 
+        private CoreDispatcher _uiDispatcher;
+
         private int _peerId = -1;
         protected bool VideoEnabled = true;
         protected bool AudioEnabled = true;
@@ -217,7 +219,7 @@ namespace PeerConnectionClient.Signalling
             }
         }
 
-        bool _videoLoopbackEnabled;
+        bool _videoLoopbackEnabled = true;
         public bool VideoLoopbackEnabled
         {
             get
@@ -226,10 +228,12 @@ namespace PeerConnectionClient.Signalling
             }
             set
             {
+                if (_videoLoopbackEnabled == value)
+                    return;
+
                 _videoLoopbackEnabled = value;
                 if (_videoLoopbackEnabled)
                 {
-
                     if (_selfVideoTrack != null)
                     {
                         Debug.WriteLine("Enabling video loopback");
@@ -244,7 +248,7 @@ namespace PeerConnectionClient.Signalling
                             ), false);
                         }
 #elif !UNITY
-                        _media.AddVideoTrackMediaElementPair(_selfVideoTrack, _selfVideo, "SELF");
+                        _media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
 #endif
                         Debug.WriteLine("Video loopback enabled");
                     }
@@ -314,13 +318,7 @@ namespace PeerConnectionClient.Signalling
 
         public void Initialize(CoreDispatcher uiDispatcher)
         {
-            Initialize(uiDispatcher, null, null);
-        }
-
-        public void Initialize(CoreDispatcher uiDispatcher, MediaElement selfVideo, MediaElement peerVideo)
-        {
-            _selfVideo = selfVideo;
-            _peerVideo = peerVideo;
+            _uiDispatcher = uiDispatcher;
 
             // Display a permission dialog to request access to the microphone and camera
             WebRTC.RequestAccessForMediaCapture().AsTask().ContinueWith(antecedent =>
@@ -615,7 +613,7 @@ namespace PeerConnectionClient.Signalling
             _peerConnection.EtwStatsEnabled = _etwStatsEnabled;
             _peerConnection.ConnectionHealthStatsEnabled = _peerConnectionStatsEnabled;
 #endif
-                if (cancelationToken.IsCancellationRequested)
+            if (cancelationToken.IsCancellationRequested)
             {
                 return false;
             }
@@ -694,7 +692,6 @@ namespace PeerConnectionClient.Signalling
             _selfVideoTrack = _mediaStream.GetVideoTracks().FirstOrDefault();
             if (_selfVideoTrack != null)
             {
-                //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
                 if (VideoLoopbackEnabled)
                 {
 #if UNITY_XAML
@@ -708,7 +705,7 @@ namespace PeerConnectionClient.Signalling
                         ), false);
                     }
 #elif !UNITY
-                    Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, _selfVideo, "SELF");
+                    Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
 #endif
                 }
             }
@@ -754,9 +751,13 @@ namespace PeerConnectionClient.Signalling
                         ), false);
                     }
 #elif !UNITY
-                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
-                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
+                    _uiDispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
+                    {
+                        Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
+                        Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
+                    })).AsTask().Wait();
 #endif
+
                     _peerVideoTrack = null;
                     _selfVideoTrack = null;
 
@@ -882,7 +883,7 @@ namespace PeerConnectionClient.Signalling
                     ), false);
                 }
 #elif !UNITY
-                _media.AddVideoTrackMediaElementPair(_peerVideoTrack, _peerVideo, "PEER");
+                _media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
 #endif
             }
 
