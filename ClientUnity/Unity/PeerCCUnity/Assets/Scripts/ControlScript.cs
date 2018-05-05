@@ -17,6 +17,8 @@ using Windows.ApplicationModel.Core;
 
 public class ControlScript : MonoBehaviour
 {
+    public static ControlScript Instance { get; private set; }
+
     public uint LocalTextureWidth = 160;
     public uint LocalTextureHeight = 120;
     public uint RemoteTextureWidth = 640;
@@ -74,6 +76,8 @@ public class ControlScript : MonoBehaviour
     
     void Start()
     {
+        Instance = this;
+
 #if !UNITY_EDITOR
         Conductor.Instance.Initialized += Conductor_Initialized;
         Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
