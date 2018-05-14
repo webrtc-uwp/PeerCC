@@ -545,6 +545,10 @@ public class ControlScript : MonoBehaviour
         Conductor.Instance.VideoCodec = videoCodecList.FirstOrDefault(c => c.Name == "H264");
         System.Diagnostics.Debug.WriteLine("Selected video codec - " + Conductor.Instance.VideoCodec.Name);
 
+        uint preferredWidth = 896;
+        uint preferredHeght = 504;
+        uint preferredFrameRate = 15;
+        uint minSizeDiff = uint.MaxValue;
         Conductor.CaptureCapability selectedCapability = null;
         var videoDeviceList = Conductor.Instance.GetVideoCaptureDevices();
         foreach (Conductor.MediaDevice device in videoDeviceList)
@@ -553,8 +557,12 @@ public class ControlScript : MonoBehaviour
             {
                 foreach (Conductor.CaptureCapability capability in capabilities.Result)
                 {
-                    if (selectedCapability == null)
+                    uint sizeDiff = (uint)Math.Abs(preferredWidth - capability.Width) + (uint)Math.Abs(preferredHeght - capability.Height);
+                    if (sizeDiff < minSizeDiff)
+                    {
                         selectedCapability = capability;
+                        minSizeDiff = sizeDiff;
+                    }
                     System.Diagnostics.Debug.WriteLine("Video device capability - " + device.Name + " - " + capability.Width + "x" + capability.Height + "@" + capability.FrameRate);
                 }
             }).Wait();
@@ -562,6 +570,7 @@ public class ControlScript : MonoBehaviour
 
         if (selectedCapability != null)
         {
+            selectedCapability.FrameRate = preferredFrameRate;
             Conductor.Instance.VideoCaptureProfile = selectedCapability;
             Conductor.Instance.UpdatePreferredFrameFormat();
             System.Diagnostics.Debug.WriteLine("Selected video device capability - " + selectedCapability.Width + "x" + selectedCapability.Height + "@" + selectedCapability.FrameRate);
