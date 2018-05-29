@@ -82,6 +82,7 @@ namespace PeerConnectionClient.Signalling
             public uint Width { get; set; }
             public uint Height { get; set; }
             public uint FrameRate { get; set; }
+            public bool MrcEnabled { get; set; }
             public string ResolutionDescription { get; set; }
             public string FrameRateDescription { get; set; }
         }
@@ -404,6 +405,7 @@ namespace PeerConnectionClient.Signalling
                             Width = capability.Width,
                             Height = capability.Height,
                             FrameRate = capability.FrameRate,
+                            MrcEnabled = capability.MrcEnabled,
                             ResolutionDescription = capability.ResolutionDescription,
                             FrameRateDescription = capability.FrameRateDescription
                         });
@@ -571,7 +573,7 @@ namespace PeerConnectionClient.Signalling
               (int)VideoCaptureProfile.Width, (int)VideoCaptureProfile.Height, (int)VideoCaptureProfile.FrameRate);
 #else
             Org.WebRtc.WebRTC.SetPreferredVideoCaptureFormat(
-                          (int)VideoCaptureProfile.Width, (int)VideoCaptureProfile.Height, (int)VideoCaptureProfile.FrameRate);
+                          (int)VideoCaptureProfile.Width, (int)VideoCaptureProfile.Height, (int)VideoCaptureProfile.FrameRate, VideoCaptureProfile.MrcEnabled);
 #endif
             }
         }

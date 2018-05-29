@@ -1621,8 +1621,8 @@ namespace PeerConnectionClient.ViewModels
 
                             foreach (var fps in fpsList)
                             {
-                            if (selectedCapFpsFrameRate != 0 && fps.FrameRate == selectedCapFpsFrameRate)
-                            {
+                                if (selectedCapFpsFrameRate != 0 && fps.FrameRate == selectedCapFpsFrameRate)
+                                {
                                     defaultFps = fps;
                                 }
                                 AllCapFps.Add(fps);
