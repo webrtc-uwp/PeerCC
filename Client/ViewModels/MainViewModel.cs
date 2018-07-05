@@ -30,6 +30,7 @@ using PeerConnectionClient.Model;
 using PeerConnectionClient.MVVM;
 using PeerConnectionClient.Signalling;
 using PeerConnectionClient.Utilities;
+using Windows.Foundation;
 #if ORTCLIB
 using Org.Ortc;
 using Org.Ortc.Adapter;
@@ -84,7 +85,7 @@ namespace PeerConnectionClient.ViewModels
             LoadHockeyAppSettings();
 
             // Display a permission dialog to request access to the microphone and camera
-            WebRTC.RequestAccessForMediaCapture().AsTask().ContinueWith(antecedent =>
+            Conductor.RequestAccessForMediaCapture().AsTask().ContinueWith(antecedent =>
             {
                 if (antecedent.Result)
                 {
@@ -111,20 +112,7 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="e">Details about the exception routed event.</param>
         public void PeerVideo_MediaFailed(object sender, ExceptionRoutedEventArgs e)
         {
-          Debug.WriteLine("PeerVideo_MediaFailed");
-          if (_peerVideoTrack != null)
-          {
-            Debug.WriteLine("Re-establishing peer video");
-
-            Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
-            //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
-            //RunOnUiThread(() =>
-            //{
-            //  PeerVideo.SetMediaStreamSource(source);
-            //  Debug.WriteLine("Peer video re-established");
-            //});
-
-            }
+            Debug.WriteLine("PeerVideo_MediaFailed");
         }
 
         /// <summary>
@@ -135,28 +123,15 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="e">Details about the exception routed event.</param>
         public void SelfVideo_MediaFailed(object sender, ExceptionRoutedEventArgs e)
         {
-          Debug.WriteLine("SelfVideo_MediaFailed");
-          if (_selfVideoTrack != null && VideoLoopbackEnabled)
-          {
-            Debug.WriteLine("Re-establishing self video");
-
-                Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
-                //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
-                //RunOnUiThread(() =>
-                //{
-                //    SelfVideo.SetMediaStreamSource(source);
-                //    Debug.WriteLine("Self video re-established");
-                //});
-
-            }
+            Debug.WriteLine("SelfVideo_MediaFailed");
         }
 
         // Help to make sure the screen is not locked while on call
         readonly DisplayRequest _keepScreenOnRequest = new DisplayRequest();
         private bool _keepOnScreenRequested;
 
-        private MediaVideoTrack _peerVideoTrack;
-        private MediaVideoTrack _selfVideoTrack;
+        private IMediaStreamTrack _peerVideoTrack;
+        private IMediaStreamTrack _selfVideoTrack;
 
         private readonly NtpService _ntpService;
 
@@ -168,24 +143,25 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="uiDispatcher">The UI dispatcher.</param>
         public void Initialize(CoreDispatcher uiDispatcher)
         {
-            WebRTC.Initialize(uiDispatcher);
+            var queue = Org.WebRtc.EventQueueMaker.BindQueue(uiDispatcher);
+            Org.WebRtc.WebRtcLib.Setup(queue);
             var settings = ApplicationData.Current.LocalSettings;
 
             // Get information of cameras attached to the device
-            Cameras = new ObservableCollection<MediaDevice>();
+            Cameras = new ObservableCollection<Conductor.MediaDevice>();
             string savedVideoRecordingDeviceId = null;
             if (settings.Values["SelectedCameraId"] != null)
             {
                 savedVideoRecordingDeviceId = (string)settings.Values["SelectedCameraId"];
             }
             // Get information of microphones attached to the device
-            Microphones = new ObservableCollection<MediaDevice>();
+            Microphones = new ObservableCollection<Conductor.MediaDevice>();
             string savedAudioRecordingDeviceId = null;
             if (settings.Values["SelectedMicrophoneId"] != null)
             {
                 savedAudioRecordingDeviceId = (string)settings.Values["SelectedMicrophoneId"];
             }
-            AudioPlayoutDevices = new ObservableCollection<MediaDevice>();
+            AudioPlayoutDevices = new ObservableCollection<Conductor.MediaDevice>();
             string savedAudioPlayoutDeviceId = null;
             if (settings.Values["SelectedAudioPlayoutDeviceId"] != null)
             {
@@ -247,6 +223,7 @@ namespace PeerConnectionClient.ViewModels
             });
             MediaDevices.Singleton.OnDeviceChange += OnMediaDevicesChanged;
 #else
+#if false
             foreach (MediaDevice videoCaptureDevice in Conductor.Instance.Media.GetVideoCaptureDevices())
             {
                 if (savedVideoRecordingDeviceId != null && savedVideoRecordingDeviceId == videoCaptureDevice.Id)
@@ -262,7 +239,9 @@ namespace PeerConnectionClient.ViewModels
             }
             Conductor.Instance.Media.OnMediaDevicesChanged += OnMediaDevicesChanged;
 #endif
+#endif
 
+#if false
             // Handler for Peer/Self video frame rate changed event
             FrameCounterHelper.FramesPerSecondChanged += (id, frameRate) =>
             {
@@ -278,7 +257,8 @@ namespace PeerConnectionClient.ViewModels
                     }
                 });
             };
-
+#endif
+#if false
             // Handler for Peer/Self video resolution changed event 
             ResolutionHelper.ResolutionChanged += (id, width, height) =>
             {
@@ -296,7 +276,7 @@ namespace PeerConnectionClient.ViewModels
                     }
                 });
             };
-
+#endif
             // A Peer is connected to the server event handler
             Conductor.Instance.Signaller.OnPeerConnected += (peerId, peerName) =>
             {
@@ -364,9 +344,9 @@ namespace PeerConnectionClient.ViewModels
             Conductor.Instance.OnRemoveTrack += Conductor_OnRemoveTrack;
             Conductor.Instance.OnAddLocalStream += Conductor_OnAddLocalStream;
 #else
-            Conductor.Instance.OnAddRemoteStream += Conductor_OnAddRemoteStream;
-            Conductor.Instance.OnRemoveRemoteStream += Conductor_OnRemoveRemoteStream;
-            Conductor.Instance.OnAddLocalStream += Conductor_OnAddLocalStream;
+            Conductor.Instance.OnAddRemoteTrack += Conductor_OnAddRemoteTrack;
+            Conductor.Instance.OnRemoveRemoteTrack += Conductor_OnRemoveRemoteTrack;
+            Conductor.Instance.OnAddLocalTrack += Conductor_OnAddLocalTrack;
 
             Conductor.Instance.OnConnectionHealthStats += Conductor_OnPeerConnectionHealthStats;
 #endif
@@ -411,10 +391,12 @@ namespace PeerConnectionClient.ViewModels
                 RunOnUiThread(() =>
                 {
                     IsConnectedToPeer = false;
-                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
+                    _peerVideoTrack.Element.Element = null;
+                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
                     //PeerVideo.Source = null;
 
-                    Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
+                    _selfVideoTrack.Element.Element = null;
+                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
                     //SelfVideo.Stop();
                     //SelfVideo.ClearValue(MediaElement.SourceProperty);
                     //SelfVideo.Source = null;
@@ -444,17 +426,17 @@ namespace PeerConnectionClient.ViewModels
             NewIceServer = new IceServer();
 
             // Prepare to list supported audio codecs
-            AudioCodecs = new ObservableCollection<CodecInfo>();
-            var audioCodecList = WebRTC.GetAudioCodecs();
+            AudioCodecs = new ObservableCollection<Conductor.CodecInfo>();
+            var audioCodecList = Conductor.GetAudioCodecs();
 
             // These are features added to existing codecs, they can't decode/encode real audio data so ignore them
             string[] incompatibleAudioCodecs = new string[] { "CN32000", "CN16000", "CN8000", "red8000", "telephone-event8000" };
 
             // Prepare to list supported video codecs
-            VideoCodecs = new ObservableCollection<CodecInfo>();
+            VideoCodecs = new ObservableCollection<Conductor.CodecInfo>();
 
             // Order the video codecs so that the stable VP8 is in front.
-            var videoCodecList = WebRTC.GetVideoCodecs().OrderBy(codec =>
+            var videoCodecList = Conductor.GetVideoCodecs().OrderBy(codec =>
             {
                 switch (codec.Name)
                 {
@@ -594,12 +576,12 @@ namespace PeerConnectionClient.ViewModels
         /// Handle media devices change event triggered by WebRTC.
         /// </summary>
         /// <param name="mediaType">The type of devices changed</param>
-        private void OnMediaDevicesChanged(MediaDeviceType mediaType)
+        private void OnMediaDevicesChanged(Conductor.MediaDeviceType mediaType)
         {
             switch(mediaType)
             {
-                case MediaDeviceType.MediaDeviceType_VideoCapture:
-                    RefreshVideoCaptureDevices(Conductor.Instance.Media.GetVideoCaptureDevices());
+                case Conductor.MediaDeviceType.VideoCapture:
+                    //RefreshVideoCaptureDevices(Conductor.Instance.Media.GetVideoCaptureDevices());
                     break;
             }
         }
@@ -607,18 +589,18 @@ namespace PeerConnectionClient.ViewModels
         /// <summary>
         /// Refresh video capture devices list.
         /// </summary>
-        private void RefreshVideoCaptureDevices(IList<MediaDevice> videoCaptureDevices)
+        private void RefreshVideoCaptureDevices(IList<Conductor.MediaDevice> videoCaptureDevices)
         {
             RunOnUiThread(() => {
-                Collection<MediaDevice> videoCaptureDevicesToRemove = new Collection<MediaDevice>();
-                foreach (MediaDevice videoCaptureDevice in Cameras)
+                Collection<Conductor.MediaDevice> videoCaptureDevicesToRemove = new Collection<Conductor.MediaDevice>();
+                foreach (Conductor.MediaDevice videoCaptureDevice in Cameras)
                 {
                     if (videoCaptureDevices.FirstOrDefault(x => x.Id == videoCaptureDevice.Id) == null)
                     {
                         videoCaptureDevicesToRemove.Add(videoCaptureDevice);
                     }
                 }
-                foreach (MediaDevice removedVideoCaptureDevices in videoCaptureDevicesToRemove)
+                foreach (Conductor.MediaDevice removedVideoCaptureDevices in videoCaptureDevicesToRemove)
                 {
                     if (SelectedCamera != null && SelectedCamera.Id == removedVideoCaptureDevices.Id)
                     {
@@ -626,7 +608,7 @@ namespace PeerConnectionClient.ViewModels
                     }
                     Cameras.Remove(removedVideoCaptureDevices);
                 }
-                foreach (MediaDevice videoCaptureDevice in videoCaptureDevices)
+                foreach (Conductor.MediaDevice videoCaptureDevice in videoCaptureDevices)
                 {
                     if (Cameras.FirstOrDefault(x => x.Id == videoCaptureDevice.Id) == null)
                     {
@@ -644,13 +626,13 @@ namespace PeerConnectionClient.ViewModels
         /// <summary>
         /// Refresh audio capture devices list.
         /// </summary>
-        private void RefreshAudioCaptureDevices(IList<MediaDevice> audioCaptureDevices)
+        private void RefreshAudioCaptureDevices(IList<Conductor.MediaDevice> audioCaptureDevices)
         {
             RunOnUiThread(() => {
                 var selectedMicrophoneId = SelectedMicrophone?.Id;
                 SelectedMicrophone = null;
                 Microphones.Clear();
-                foreach (MediaDevice audioCaptureDevice in audioCaptureDevices)
+                foreach (Conductor.MediaDevice audioCaptureDevice in audioCaptureDevices)
                 {
                     Microphones.Add(audioCaptureDevice);
                     if (audioCaptureDevice.Id == selectedMicrophoneId)
@@ -673,13 +655,13 @@ namespace PeerConnectionClient.ViewModels
         /// <summary>
         /// Refresh audio playout devices list.
         /// </summary>
-        private void RefreshAudioPlayoutDevices(IList<MediaDevice> audioPlayoutDevices)
+        private void RefreshAudioPlayoutDevices(IList<Conductor.MediaDevice> audioPlayoutDevices)
         {
             RunOnUiThread(() => {
                 var selectedPlayoutDeviceId = SelectedAudioPlayoutDevice?.Id;
                 SelectedAudioPlayoutDevice = null;
                 AudioPlayoutDevices.Clear();
-                foreach (MediaDevice audioPlayoutDevice in audioPlayoutDevices)
+                foreach (Conductor.MediaDevice audioPlayoutDevice in audioPlayoutDevices)
                 {
                     AudioPlayoutDevices.Add(audioPlayoutDevice);
                     if (audioPlayoutDevice.Id == selectedPlayoutDeviceId)
@@ -724,17 +706,22 @@ namespace PeerConnectionClient.ViewModels
         /// Add remote stream event handler.
         /// </summary>
         /// <param name="evt">Details about Media stream event.</param>
-        private void Conductor_OnAddRemoteStream(MediaStreamEvent evt)
+        private void Conductor_OnAddRemoteTrack(IMediaStreamTrack track)
         {
-            _peerVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
-            if (_peerVideoTrack != null)
+            if (track.Kind == "video")
             {
-                Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
-                //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
-                //RunOnUiThread(() =>
-                //{
-                //  PeerVideo.SetMediaStreamSource(source);
-                //});
+                _peerVideoTrack = track;
+
+                if (_peerVideoTrack != null)
+                {
+                    _peerVideoTrack.Element.Element = PeerVideo;
+                    //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
+                    //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
+                    //RunOnUiThread(() =>
+                    //{
+                    //  PeerVideo.SetMediaStreamSource(source);
+                    //});
+                }
             }
 
             IsReadyToDisconnect = true;
@@ -744,12 +731,16 @@ namespace PeerConnectionClient.ViewModels
         /// Remove remote stream event handler.
         /// </summary>
         /// <param name="evt">Details about Media stream event.</param>
-        private void Conductor_OnRemoveRemoteStream(MediaStreamEvent evt)
+        private void Conductor_OnRemoveRemoteTrack(IMediaStreamTrack track)
         {
             RunOnUiThread(() =>
             {
-                Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
-                //PeerVideo.SetMediaStreamSource(null);
+                if (track.Kind == "video")
+                {
+                    _peerVideoTrack.Element.Element = null;
+                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
+                    //PeerVideo.SetMediaStreamSource(null);
+                }
             });
         }
 #endif
@@ -758,13 +749,15 @@ namespace PeerConnectionClient.ViewModels
         /// Add local stream event handler.
         /// </summary>
         /// <param name="evt">Details about Media stream event.</param>
-        private void Conductor_OnAddLocalStream(MediaStreamEvent evt)
+        private void Conductor_OnAddLocalTrack(IMediaStreamTrack track)
         {
-          _selfVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
-          if (_selfVideoTrack != null)
+            if (track.Kind == "video")
             {
-                //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
-                RunOnUiThread(() =>
+                _selfVideoTrack = track;
+                if (_selfVideoTrack != null)
+                {
+                    //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
+                    RunOnUiThread(() =>
                     {
                         if (_cameraEnabled)
                         {
@@ -784,9 +777,11 @@ namespace PeerConnectionClient.ViewModels
                             Conductor.Instance.MuteMicrophone();
                         }
                     });
-                if (VideoLoopbackEnabled)
-                {
-                    Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
+                    if (VideoLoopbackEnabled)
+                    {
+                        _selfVideoTrack.Element.Element = SelfVideo;
+                        //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
+                    }
                 }
             }
         }
@@ -795,7 +790,7 @@ namespace PeerConnectionClient.ViewModels
         /// New connection health statistics received.
         /// </summary>
         /// <param name="stats">Connection health statistics.</param>
-        private void Conductor_OnPeerConnectionHealthStats(RTCPeerConnectionHealthStats stats)
+        private void Conductor_OnPeerConnectionHealthStats(String stats)
         {
             PeerConnectionHealthStats = stats; 
         }
@@ -821,7 +816,7 @@ namespace PeerConnectionClient.ViewModels
             });
         }
 #endif
-                    #region Bindings
+            #region Bindings
 
         private ValidableNonEmptyString _ntpServer;
 
@@ -1282,11 +1277,11 @@ namespace PeerConnectionClient.ViewModels
 #else
                 if (_tracingEnabled)
                 {
-                    WebRTC.StartTracing("webrtc-trace.txt");
+                    //WebRTC.StartTracing("webrtc-trace.txt");
                 }
                 else
                 {
-                    WebRTC.StopTracing();
+                    //WebRTC.StopTracing();
                 }
 #endif
                 AppPerformanceCheck();
@@ -1328,23 +1323,23 @@ namespace PeerConnectionClient.ViewModels
             }
         }
 
-        private ObservableCollection<MediaDevice> _cameras;
+        private ObservableCollection<Conductor.MediaDevice> _cameras;
 
         /// <summary>
         /// The list of available cameras.
         /// </summary>
-        public ObservableCollection<MediaDevice> Cameras
+        public ObservableCollection<Conductor.MediaDevice> Cameras
         {
             get { return _cameras; }
             set { SetProperty(ref _cameras, value); }
         }
 
-        private MediaDevice _selectedCamera;
+        private Conductor.MediaDevice _selectedCamera;
 
         /// <summary>
         /// The selected camera.
         /// </summary>
-        public MediaDevice SelectedCamera
+        public Conductor.MediaDevice SelectedCamera
         {
             get { return _selectedCamera; }
             set
@@ -1358,7 +1353,7 @@ namespace PeerConnectionClient.ViewModels
 
                 var localSettings = ApplicationData.Current.LocalSettings;
                 localSettings.Values["SelectedCameraId"] = _selectedCamera.Id;
-                Conductor.Instance.Media.SelectVideoDevice(_selectedCamera);
+                //Conductor.Instance.Media.SelectVideoDevice(_selectedCamera);
                 if (_allCapRes == null)
                 {
                     _allCapRes = new ObservableCollection<String>();
@@ -1367,8 +1362,8 @@ namespace PeerConnectionClient.ViewModels
                 {
                     _allCapRes.Clear();
                 }
-
-                var opRes = value.GetVideoCaptureCapabilities();
+#if false
+                var opRes = Conductor.Instance.GetVideoCaptureCapabilities(value.Id);
                 opRes.AsTask().ContinueWith(resolutions =>
                 {
                     RunOnUiThread(async () =>
@@ -1425,26 +1420,27 @@ namespace PeerConnectionClient.ViewModels
                     });
                     OnPropertyChanged("AllCapRes");
                 });
+#endif
             }
         }
 
-        private ObservableCollection<MediaDevice> _microphones;
+        private ObservableCollection<Conductor.MediaDevice> _microphones;
 
         /// <summary>
         /// The list of available microphones.
         /// </summary>
-        public ObservableCollection<MediaDevice> Microphones
+        public ObservableCollection<Conductor.MediaDevice> Microphones
         {
             get { return _microphones; }
             set { SetProperty(ref _microphones, value); }
         }
 
-        private MediaDevice _selectedMicrophone;
+        private Conductor.MediaDevice _selectedMicrophone;
 
         /// <summary>
         /// The selected microphone.
         /// </summary>
-        public MediaDevice SelectedMicrophone
+        public Conductor.MediaDevice SelectedMicrophone
         {
             get { return _selectedMicrophone; }
             set
@@ -1457,23 +1453,23 @@ namespace PeerConnectionClient.ViewModels
             }
         }
 
-        private ObservableCollection<MediaDevice> _audioPlayoutDevices;
+        private ObservableCollection<Conductor.MediaDevice> _audioPlayoutDevices;
 
         /// <summary>
         /// The list of available audio playout devices.
         /// </summary>
-        public ObservableCollection<MediaDevice> AudioPlayoutDevices
+        public ObservableCollection<Conductor.MediaDevice> AudioPlayoutDevices
         {
             get { return _audioPlayoutDevices; }
             set { SetProperty(ref _audioPlayoutDevices, value); }
         }
 
-        private MediaDevice _selectedAudioPlayoutDevice;
+        private Conductor.MediaDevice _selectedAudioPlayoutDevice;
 
         /// <summary>
         /// The selected audio playout device.
         /// </summary>
-        public MediaDevice SelectedAudioPlayoutDevice
+        public Conductor.MediaDevice SelectedAudioPlayoutDevice
         {
             get { return _selectedAudioPlayoutDevice; }
             set
@@ -1510,7 +1506,7 @@ namespace PeerConnectionClient.ViewModels
                     var message = "ORTC logging enabled, connect to TCP port " + _traceServerPort +
                                   " to receive log stream.";
 #else
-                    WebRTC.EnableLogging(LogLevel.LOGLVL_INFO);
+                    //WebRTC.EnableLogging(LogLevel.LOGLVL_INFO);
                     var message = "WebRTC logging enabled, connect to TCP port 47003 to receive log stream.";
 #endif
                     var msgDialog = new MessageDialog(message);
@@ -1521,7 +1517,7 @@ namespace PeerConnectionClient.ViewModels
 #if ORTCLIB
                     Logger.UninstallTelnetLogger();
 #else
-                    WebRTC.DisableLogging();
+                    //WebRTC.DisableLogging();
 #endif
                     var task = SavingLogging();
                 }
@@ -1546,7 +1542,8 @@ namespace PeerConnectionClient.ViewModels
                         {
                             Debug.WriteLine("Enabling video loopback");
 
-                            Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
+                            _selfVideoTrack.Element.Element = SelfVideo;
+                            //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
                             //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
                             //RunOnUiThread(() =>
                             //{
@@ -1565,7 +1562,9 @@ namespace PeerConnectionClient.ViewModels
                         // internal stream source is destroyed.
                         // Apparently, with webrtc package version < 1.1.175, the internal stream source was destroyed
                         // corectly, only by setting SelfVideo.Source to null.
-                        Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
+
+                        _selfVideoTrack.Element.Element = null;
+                        //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
                         //SelfVideo.Source = null;
                         //SelfVideo.Stop();
                         //SelfVideo.Source = null;
@@ -1585,11 +1584,11 @@ namespace PeerConnectionClient.ViewModels
             StorageFolder logFolder = WebRTC.LogFolder();
             String logFileName = WebRTC.LogFileName();
 #else
-            StorageFolder logFolder = WebRTC.LogFolder;
-            String logFileName = WebRTC.LogFileName;
+            //StorageFolder logFolder = WebRTC.LogFolder;
+            //String logFileName = WebRTC.LogFileName;
 #endif
 
-            StorageFile logFile = await logFolder.GetFileAsync(logFileName);
+            StorageFile logFile = null;//await logFolder.GetFileAsync(logFileName);
 
             WebrtcLoggingFile = null; // Reset
 
@@ -1672,12 +1671,12 @@ namespace PeerConnectionClient.ViewModels
             }
         }
 
-        private ObservableCollection<CodecInfo> _audioCodecs;
+        private ObservableCollection<Conductor.CodecInfo> _audioCodecs;
 
         /// <summary>
         /// The list of audio codecs.
         /// </summary>
-        public ObservableCollection<CodecInfo> AudioCodecs
+        public ObservableCollection<Conductor.CodecInfo> AudioCodecs
         {
             get { return _audioCodecs; }
             set { SetProperty(ref _audioCodecs, value); }
@@ -1686,7 +1685,7 @@ namespace PeerConnectionClient.ViewModels
         /// <summary>
         /// The selected Audio codec.
         /// </summary>
-        public CodecInfo SelectedAudioCodec
+        public Conductor.CodecInfo SelectedAudioCodec
         {
             get { return Conductor.Instance.AudioCodec; }
             set
@@ -1732,12 +1731,13 @@ namespace PeerConnectionClient.ViewModels
 
                 if (AllCapFps == null)
                 {
-                    AllCapFps = new ObservableCollection<CaptureCapability>();
+                    //AllCapFps = new ObservableCollection<CaptureCapability>();
                 }
                 else
                 {
                     AllCapFps.Clear();
                 }
+#if false
                 var opCap = SelectedCamera.GetVideoCaptureCapabilities();
                 opCap.AsTask().ContinueWith(caps =>
                 {
@@ -1768,27 +1768,28 @@ namespace PeerConnectionClient.ViewModels
                         });
                     OnPropertyChanged("AllCapFps");
                 });
+#endif
                 SetProperty(ref _selectedCapResItem, value);
             }
         }
 
-        private ObservableCollection<CaptureCapability> _allCapFps;
+        private ObservableCollection<Conductor.CaptureCapability> _allCapFps;
 
         /// <summary>
         /// The list of all capture frame rates.
         /// </summary>
-        public ObservableCollection<CaptureCapability> AllCapFps
+        public ObservableCollection<Conductor.CaptureCapability> AllCapFps
         {
-            get { return _allCapFps ?? (_allCapFps = new ObservableCollection<CaptureCapability>()); }
+            get { return _allCapFps ?? (_allCapFps = new ObservableCollection<Conductor.CaptureCapability>()); }
             set { SetProperty(ref _allCapFps, value); }
         }
 
-        private CaptureCapability _selectedCapFpsItem;
+        private Conductor.CaptureCapability _selectedCapFpsItem;
 
         /// <summary>
         /// The selected capture frame rate.
         /// </summary>
-        public CaptureCapability SelectedCapFpsItem
+        public Conductor.CaptureCapability SelectedCapFpsItem
         {
             get { return _selectedCapFpsItem; }
             set
@@ -1804,12 +1805,12 @@ namespace PeerConnectionClient.ViewModels
             }
         }
 
-        private ObservableCollection<CodecInfo> _videoCodecs;
+        private ObservableCollection<Conductor.CodecInfo> _videoCodecs;
 
         /// <summary>
         /// The list of video codecs.
         /// </summary>
-        public ObservableCollection<CodecInfo> VideoCodecs
+        public ObservableCollection<Conductor.CodecInfo> VideoCodecs
         {
             get { return _videoCodecs; }
             set { SetProperty(ref _videoCodecs, value); }
@@ -1818,7 +1819,7 @@ namespace PeerConnectionClient.ViewModels
         /// <summary>
         /// The selected video codec.
         /// </summary>
-        public CodecInfo SelectedVideoCodec
+        public Conductor.CodecInfo SelectedVideoCodec
         {
             get { return Conductor.Instance.VideoCodec; }
             set
@@ -1902,9 +1903,9 @@ namespace PeerConnectionClient.ViewModels
         /// <summary>
         /// Peer connection health statistics from WebRTC.
         /// </summary>
-        private RTCPeerConnectionHealthStats _peerConnectionHealthStats;
+        private String _peerConnectionHealthStats;
 
-        public RTCPeerConnectionHealthStats PeerConnectionHealthStats
+        public String PeerConnectionHealthStats
         {
             get { return _peerConnectionHealthStats; }
             set
@@ -1956,8 +1957,8 @@ namespace PeerConnectionClient.ViewModels
             set { SetProperty(ref _showLoopbackVideo, value); }
         }
 
-        public MediaElement SelfVideo;
-        public MediaElement PeerVideo;
+        public Windows.UI.Xaml.Controls.MediaElement SelfVideo;
+        public Windows.UI.Xaml.Controls.MediaElement PeerVideo;
 
 #endregion
 
@@ -2116,7 +2117,7 @@ namespace PeerConnectionClient.ViewModels
 #endif*/
             }
 
-    private bool _settingsButtonChecked;
+        private bool _settingsButtonChecked;
 
         /// <summary>
         /// Indicator if Settings button is checked
@@ -2389,7 +2390,7 @@ namespace PeerConnectionClient.ViewModels
 #if ORTCLIB
             Org.Ortc.Ortc.NtpServerTime = ntpTime;
 #else
-            WebRTC.SynNTPTime(ntpTime);
+            //WebRTC.SynNTPTime(ntpTime);
 #endif
             NtpSyncInProgress = false;
         }
@@ -2416,7 +2417,7 @@ namespace PeerConnectionClient.ViewModels
                 IsDisconnecting = true;
                 await Conductor.Instance.DisconnectFromServer();
             }
-            Media.OnAppSuspending();
+            //Media.OnAppSuspending();
         }
 
         /// <summary>
@@ -2479,8 +2480,8 @@ namespace PeerConnectionClient.ViewModels
         /// </summary>
         private void ReportAppPerfData(object sender, object e)
         {
-            WebRTC.CpuUsage = CPUData.GetCPUUsage();
-            WebRTC.MemoryUsage = MEMData.GetMEMUsage();
+            //WebRTC.CpuUsage = CPUData.GetCPUUsage();
+            //WebRTC.MemoryUsage = MEMData.GetMEMUsage();
         }
     }
 }
