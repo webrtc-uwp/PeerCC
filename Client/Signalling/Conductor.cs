@@ -197,6 +197,8 @@ namespace PeerConnectionClient.Signalling
 #endif
         RTCPeerConnection _peerConnection;
 
+        MediaDevice _selectedVideoDevice = null;
+
         public ObservableCollection<Peer> Peers;
         public Peer Peer;
         readonly List<RTCIceServer> _iceServers;
@@ -357,6 +359,11 @@ namespace PeerConnectionClient.Signalling
             return ret;
 		}
 
+        public void SelectVideoDevice(MediaDevice device)
+        {
+            _selectedVideoDevice = device;
+        }
+
         /// <summary>
         /// Creates a peer connection.
         /// </summary>
@@ -460,7 +467,7 @@ namespace PeerConnectionClient.Signalling
                 }
             }
 #else
-            IVideoCapturer videoCapturer = VideoCapturer.Create("Integrated Camera", "\\\\?\\USB#VID_04F2&PID_B5C0&MI_00#6&34052049&0&0000#{e5323777-f976-4f5b-9b55-b94699c46e44}\\GLOBAL");
+            IVideoCapturer videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id);
             IVideoTrackSource videoTrackSource = VideoTrackSource.Create(videoCapturer);
             IMediaStreamTrack localVideoTrack = MediaStreamTrack.CreateVideoTrack("SELF_VIDEO", videoTrackSource);
 

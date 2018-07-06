@@ -1357,7 +1357,8 @@ namespace PeerConnectionClient.ViewModels
 
                 var localSettings = ApplicationData.Current.LocalSettings;
                 localSettings.Values["SelectedCameraId"] = _selectedCamera.Id;
-                //Conductor.Instance.Media.SelectVideoDevice(_selectedCamera);
+                Conductor.Instance.SelectVideoDevice(_selectedCamera);
+#if false
                 if (_allCapRes == null)
                 {
                     _allCapRes = new ObservableCollection<String>();
@@ -1366,8 +1367,8 @@ namespace PeerConnectionClient.ViewModels
                 {
                     _allCapRes.Clear();
                 }
-#if false
-                var opRes = Conductor.Instance.GetVideoCaptureCapabilities(value.Id);
+
+                var opRes = _selectedCamera.GetVideoCaptureCapabilities();
                 opRes.AsTask().ContinueWith(resolutions =>
                 {
                     RunOnUiThread(async () =>
@@ -1392,7 +1393,7 @@ namespace PeerConnectionClient.ViewModels
                             return;
                         }
                         var uniqueRes = resolutions.Result.GroupBy(test => test.ResolutionDescription).Select(grp => grp.First()).ToList();
-                        CaptureCapability defaultResolution = null;
+                        Conductor.CaptureCapability defaultResolution = null;
                         foreach (var resolution in uniqueRes)
                         {
                             if (defaultResolution == null)
