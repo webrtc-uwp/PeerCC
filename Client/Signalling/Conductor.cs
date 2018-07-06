@@ -313,23 +313,22 @@ namespace PeerConnectionClient.Signalling
             }).AsAsyncOperation<bool>();
         }
 
-        public static IAsyncOperation<IList<MediaDevice>> GetVideoCaptureDevices()
+        async public static Task<IList<MediaDevice>> GetVideoCaptureDevices()
         {
-            Task task = VideoCapturer.GetDevices().AsTask();
-            return task.ContinueWith(result =>
+            var devicesObject = (await VideoCapturer.GetDevices()) ;
+            var devices = devicesObject as IList<IVideoDeviceInfo>;
+
+            IList<MediaDevice> deviceList = new List<MediaDevice>();
+            foreach (var deviceInfo in devices)
             {
-                IList<MediaDevice> deviceList = new List<MediaDevice>();
-                foreach (IVideoDeviceInfo deviceInfo in ((Task<IList<IVideoDeviceInfo>>)result).Result)
+                deviceList.Add(new MediaDevice
                 {
-                    deviceList.Add(new MediaDevice
-                    {
-                        Id = deviceInfo.Info.Id,
-                        Name = deviceInfo.Info.Name,
-                        Location = deviceInfo.Info.EnclosureLocation
-                    });
-                }
-                return deviceList;
-            }).AsAsyncOperation<IList<MediaDevice>>();
+                    Id = deviceInfo.Info.Id,
+                    Name = deviceInfo.Info.Name,
+                    Location = deviceInfo.Info.EnclosureLocation
+                });
+            }
+            return deviceList;
         }
 
         public static IList<CodecInfo> GetAudioCodecs()
