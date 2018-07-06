@@ -313,7 +313,27 @@ namespace PeerConnectionClient.Signalling
             }).AsAsyncOperation<bool>();
         }
 
-        public static IList<CodecInfo> GetAudioCodecs() {
+        public static IAsyncOperation<IList<MediaDevice>> GetVideoCaptureDevices()
+        {
+            Task task = VideoCapturer.GetDevices().AsTask();
+            return task.ContinueWith(result =>
+            {
+                IList<MediaDevice> deviceList = new List<MediaDevice>();
+                foreach (IVideoDeviceInfo deviceInfo in ((Task<IList<IVideoDeviceInfo>>)result).Result)
+                {
+                    deviceList.Add(new MediaDevice
+                    {
+                        Id = deviceInfo.Info.Id,
+                        Name = deviceInfo.Info.Name,
+                        Location = deviceInfo.Info.EnclosureLocation
+                    });
+                }
+                return deviceList;
+            }).AsAsyncOperation<IList<MediaDevice>>();
+        }
+
+        public static IList<CodecInfo> GetAudioCodecs()
+        {
             var ret = new List<CodecInfo>
             {
                 new CodecInfo { Id = 1, ClockRate = 48000, Name = "opus" },
@@ -327,7 +347,8 @@ namespace PeerConnectionClient.Signalling
             return ret;
 		}
 
-        public static IList<CodecInfo> GetVideoCodecs() {
+        public static IList<CodecInfo> GetVideoCodecs()
+        {
             var ret = new List<CodecInfo>
             {
                 new CodecInfo { Id = 1, ClockRate = 90000, Name = "VP8" },

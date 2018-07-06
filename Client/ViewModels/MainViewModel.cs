@@ -223,22 +223,23 @@ namespace PeerConnectionClient.ViewModels
             });
             MediaDevices.Singleton.OnDeviceChange += OnMediaDevicesChanged;
 #else
-#if false
-            foreach (MediaDevice videoCaptureDevice in Conductor.Instance.Media.GetVideoCaptureDevices())
+            RunOnUiThread(async () =>
             {
-                if (savedVideoRecordingDeviceId != null && savedVideoRecordingDeviceId == videoCaptureDevice.Id)
+                foreach (Conductor.MediaDevice videoCaptureDevice in await Conductor.GetVideoCaptureDevices())
                 {
-                    SelectedCamera = videoCaptureDevice;
+                    if (savedVideoRecordingDeviceId != null && savedVideoRecordingDeviceId == videoCaptureDevice.Id)
+                    {
+                        SelectedCamera = videoCaptureDevice;
+                    }
+                    Cameras.Add(videoCaptureDevice);
                 }
-                Cameras.Add(videoCaptureDevice);
-            }
 
-            if (SelectedCamera == null && Cameras.Count > 0)
-            {
-                SelectedCamera = Cameras.First();
-            }
-            Conductor.Instance.Media.OnMediaDevicesChanged += OnMediaDevicesChanged;
-#endif
+                if (SelectedCamera == null && Cameras.Count > 0)
+                {
+                    SelectedCamera = Cameras.First();
+                }
+                //Conductor.Instance.Media.OnMediaDevicesChanged += OnMediaDevicesChanged;
+            });
 #endif
 
 #if false
@@ -578,12 +579,15 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="mediaType">The type of devices changed</param>
         private void OnMediaDevicesChanged(Conductor.MediaDeviceType mediaType)
         {
-            switch(mediaType)
+            RunOnUiThread(async () =>
             {
-                case Conductor.MediaDeviceType.VideoCapture:
-                    //RefreshVideoCaptureDevices(Conductor.Instance.Media.GetVideoCaptureDevices());
-                    break;
-            }
+                switch(mediaType)
+                {
+                    case Conductor.MediaDeviceType.VideoCapture:
+                        RefreshVideoCaptureDevices(await Conductor.GetVideoCaptureDevices());
+                        break;
+                }
+            });
         }
 #endif
         /// <summary>
