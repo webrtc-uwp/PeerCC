@@ -143,7 +143,7 @@ namespace PeerConnectionClient.ViewModels
         /// <param name="uiDispatcher">The UI dispatcher.</param>
         public void Initialize(CoreDispatcher uiDispatcher)
         {
-            var queue = Org.WebRtc.EventQueueMaker.BindQueue(uiDispatcher);
+            var queue = Org.WebRtc.EventQueueMaker.Bind(uiDispatcher);
             Org.WebRtc.WebRtcLib.Setup(queue);
             var settings = ApplicationData.Current.LocalSettings;
 
@@ -392,11 +392,12 @@ namespace PeerConnectionClient.ViewModels
                 RunOnUiThread(() =>
                 {
                     IsConnectedToPeer = false;
-                    _peerVideoTrack.Element.Element = null;
+                    //_peerVideoTrack.Element.Element = null;
+                    _peerVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
                     //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
                     //PeerVideo.Source = null;
 
-                    _selfVideoTrack.Element.Element = null;
+                    _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
                     //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
                     //SelfVideo.Stop();
                     //SelfVideo.ClearValue(MediaElement.SourceProperty);
@@ -718,7 +719,7 @@ namespace PeerConnectionClient.ViewModels
 
                 if (_peerVideoTrack != null)
                 {
-                    _peerVideoTrack.Element.Element = PeerVideo;
+                    _peerVideoTrack.Element = Org.WebRtc.MediaElementMaker.Bind(PeerVideo);
                     //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
                     //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
                     //RunOnUiThread(() =>
@@ -741,7 +742,7 @@ namespace PeerConnectionClient.ViewModels
             {
                 if (track.Kind == "video")
                 {
-                    _peerVideoTrack.Element.Element = null;
+                    _peerVideoTrack.Element = null; //Org.WebRtc.MediaElementMaker.Bind(obj)
                     //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
                     //PeerVideo.SetMediaStreamSource(null);
                 }
@@ -783,7 +784,7 @@ namespace PeerConnectionClient.ViewModels
                     });
                     if (VideoLoopbackEnabled)
                     {
-                        _selfVideoTrack.Element.Element = SelfVideo;
+                        _selfVideoTrack.Element = Org.WebRtc.MediaElementMaker.Bind(SelfVideo);
                         //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
                     }
                 }
@@ -1547,7 +1548,7 @@ namespace PeerConnectionClient.ViewModels
                         {
                             Debug.WriteLine("Enabling video loopback");
 
-                            _selfVideoTrack.Element.Element = SelfVideo;
+                            _selfVideoTrack.Element = Org.WebRtc.MediaElementMaker.Bind(SelfVideo);
                             //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
                             //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
                             //RunOnUiThread(() =>
@@ -1568,7 +1569,7 @@ namespace PeerConnectionClient.ViewModels
                         // Apparently, with webrtc package version < 1.1.175, the internal stream source was destroyed
                         // corectly, only by setting SelfVideo.Source to null.
 
-                        _selfVideoTrack.Element.Element = null;
+                        _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj)
                         //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
                         //SelfVideo.Source = null;
                         //SelfVideo.Stop();
