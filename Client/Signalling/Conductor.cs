@@ -368,9 +368,8 @@ namespace PeerConnectionClient.Signalling
         /// Creates a peer connection.
         /// </summary>
         /// <returns>True if connection to a peer is successfully created.</returns>
-        private async Task<bool> CreatePeerConnection(CancellationToken cancelationToken)
+        private bool CreatePeerConnection(CancellationToken cancelationToken)
         {
-#if true
             Debug.Assert(_peerConnection == null);
             if(cancelationToken.IsCancellationRequested)
             {
@@ -402,7 +401,7 @@ namespace PeerConnectionClient.Signalling
             //_peerConnection.EtwStatsEnabled = _etwStatsEnabled;
             //_peerConnection.ConnectionHealthStatsEnabled = _peerConnectionStatsEnabled;
 #endif
-                if (cancelationToken.IsCancellationRequested)
+            if (cancelationToken.IsCancellationRequested)
             {
                 return false;
             }
@@ -420,7 +419,7 @@ namespace PeerConnectionClient.Signalling
             _peerConnection.OnTrack += PeerConnection_OnTrack;
             _peerConnection.OnRemoveTrack += PeerConnection_OnRemoveTrack;
             //_peerConnection.OnConnectionHealthStats += PeerConnection_OnConnectionHealthStats;
-#endif
+
             Debug.WriteLine("Conductor: Getting user media.");
 #if false
             RTCMediaStreamConstraints mediaStreamConstraints = new RTCMediaStreamConstraints
@@ -740,8 +739,9 @@ namespace PeerConnectionClient.Signalling
                             _signalingMode = Helper.SignalingModeForClientName(Peer.Name);
 #endif
                             _connectToPeerCancelationTokenSource = new CancellationTokenSource();
-                            _connectToPeerTask = CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
-                            bool connectResult = await _connectToPeerTask;
+                            //_connectToPeerTask = CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
+                            //bool connectResult = await _connectToPeerTask;
+                            bool connectResult = CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
                             _connectToPeerTask = null;
                             _connectToPeerCancelationTokenSource.Dispose();
                             if (!connectResult)
@@ -933,8 +933,9 @@ namespace PeerConnectionClient.Signalling
             _signalingMode = Helper.SignalingModeForClientName(peer.Name);
 #endif
             _connectToPeerCancelationTokenSource = new System.Threading.CancellationTokenSource();
-            _connectToPeerTask = CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
-            bool connectResult = await _connectToPeerTask;
+            //_connectToPeerTask = CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
+            //bool connectResult = await _connectToPeerTask;
+            bool connectResult = CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
             _connectToPeerTask = null;
             _connectToPeerCancelationTokenSource.Dispose();
 
