@@ -72,7 +72,9 @@ public class ControlScript : MonoBehaviour
 
     public void DestroyLocalMediaStreamSource()
     {
+#if !UNITY_EDITOR
         Plugin.UnloadLocalMediaStreamSource();
+#endif
     }
 
     public void CreateRemoteMediaStreamSource(object track, string type, string id)
@@ -86,7 +88,9 @@ public class ControlScript : MonoBehaviour
 
     public void DestroyRemoteMediaStreamSource()
     {
+#if !UNITY_EDITOR
         Plugin.UnloadRemoteMediaStreamSource();
+#endif
     }
 
     private static class Plugin
