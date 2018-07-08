@@ -564,7 +564,7 @@ namespace PeerConnectionClient.Signalling
                     {kCandidateSdpName, JsonValue.CreateStringValue(evt.Candidate.Candidate)}
                 };
             }
-            Debug.WriteLine("Conductor: Sending ice candidate.\n" + json.Stringify());
+            Debug.WriteLine("Conductor: Sending ice candidate:\n" + json.Stringify());
             SendMessage(json);
         }
 
@@ -811,7 +811,7 @@ namespace PeerConnectionClient.Signalling
                         default: Debug.Assert(false, type); break;
                     }
 #endif
-                    Debug.WriteLine("Conductor: Received session description: " + message);
+                    Debug.WriteLine("Conductor: Received session description:\n" + message);
                     RTCSessionDescriptionInit sdpInit = new RTCSessionDescriptionInit();
                     sdpInit.Sdp = sdp;
                     sdpInit.Type = messageType;
@@ -877,7 +877,7 @@ namespace PeerConnectionClient.Signalling
 #endif
 
 
-                    Debug.WriteLine("Conductor: Received candidate : " + message);
+                    Debug.WriteLine("Conductor: Receiving ice candidate:\n" + message);
                 }
             }).Wait();
         }
@@ -951,7 +951,7 @@ namespace PeerConnectionClient.Signalling
                 //offer.Sdp = newSdp;
 #endif
                 await _peerConnection.SetLocalDescription(offer);
-                Debug.WriteLine("Conductor: Sending offer.");
+                Debug.WriteLine("Conductor: Sending offer:\n" + offer.Sdp);
                 SendSdp(offer);
 #if ORTCLIB
                 OrtcStatsManager.Instance.StartCallWatch(SessionId, true);
