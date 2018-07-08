@@ -317,8 +317,7 @@ namespace PeerConnectionClient.Signalling
 
         async public static Task<IList<MediaDevice>> GetVideoCaptureDevices()
         {
-            var devicesObject = (await VideoCapturer.GetDevices()) ;
-            var devices = devicesObject as IList<IVideoDeviceInfo>;
+            var devices = (await VideoCapturer.GetDevices()) ;
 
             IList<MediaDevice> deviceList = new List<MediaDevice>();
             foreach (var deviceInfo in devices)
@@ -825,7 +824,7 @@ namespace PeerConnectionClient.Signalling
 #endif
                     {
                         RTCAnswerOptions answerOptions = new RTCAnswerOptions();
-                        IRTCSessionDescription answer = (IRTCSessionDescription)await _peerConnection.CreateAnswer(answerOptions);
+                        var answer = await _peerConnection.CreateAnswer(answerOptions);
                         await _peerConnection.SetLocalDescription(answer);
                         // Send answer
                         SendSdp(answer);
@@ -943,7 +942,7 @@ namespace PeerConnectionClient.Signalling
             {
                 _peerId = peer.Id;
                 IRTCOfferOptions offerOptions = new RTCOfferOptions();
-                IRTCSessionDescription offer = (IRTCSessionDescription)await _peerConnection.CreateOffer(offerOptions);
+                var offer = await _peerConnection.CreateOffer(offerOptions);
 #if !ORTCLIB
                 // Alter sdp to force usage of selected codecs
                 //string newSdp = offer.Sdp;
