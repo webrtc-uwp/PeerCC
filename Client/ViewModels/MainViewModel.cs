@@ -393,11 +393,17 @@ namespace PeerConnectionClient.ViewModels
                 {
                     IsConnectedToPeer = false;
                     //_peerVideoTrack.Element.Element = null;
-                    _peerVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
+                    if (null != _peerVideoTrack)
+                    {
+                        _peerVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
+                    }
                     //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
                     //PeerVideo.Source = null;
 
-                    _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
+                    if (null != _selfVideoTrack)
+                    {
+                        _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
+                    }
                     //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
                     //SelfVideo.Stop();
                     //SelfVideo.ClearValue(MediaElement.SourceProperty);
