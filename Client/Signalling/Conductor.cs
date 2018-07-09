@@ -517,7 +517,7 @@ namespace PeerConnectionClient.Signalling
 #endif
                     OnPeerConnectionClosed?.Invoke();
 
-                    _peerConnection.Close(); // Slow, so do this after UI updated and camera turned off
+                    (_peerConnection as IDisposable)?.Dispose();
 
                     SessionId = null;
 #if ORTCLIB

@@ -392,26 +392,12 @@ namespace PeerConnectionClient.ViewModels
                 RunOnUiThread(() =>
                 {
                     IsConnectedToPeer = false;
-                    //_peerVideoTrack.Element.Element = null;
-                    if (null != _peerVideoTrack)
-                    {
-                        _peerVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
-                    }
-                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
-                    //PeerVideo.Source = null;
+                    if (null != _peerVideoTrack) _peerVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
+                    if (null != _selfVideoTrack) _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
 
-                    if (null != _selfVideoTrack)
-                    {
-                        _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
-                    }
-                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
-                    //SelfVideo.Stop();
-                    //SelfVideo.ClearValue(MediaElement.SourceProperty);
-                    //SelfVideo.Source = null;
+                    (_peerVideoTrack as IDisposable)?.Dispose();
+                    (_selfVideoTrack as IDisposable)?.Dispose();
 
-                    _peerVideoTrack = null;
-                    _selfVideoTrack = null;
-                    GC.Collect(); // Ensure all references are truly dropped.
                     IsMicrophoneEnabled = true;
                     IsCameraEnabled = true;
                     SelfVideoFps = PeerVideoFps = "";
