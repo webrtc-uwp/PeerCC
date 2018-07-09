@@ -398,6 +398,9 @@ namespace PeerConnectionClient.ViewModels
                     (_peerVideoTrack as IDisposable)?.Dispose();
                     (_selfVideoTrack as IDisposable)?.Dispose();
 
+                    _peerVideoTrack = null;
+                    _selfVideoTrack = null;
+
                     IsMicrophoneEnabled = true;
                     IsCameraEnabled = true;
                     SelfVideoFps = PeerVideoFps = "";
