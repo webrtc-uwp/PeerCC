@@ -172,9 +172,10 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Org.WebRtc">
-      <HintPath>..\..\..\..\..\ortc\windows\solutions\x64\Debug\Webrtc\Org.WebRtc.winmd</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\..\..\..\ortc\windows\projects\msvc\Webrtc.Universal\Webrtc.vcxproj">
+      <Project>{6799ece8-f824-48ee-867e-865eead0e9b0}</Project>
+      <Name>WebRtc</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

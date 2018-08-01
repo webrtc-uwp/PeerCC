@@ -201,7 +201,7 @@
                             </ToggleButton>
                         </StackPanel>
                     </Border>
-                    <Border Background="White" Width="110"
+                    <Border Background="White" Width="120"
                             RelativePanel.AlignBottomWithPanel="True"
                             RelativePanel.AlignLeftWithPanel="True"
                             Name="RemoteResFPSLabel">
@@ -250,7 +250,7 @@
                         RealTimePlayback="True"
                         Name="SelfVideo"
                         MediaFailed="SelfVideo_MediaFailed"/>
-                    <Border Background="White" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="110">
+                    <Border Background="White" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="120">
                         <TextBlock Foreground="Black" VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Run Text="{Binding SelfWidth}"/>
                             <Run Text="x"/>

@@ -242,42 +242,6 @@ namespace PeerConnectionClient.ViewModels
             });
 #endif
 
-#if false
-            // Handler for Peer/Self video frame rate changed event
-            FrameCounterHelper.FramesPerSecondChanged += (id, frameRate) =>
-            {
-                RunOnUiThread(() =>
-                {
-                    if (id == "SELF")
-                    {
-                        SelfVideoFps = frameRate;
-                    }
-                    else if (id == "PEER")
-                    {
-                        PeerVideoFps = frameRate;
-                    }
-                });
-            };
-#endif
-#if false
-            // Handler for Peer/Self video resolution changed event 
-            ResolutionHelper.ResolutionChanged += (id, width, height) =>
-            {
-                RunOnUiThread(() =>
-                {
-                    if (id == "SELF")
-                    {
-                        SelfHeight = height.ToString();
-                        SelfWidth = width.ToString();
-                    }
-                    else if (id == "PEER")
-                    {
-                        PeerHeight = height.ToString();
-                        PeerWidth = width.ToString();
-                    }
-                });
-            };
-#endif
             // A Peer is connected to the server event handler
             Conductor.Instance.Signaller.OnPeerConnected += (peerId, peerName) =>
             {
@@ -686,9 +650,7 @@ namespace PeerConnectionClient.ViewModels
             _peerVideoTrack = evt.Track;
             if (evt.Track != null && evt.Track.Kind == MediaStreamTrackKind.Video)
             {
-                Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
-                //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
-                //RunOnUiThread(() => { PeerVideo.SetMediaStreamSource(source); });
+                _peerVideoTrack.Element = Org.WebRtc.MediaElementMaker.Bind(PeerVideo);
             }
 
             IsReadyToDisconnect = true;
@@ -715,12 +677,21 @@ namespace PeerConnectionClient.ViewModels
                 if (_peerVideoTrack != null)
                 {
                     _peerVideoTrack.Element = Org.WebRtc.MediaElementMaker.Bind(PeerVideo);
-                    //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
-                    //var source = Media.CreateMedia().CreateMediaSource(_peerVideoTrack, "PEER");
-                    //RunOnUiThread(() =>
-                    //{
-                    //  PeerVideo.SetMediaStreamSource(source);
-                    //});
+                    ((MediaStreamTrack)_peerVideoTrack).OnFrameRateChanged += (float frameRate) =>
+                    {
+                        RunOnUiThread(() =>
+                        {
+                            PeerVideoFps = frameRate.ToString("0.0");
+                        });
+                    };
+                    ((MediaStreamTrack)_peerVideoTrack).OnResolutionChanged += (uint width, uint height) =>
+                    {
+                        RunOnUiThread(() =>
+                        {
+                            PeerHeight = height.ToString();
+                            PeerWidth = width.ToString();
+                        });
+                    };
                 }
             }
 
@@ -738,8 +709,6 @@ namespace PeerConnectionClient.ViewModels
                 if (track.Kind == "video")
                 {
                     _peerVideoTrack.Element = null; //Org.WebRtc.MediaElementMaker.Bind(obj)
-                    //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
-                    //PeerVideo.SetMediaStreamSource(null);
                 }
             });
         }
@@ -780,7 +749,21 @@ namespace PeerConnectionClient.ViewModels
                     if (VideoLoopbackEnabled)
                     {
                         _selfVideoTrack.Element = Org.WebRtc.MediaElementMaker.Bind(SelfVideo);
-                        //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
+                        ((MediaStreamTrack)_selfVideoTrack).OnFrameRateChanged += (float frameRate) =>
+                        {
+                            RunOnUiThread(() =>
+                            {
+                                SelfVideoFps = frameRate.ToString("0.0");
+                            });
+                        };
+                        ((MediaStreamTrack)_selfVideoTrack).OnResolutionChanged += (uint width, uint height) =>
+                        {
+                            RunOnUiThread(() =>
+                            {
+                                SelfHeight = height.ToString();
+                                SelfWidth = width.ToString();
+                            });
+                        };
                     }
                 }
             }
@@ -1544,13 +1527,21 @@ namespace PeerConnectionClient.ViewModels
                             Debug.WriteLine("Enabling video loopback");
 
                             _selfVideoTrack.Element = Org.WebRtc.MediaElementMaker.Bind(SelfVideo);
-                            //Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
-                            //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
-                            //RunOnUiThread(() =>
-                            //{
-                            //    SelfVideo.SetMediaStreamSource(source);
-                            //    Debug.WriteLine("Video loopback enabled");
-                            //});
+                            ((MediaStreamTrack)_selfVideoTrack).OnFrameRateChanged += (float frameRate) =>
+                            {
+                                RunOnUiThread(() =>
+                                {
+                                    SelfVideoFps = frameRate.ToString("0.0");
+                                });
+                            };
+                            ((MediaStreamTrack)_selfVideoTrack).OnResolutionChanged += (uint width, uint height) =>
+                            {
+                                RunOnUiThread(() =>
+                                {
+                                    SelfHeight = height.ToString();
+                                    SelfWidth = width.ToString();
+                                });
+                            };
                         }
                     }
                     else
@@ -1565,10 +1556,6 @@ namespace PeerConnectionClient.ViewModels
                         // corectly, only by setting SelfVideo.Source to null.
 
                         _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj)
-                        //Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
-                        //SelfVideo.Source = null;
-                        //SelfVideo.Stop();
-                        //SelfVideo.Source = null;
                         GC.Collect(); // Ensure all references are truly dropped.
                     }
                 }
