@@ -132,6 +132,8 @@ namespace PeerConnectionClient.ViewModels
 
         private IMediaStreamTrack _peerVideoTrack;
         private IMediaStreamTrack _selfVideoTrack;
+        private IMediaStreamTrack _peerAudioTrack;
+        private IMediaStreamTrack _selfAudioTrack;
 
         private readonly NtpService _ntpService;
 
@@ -238,7 +240,6 @@ namespace PeerConnectionClient.ViewModels
                 {
                     SelectedCamera = Cameras.First();
                 }
-                //Conductor.Instance.Media.OnMediaDevicesChanged += OnMediaDevicesChanged;
             });
 #endif
 
@@ -361,9 +362,13 @@ namespace PeerConnectionClient.ViewModels
 
                     (_peerVideoTrack as IDisposable)?.Dispose();
                     (_selfVideoTrack as IDisposable)?.Dispose();
+                    (_peerAudioTrack as IDisposable)?.Dispose();
+                    (_selfAudioTrack as IDisposable)?.Dispose();
 
                     _peerVideoTrack = null;
                     _selfVideoTrack = null;
+                    _peerAudioTrack = null;
+                    _selfAudioTrack = null;
 
                     IsMicrophoneEnabled = true;
                     IsCameraEnabled = true;
@@ -694,6 +699,10 @@ namespace PeerConnectionClient.ViewModels
                     };
                 }
             }
+            else if (track.Kind == "audio")
+            {
+                _peerAudioTrack = track;
+            }
 
             IsReadyToDisconnect = true;
         }
@@ -725,25 +734,15 @@ namespace PeerConnectionClient.ViewModels
                 _selfVideoTrack = track;
                 if (_selfVideoTrack != null)
                 {
-                    //var source = Media.CreateMedia().CreateMediaSource(_selfVideoTrack, "SELF");
                     RunOnUiThread(() =>
                     {
                         if (_cameraEnabled)
                         {
-                            Conductor.Instance.EnableLocalVideoStream();
+                            _selfVideoTrack.Enabled = true;
                         }
                         else
                         {
-                            Conductor.Instance.DisableLocalVideoStream();
-                        }
-
-                        if (_microphoneIsOn)
-                        {
-                            Conductor.Instance.UnmuteMicrophone();
-                        }
-                        else
-                        {
-                            Conductor.Instance.MuteMicrophone();
+                            _selfVideoTrack.Enabled = false;
                         }
                     });
                     if (VideoLoopbackEnabled)
@@ -765,6 +764,24 @@ namespace PeerConnectionClient.ViewModels
                             });
                         };
                     }
+                }
+            }
+            if (track.Kind == "audio")
+            {
+                _selfAudioTrack = track;
+                if (_selfAudioTrack != null)
+                {
+                    RunOnUiThread(() =>
+                    {
+                        if (_microphoneIsOn)
+                        {
+                            _selfAudioTrack.Enabled = true;
+                        }
+                        else
+                        {
+                            _selfAudioTrack.Enabled = false;
+                        }
+                    });
                 }
             }
         }
@@ -1166,15 +1183,15 @@ namespace PeerConnectionClient.ViewModels
                     return;
                 }
 
-                if (IsConnectedToPeer)
+                if (IsConnectedToPeer && _selfVideoTrack != null)
                 {
                     if (_cameraEnabled)
                     {
-                        Conductor.Instance.EnableLocalVideoStream();
+                        _selfVideoTrack.Enabled = true;
                     }
                     else
                     {
-                        Conductor.Instance.DisableLocalVideoStream();
+                        _selfVideoTrack.Enabled = false;
                     }
                 }
             }
@@ -1196,15 +1213,15 @@ namespace PeerConnectionClient.ViewModels
                     return;
                 }
 
-                if (IsConnectedToPeer)
+                if (IsConnectedToPeer && _selfAudioTrack != null)
                 {
                     if (_microphoneIsOn)
                     {
-                        Conductor.Instance.UnmuteMicrophone();
+                        _selfAudioTrack.Enabled = true;
                     }
                     else
                     {
-                        Conductor.Instance.MuteMicrophone();
+                        _selfAudioTrack.Enabled = false;
                     }
                 }
             }
@@ -1337,7 +1354,7 @@ namespace PeerConnectionClient.ViewModels
                 var localSettings = ApplicationData.Current.LocalSettings;
                 localSettings.Values["SelectedCameraId"] = _selectedCamera.Id;
                 Conductor.Instance.SelectVideoDevice(_selectedCamera);
-#if false
+
                 if (_allCapRes == null)
                 {
                     _allCapRes = new ObservableCollection<String>();
@@ -1404,7 +1421,6 @@ namespace PeerConnectionClient.ViewModels
                     });
                     OnPropertyChanged("AllCapRes");
                 });
-#endif
             }
         }
 
@@ -1719,20 +1735,20 @@ namespace PeerConnectionClient.ViewModels
 
                 if (AllCapFps == null)
                 {
-                    //AllCapFps = new ObservableCollection<CaptureCapability>();
+                    AllCapFps = new ObservableCollection<Conductor.CaptureCapability>();
                 }
                 else
                 {
                     AllCapFps.Clear();
                 }
-#if false
+
                 var opCap = SelectedCamera.GetVideoCaptureCapabilities();
                 opCap.AsTask().ContinueWith(caps =>
                 {
                     var fpsList = from cap in caps.Result where cap.ResolutionDescription == value select cap;
                     var t = CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
-                            CaptureCapability defaultFps = null;
+                            Conductor.CaptureCapability defaultFps = null;
                             uint selectedCapFpsFrameRate = 0;
                             var settings = ApplicationData.Current.LocalSettings;
                             if (settings.Values["SelectedCapFPSItemFrameRate"] != null)
@@ -1756,7 +1772,6 @@ namespace PeerConnectionClient.ViewModels
                         });
                     OnPropertyChanged("AllCapFps");
                 });
-#endif
                 SetProperty(ref _selectedCapResItem, value);
             }
         }
@@ -1785,7 +1800,6 @@ namespace PeerConnectionClient.ViewModels
                 if (SetProperty(ref _selectedCapFpsItem, value))
                 {
                     Conductor.Instance.VideoCaptureProfile = value;
-                    Conductor.Instance.UpdatePreferredFrameFormat();
 
                     var localSettings = ApplicationData.Current.LocalSettings;
                     localSettings.Values["SelectedCapFPSItemFrameRate"] = value?.FrameRate ?? 0;
