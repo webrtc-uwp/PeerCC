@@ -358,7 +358,7 @@ namespace PeerConnectionClient.Signalling
             {
                 new CodecInfo { Id = 96, ClockRate = 90000, Name = "VP8" },
                 new CodecInfo { Id = 98, ClockRate = 90000, Name = "VP9" },
-                new CodecInfo { Id = 125, ClockRate = 90000, Name = "H264" }
+                new CodecInfo { Id = 100, ClockRate = 90000, Name = "H264" }
             };
             return ret;
 		}
@@ -427,9 +427,12 @@ namespace PeerConnectionClient.Signalling
             Debug.WriteLine("Conductor: Getting user media.");
 
             IReadOnlyList<IConstraint> mandatoryConstraints = new List<IConstraint>() {
-                new Constraint("width", VideoCaptureProfile.Width.ToString()),
-                new Constraint("height", VideoCaptureProfile.Height.ToString()),
-                new Constraint("frameRate", VideoCaptureProfile.FrameRate.ToString())
+                new Constraint("maxWidth", VideoCaptureProfile.Width.ToString()),
+                new Constraint("minWidth", VideoCaptureProfile.Width.ToString()),
+                new Constraint("maxHeight", VideoCaptureProfile.Height.ToString()),
+                new Constraint("minHeight", VideoCaptureProfile.Height.ToString()),
+                new Constraint("maxFrameRate", VideoCaptureProfile.FrameRate.ToString()),
+                new Constraint("minFrameRate", VideoCaptureProfile.FrameRate.ToString())
             };
             IReadOnlyList<IConstraint> optionalConstraints = new List<IConstraint>();
             IMediaConstraints mediaConstraints = new MediaConstraints(mandatoryConstraints, optionalConstraints);
