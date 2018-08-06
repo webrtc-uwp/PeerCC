@@ -24,6 +24,8 @@ using System.Text.RegularExpressions;
 using static System.String;
 using Windows.Foundation;
 using Windows.Media.Capture;
+using Windows.Devices.Enumeration;
+using Windows.Media.MediaProperties;
 #if ORTCLIB
 using Org.Ortc;
 using Org.Ortc.Adapter;
@@ -113,9 +115,9 @@ namespace PeerConnectionClient.Signalling
             public string Name { get; set; }
 
             /// <summary>
-            /// Get the location of the media device.
+            /// Gets or sets the location of the media device.
             /// </summary>
-            public Windows.Devices.Enumeration.EnclosureLocation Location { get; set; }
+            public EnclosureLocation Location { get; set; }
 
             /// <summary>
             /// Retrieves video capabilities for a given device.
@@ -124,29 +126,39 @@ namespace PeerConnectionClient.Signalling
             /// capabilities supported by the video device.</returns>
             public IAsyncOperation<IList<CaptureCapability>> GetVideoCaptureCapabilities()
             {
-                return Task.Run(() =>
-                {
-                    if (Id == null)
-                        return null;
+                if (Id == null)
+                    return null;
 
-                    IVideoCapturer videoCapturer = VideoCapturer.Create(Name, Id);
+                MediaCapture mediaCapture = new MediaCapture();
+                MediaCaptureInitializationSettings mediaSettings =
+                    new MediaCaptureInitializationSettings();
+                mediaSettings.VideoDeviceId = Id;
 
-                    IReadOnlyList<IVideoFormat> formats = videoCapturer.GetSupportedFormats();
-
-                    IList<CaptureCapability> capabilityList = new List<CaptureCapability>();
-                    foreach (var format in formats)
+                Task initTask = mediaCapture.InitializeAsync(mediaSettings).AsTask();
+                return initTask.ContinueWith(initResult => {
+                    if (initResult.Exception != null)
                     {
+                        Debug.WriteLine("Failed to initialize video device: " + initResult.Exception.Message);
+                        return null;
+                    }
+                    var streamProperties =
+                        mediaCapture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoRecord);
+                    IList<CaptureCapability> capabilityList = new List<CaptureCapability>();
+                    foreach (VideoEncodingProperties property in streamProperties)
+                    {
+                        uint frameRate = (uint)(property.FrameRate.Numerator /
+                            property.FrameRate.Denominator);
                         capabilityList.Add(new CaptureCapability
                         {
-                            Width = (uint)format.Width,
-                            Height = (uint)format.Height,
-                            FrameRate = (uint)format.Framerate,
-                            FrameRateDescription = $"{format.Framerate} fps",
-                            ResolutionDescription = $"{format.Width} x {format.Height}"
+                            Width = (uint)property.Width,
+                            Height = (uint)property.Height,
+                            FrameRate = frameRate,
+                            FrameRateDescription = $"{frameRate} fps",
+                            ResolutionDescription = $"{property.Width} x {property.Height}"
                         });
                     }
                     return capabilityList;
-                }).AsAsyncOperation();
+                }).AsAsyncOperation<IList<CaptureCapability>>();
             }
         }
 

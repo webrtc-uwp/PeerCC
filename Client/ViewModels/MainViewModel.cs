@@ -1753,13 +1753,13 @@ namespace PeerConnectionClient.ViewModels
                             var settings = ApplicationData.Current.LocalSettings;
                             if (settings.Values["SelectedCapFPSItemFrameRate"] != null)
                             {
-                            selectedCapFpsFrameRate = (uint) settings.Values["SelectedCapFPSItemFrameRate"];
+                                selectedCapFpsFrameRate = (uint) settings.Values["SelectedCapFPSItemFrameRate"];
                             }
 
                             foreach (var fps in fpsList)
                             {
-                            if (selectedCapFpsFrameRate != 0 && fps.FrameRate == selectedCapFpsFrameRate)
-                            {
+                                if (selectedCapFpsFrameRate != 0 && fps.FrameRate == selectedCapFpsFrameRate)
+                                {
                                     defaultFps = fps;
                                 }
                                 AllCapFps.Add(fps);
