@@ -172,6 +172,12 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="HockeySDK.UWP">
+      <Version>4.1.6</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
+      <Version>6.1.5</Version>
+    </PackageReference>
     <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
       <Project>{3dd8fdcd-b703-4b75-826a-2c7e844f903e}</Project>
       <Name>Org.WebRtc</Name>
