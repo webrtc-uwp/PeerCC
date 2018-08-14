@@ -184,10 +184,18 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\ortc\windows\projects\msvc\Org.Ortc.Uwp\Org.Ortc.Uwp.vcxproj">
-      <Project>{287f164d-1822-4af6-a08f-27cd0af2697d}</Project>
-      <Name>Org.Ortc.Uwp</Name>
+    <ProjectReference Include="..\..\..\..\..\ortc\windows\projects\msvc\Org.Ortc.Universal\Org.Ortc.vcxproj">
+      <Project>{04d12fba-cdbe-412f-b31e-e27fbd9bc0aa}</Project>
+      <Name>Org.Ortc</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Org.Ortc.Adapter">
+      <HintPath>..\..\..\..\..\ortc\windows\solutions\$(PlatformTarget)\$(Configuration)\Org.Ortc\Org.Ortc.Adapter.winmd</HintPath>
+    </Reference>
+    <Reference Include="Org.Ortc.Log">
+      <HintPath>..\..\..\..\..\ortc\windows\solutions\$(PlatformTarget)\$(Configuration)\Org.Ortc\Org.Ortc.Log.winmd</HintPath>
+    </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

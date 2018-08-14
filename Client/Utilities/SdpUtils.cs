@@ -33,8 +33,11 @@ namespace PeerConnectionClient.Utilities
         /// <param name="audioCodec">Audio codec.</param>
         /// <param name="videoCodec">Video codec.</param>
         /// <returns>True if succeeds to force to use the selected audio/video codecs.</returns>
-        //public static bool SelectCodecs(ref string sdp, CodecInfo audioCodec, CodecInfo videoCodec)
+#if ORTCLIB
+        public static bool SelectCodecs(ref string sdp, CodecInfo audioCodec, CodecInfo videoCodec)
+#else
         public static bool SelectCodecs(ref string sdp, int audioCodecId, int videoCodecId)
+#endif
         {
             Regex mfdRegex = new Regex("\r\nm=audio.*RTP.*?( .\\d*)+\r\n");
             Match mfdMatch = mfdRegex.Match(sdp);

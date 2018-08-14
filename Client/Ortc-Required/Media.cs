@@ -51,8 +51,7 @@ namespace PeerConnectionClient.Ortc
             return Task.Run(() => CreateMedia()).AsAsyncOperation();
         }
 
-
-        public Task<IList<MediaStreamTrack>> GetUserMedia(RTCMediaStreamConstraints mediaStreamConstraints)
+        public Task<IReadOnlyList<IMediaStreamTrack>> GetUserMedia(RTCMediaStreamConstraints mediaStreamConstraints)
         {
             return Task.Run(() =>
             {
@@ -62,24 +61,27 @@ namespace PeerConnectionClient.Ortc
                     MediaDeviceKind.VideoInput, _videoDevice);
                 if (constraints.Video != null && constraints.Video.Advanced.Count > 0)
                 {
-                    MediaTrackConstraintSet constraintSet = constraints.Video.Advanced.First();
+                    var constraintSet = constraints.Video.Advanced.First();
                     constraintSet.Width = new ConstrainLong { Value = _preferredFrameWidth };
                     constraintSet.Height = new ConstrainLong { Value = _preferredFrameHeight };
                     constraintSet.FrameRate = new ConstrainDouble { Value = _preferredFPS };
                 }
 
-                Task<IList<MediaStreamTrack>> task = MediaDevices.GetUserMedia(constraints).AsTask();
+                var task = MediaDevices.GetUserMedia(constraints).AsTask();
                 return task.Result;
             });
         }
+
+#if MISSING_CREATE_MEDIA
         public IMediaSource CreateMediaSource(MediaStreamTrack track, string id)
         {
             return track?.CreateMediaSource();
         }
+#endif
 
         public static void OnAppSuspending()
         {
-            MediaDevices.OnAppSuspending();
+            //MediaDevices.OnAppSuspending();
         }
 
         public void SelectAudioCaptureDevice(MediaDevice device)

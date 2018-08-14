@@ -35,6 +35,7 @@ using CodecInfo = Org.Ortc.RTCRtpCodecCapability;
 using MediaVideoTrack = Org.Ortc.MediaStreamTrack;
 using MediaAudioTrack = Org.Ortc.MediaStreamTrack;
 using RTCIceCandidate = Org.Ortc.Adapter.RTCIceCandidate;
+using MediaDevice = PeerConnectionClient.Ortc.MediaDevice;
 #else
 using Org.WebRtc;
 using PeerConnectionClient.Utilities;
@@ -98,6 +99,7 @@ namespace PeerConnectionClient.Signalling
             public string FrameRateDescription { get; set; }
         }
 
+#if !ORTCLIB
         /// <summary>
         /// Represents a local media device, such as a microphone or a camera.
         /// </summary>
@@ -161,6 +163,7 @@ namespace PeerConnectionClient.Signalling
                 }).AsAsyncOperation<IList<CaptureCapability>>();
             }
         }
+#endif
 
         public enum MediaDeviceType
         {
@@ -169,12 +172,14 @@ namespace PeerConnectionClient.Signalling
 			VideoCapture
         };
 
+#if !ORTCLIB
         public class CodecInfo
         {
             public int Id { get; set; }
             public string Name { get; set; }
             public int ClockRate { get; set; }
         }
+#endif
 
         /// <summary>
         ///  The single instance of the Conductor class.
@@ -334,16 +339,25 @@ namespace PeerConnectionClient.Signalling
 
         async public static Task<IList<MediaDevice>> GetVideoCaptureDevices()
         {
+#if ORTCLIB
+            var devices = (await MediaDevices.EnumerateDevices());
+#else
             var devices = (await VideoCapturer.GetDevices());
+#endif
 
             IList<MediaDevice> deviceList = new List<MediaDevice>();
             foreach (var deviceInfo in devices)
             {
                 deviceList.Add(new MediaDevice
                 {
-                    Id = deviceInfo.Info.Id,
-                    Name = deviceInfo.Info.Name,
-                    Location = deviceInfo.Info.EnclosureLocation
+#if ORTCLIB
+                    Id = deviceInfo.DeviceId,
+                    Name = deviceInfo.Label
+#else
+                    Id = deviceInfo.Id,
+                    Name = deviceInfo.Name,
+                    Location = deviceInfo.EnclosureLocation
+#endif
                 });
             }
             return deviceList;
@@ -353,13 +367,13 @@ namespace PeerConnectionClient.Signalling
         {
             var ret = new List<CodecInfo>
             {
-                new CodecInfo { Id = 111, ClockRate = 48000, Name = "opus" },
-                new CodecInfo { Id = 103, ClockRate = 16000, Name = "ISAC" },
-                new CodecInfo { Id = 104, ClockRate = 32000, Name = "ISAC" },
-                new CodecInfo { Id = 9, ClockRate = 8000, Name = "G722" },
-                new CodecInfo { Id = 102, ClockRate = 8000, Name = "ILBC" },
-                new CodecInfo { Id = 0, ClockRate = 8000, Name = "PCMU" },
-                new CodecInfo { Id = 8, ClockRate = 8000, Name = "PCMA" }
+                new CodecInfo { PreferredPayloadType = 111, ClockRate = 48000, Name = "opus" },
+                new CodecInfo { PreferredPayloadType = 103, ClockRate = 16000, Name = "ISAC" },
+                new CodecInfo { PreferredPayloadType = 104, ClockRate = 32000, Name = "ISAC" },
+                new CodecInfo { PreferredPayloadType = 9, ClockRate = 8000, Name = "G722" },
+                new CodecInfo { PreferredPayloadType = 102, ClockRate = 8000, Name = "ILBC" },
+                new CodecInfo { PreferredPayloadType = 0, ClockRate = 8000, Name = "PCMU" },
+                new CodecInfo { PreferredPayloadType = 8, ClockRate = 8000, Name = "PCMA" }
             };
             return ret;
 		}
@@ -368,9 +382,9 @@ namespace PeerConnectionClient.Signalling
         {
             var ret = new List<CodecInfo>
             {
-                new CodecInfo { Id = 96, ClockRate = 90000, Name = "VP8" },
-                new CodecInfo { Id = 98, ClockRate = 90000, Name = "VP9" },
-                new CodecInfo { Id = 100, ClockRate = 90000, Name = "H264" }
+                new CodecInfo { PreferredPayloadType = 96, ClockRate = 90000, Name = "VP8" },
+                new CodecInfo { PreferredPayloadType = 98, ClockRate = 90000, Name = "VP9" },
+                new CodecInfo { PreferredPayloadType = 100, ClockRate = 90000, Name = "H264" }
             };
             return ret;
 		}
@@ -384,7 +398,7 @@ namespace PeerConnectionClient.Signalling
         /// Creates a peer connection.
         /// </summary>
         /// <returns>True if connection to a peer is successfully created.</returns>
-        private bool CreatePeerConnection(CancellationToken cancelationToken)
+        async private Task<bool> CreatePeerConnection(CancellationToken cancelationToken)
         {
             Debug.Assert(_peerConnection == null);
             if(cancelationToken.IsCancellationRequested)
@@ -455,32 +469,37 @@ namespace PeerConnectionClient.Signalling
             }
 #endif
 #if ORTCLIB
-            var tracks = await _media.GetUserMedia(mediaStreamConstraints);
+            var mediaStreamConstraints = new MediaStreamConstraints();
+            var tracks = await (MediaDevices.GetUserMedia(mediaStreamConstraints).AsTask<IReadOnlyList<IMediaStreamTrack>>());
+            IMediaStreamTrack localVideoTrack = null;
+            IMediaStreamTrack localAudioTrack = null;
             if (tracks != null)
             {
-                RTCRtpCapabilities audioCapabilities = RTCRtpSender.GetCapabilities("audio");
-                RTCRtpCapabilities videoCapabilities = RTCRtpSender.GetCapabilities("video");
+                var audioCapabilities = RTCRtpSender.GetCapabilities(MediaStreamTrackKind.Audio);
+                var videoCapabilities = RTCRtpSender.GetCapabilities(MediaStreamTrackKind.Video);
 
-                _mediaStream = new MediaStream(tracks);
+                var mediaStream = new MediaStream(tracks);
                 Debug.WriteLine("Conductor: Adding local media stream.");
-                IList<MediaStream> mediaStreamList = new List<MediaStream>();
-                mediaStreamList.Add(_mediaStream);
+                var mediaStreamList = new List<IMediaStream>();
+                mediaStreamList.Add(mediaStream);
                 foreach (var mediaStreamTrack in tracks)
                 {
                     //Create stream track configuration based on capabilities
                     RTCMediaStreamTrackConfiguration configuration = null;
                     if (mediaStreamTrack.Kind == MediaStreamTrackKind.Audio && audioCapabilities != null)
                     {
+                        localAudioTrack = mediaStreamTrack;
                         configuration =
                             await Helper.GetTrackConfigurationForCapabilities(audioCapabilities, AudioCodec);
                     }
                     else if (mediaStreamTrack.Kind == MediaStreamTrackKind.Video && videoCapabilities != null)
                     {
+                        localVideoTrack = mediaStreamTrack;
                         configuration =
                             await Helper.GetTrackConfigurationForCapabilities(videoCapabilities, VideoCodec);
                     }
                     if (configuration != null)
-                        _peerConnection.AddTrack(mediaStreamTrack, mediaStreamList, configuration);
+                        await _peerConnection.AddTrack(mediaStreamTrack, mediaStreamList, configuration);
                 }
             }
 #else
@@ -556,14 +575,13 @@ namespace PeerConnectionClient.Signalling
 
             double index = null != evt.Candidate.SdpMLineIndex ? (double)evt.Candidate.SdpMLineIndex : -1;
 
-            JsonObject json;
+            JsonObject json = null;
 #if ORTCLIB
             if (RTCPeerConnectionSignalingMode.Json == _signalingMode)
             {
-                json = JsonObject.Parse(evt.Candidate.ToJsonString());
+                json = JsonObject.Parse(evt.Candidate.ToJson().ToString());
             }
-            else
-#endif
+#else
             {
                 json = new JsonObject
                 {
@@ -572,7 +590,8 @@ namespace PeerConnectionClient.Signalling
                     {kCandidateSdpName, JsonValue.CreateStringValue(evt.Candidate.Candidate)}
                 };
             }
-            Debug.WriteLine("Conductor: Sending ice candidate:\n" + json.Stringify());
+#endif
+            Debug.WriteLine("Conductor: Sending ice candidate:\n" + json?.Stringify());
             SendMessage(json);
         }
 
@@ -580,8 +599,8 @@ namespace PeerConnectionClient.Signalling
         /// <summary>
         /// Invoked when the remote peer added a media track to the peer connection.
         /// </summary>
-        public event Action<RTCTrackEvent> OnAddRemoteTrack;
-        private void PeerConnection_OnAddTrack(RTCTrackEvent evt)
+        public event Action<IRTCTrackEvent> OnAddRemoteTrack;
+        private void PeerConnection_OnAddTrack(IRTCTrackEvent evt)
         {
             OnAddRemoteTrack?.Invoke(evt);
         }
@@ -589,8 +608,8 @@ namespace PeerConnectionClient.Signalling
         /// <summary>
         /// Invoked when the remote peer removed a media track from the peer connection.
         /// </summary>
-        public event Action<RTCTrackEvent> OnRemoveTrack;
-        private void PeerConnection_OnRemoveTrack(RTCTrackEvent evt)
+        public event Action<IRTCTrackEvent> OnRemoveTrack;
+        private void PeerConnection_OnRemoveTrack(IRTCTrackEvent evt)
         {
             OnRemoveTrack?.Invoke(evt);
         }
@@ -746,7 +765,7 @@ namespace PeerConnectionClient.Signalling
                             _signalingMode = Helper.SignalingModeForClientName(Peer.Name);
 #endif
                             _connectToPeerCancelationTokenSource = new CancellationTokenSource();
-                            bool connectResult = CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
+                            bool connectResult = await CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
                             _connectToPeerTask = null;
                             _connectToPeerCancelationTokenSource.Dispose();
                             if (!connectResult)
@@ -796,6 +815,7 @@ namespace PeerConnectionClient.Signalling
                         return;
                     }
 
+                    Debug.WriteLine("Conductor: Received session description:\n" + message);
 #if ORTCLIB
                     RTCSessionDescriptionSignalingType messageType = RTCSessionDescriptionSignalingType.SdpOffer;
                     switch (type)
@@ -806,6 +826,7 @@ namespace PeerConnectionClient.Signalling
                         case "pranswer": messageType = RTCSessionDescriptionSignalingType.SdpPranswer; break;
                         default: Debug.Assert(false, type); break;
                     }
+                    var description = new RTCSessionDescription(messageType, sdp);
 #else
                     RTCSdpType messageType = RTCSdpType.Offer;
                     switch (type)
@@ -815,12 +836,12 @@ namespace PeerConnectionClient.Signalling
                         case "pranswer": messageType = RTCSdpType.Pranswer; break;
                         default: Debug.Assert(false, type); break;
                     }
-#endif
-                    Debug.WriteLine("Conductor: Received session description:\n" + message);
                     RTCSessionDescriptionInit sdpInit = new RTCSessionDescriptionInit();
                     sdpInit.Sdp = sdp;
                     sdpInit.Type = messageType;
-                    await _peerConnection.SetRemoteDescription(new RTCSessionDescription(sdpInit));
+                    var description = new RTCSessionDescription(sdpInit);
+#endif
+                    await _peerConnection.SetRemoteDescription(description);
 
 #if ORTCLIB
                     if ((messageType == RTCSessionDescriptionSignalingType.SdpOffer) ||
@@ -874,7 +895,7 @@ namespace PeerConnectionClient.Signalling
 #if ORTCLIB
                     else
                     {
-                        candidate = RTCIceCandidate.FromJsonString(message);
+                        candidate = RTCIceCandidate.WithJson(new Json(message));
                     }
                     _peerConnection?.AddIceCandidate(candidate);
 #else
@@ -938,7 +959,7 @@ namespace PeerConnectionClient.Signalling
             _signalingMode = Helper.SignalingModeForClientName(peer.Name);
 #endif
             _connectToPeerCancelationTokenSource = new System.Threading.CancellationTokenSource();
-            bool connectResult = CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
+            bool connectResult = await CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
             _connectToPeerTask = null;
             _connectToPeerCancelationTokenSource.Dispose();
 
@@ -947,7 +968,9 @@ namespace PeerConnectionClient.Signalling
                 _peerId = peer.Id;
                 IRTCOfferOptions offerOptions = new RTCOfferOptions();
                 var offer = await _peerConnection.CreateOffer(offerOptions);
-#if !ORTCLIB
+#if ORTCLIB
+                var modifiedOffer = offer;
+#else
                 // Alter sdp to force usage of selected codecs
                 string modifiedSdp = offer.Sdp;
                 SdpUtils.SelectCodecs(ref modifiedSdp, AudioCodec.Id, VideoCodec.Id);
@@ -1089,17 +1112,7 @@ namespace PeerConnectionClient.Signalling
                 }
                 RTCIceServer server = null;
                 url += iceServer.Host.Value;
-#if ORTCLIB
-                //url += iceServer.Host.Value;
-                server = new RTCIceServer()
-                {
-                    Urls = new List<string>(),
-                };
-                server.Urls.Add(url);
-#else
-                //url += iceServer.Host.Value + ":" + iceServer.Port.Value;
                 server = new RTCIceServer { Urls = new List<string> { url } };
-#endif
                 if (iceServer.Credential != null)
                 {
                     server.Credential = iceServer.Credential;

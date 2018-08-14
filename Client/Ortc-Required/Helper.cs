@@ -18,12 +18,12 @@ namespace PeerConnectionClient.Ortc.Utilities
     {
         public static MediaDevice ToMediaDevice(MediaDeviceInfo device)
         {
-            return new MediaDevice(device.DeviceId, device.Label);
+            return new MediaDevice { Id = device.DeviceId, Name = device.Label };
         }
 
         public static IList<RTCRtpCodecCapability> GetCodecs(string kind)
         {
-            var caps = RTCRtpSender.GetCapabilities(kind);
+            var caps = RTCRtpSender.GetCapabilities(kind == "audio" ? MediaStreamTrackKind.Audio : MediaStreamTrackKind.Video);
             var results = new List<RTCRtpCodecCapability>(caps.Codecs);
             return results;
         }
@@ -39,7 +39,7 @@ namespace PeerConnectionClient.Ortc.Utilities
             if (null == device) return existingConstraints;
 
             if (null == existingConstraints) existingConstraints = new MediaStreamConstraints();
-            MediaTrackConstraints trackConstraints = null;
+            IMediaTrackConstraints trackConstraints = null;
 
             switch (kind)
             {
@@ -55,8 +55,10 @@ namespace PeerConnectionClient.Ortc.Utilities
             }
             if (null == trackConstraints) trackConstraints = new MediaTrackConstraints();
 
+            var newAdvancedList = new List<MediaTrackConstraintSet>();
+
             if (null == trackConstraints.Advanced)
-                trackConstraints.Advanced = new List<MediaTrackConstraintSet>();
+                trackConstraints.Advanced = newAdvancedList;
 
             var constraintSet = new MediaTrackConstraintSet
             {
@@ -70,7 +72,8 @@ namespace PeerConnectionClient.Ortc.Utilities
                 }
             };
 
-            trackConstraints.Advanced.Add(constraintSet);
+            newAdvancedList.Add(constraintSet);
+            trackConstraints.Advanced = newAdvancedList;
 
             switch (kind)
             {
@@ -116,7 +119,7 @@ namespace PeerConnectionClient.Ortc.Utilities
 
             return Task.Run(() =>
             {
-                RTCRtpCapabilities capabilities = sourceCapabilities.Clone();
+                var capabilities = RTCRtpCapabilities.Clone(sourceCapabilities);
               
                 // scoope: move prefered codec to be first in the list
                 {
@@ -124,11 +127,13 @@ namespace PeerConnectionClient.Ortc.Utilities
                     if (itemsToRemove.Count > 0)
                     {
                         RTCRtpCodecCapability codecCapability = itemsToRemove.First();
-                        if (codecCapability != null && capabilities.Codecs.IndexOf(codecCapability) > 0)
+                        var modifyList = capabilities.Codecs.ToList();
+                        if (codecCapability != null && modifyList.IndexOf(codecCapability) > 0)
                         {
-                            capabilities.Codecs.Remove(codecCapability);
-                            capabilities.Codecs.Insert(0, codecCapability);
+                            modifyList.Remove(codecCapability);
+                            modifyList.Insert(0, codecCapability);
                         }
+                        capabilities.Codecs = modifyList;
                     }
                 }
 

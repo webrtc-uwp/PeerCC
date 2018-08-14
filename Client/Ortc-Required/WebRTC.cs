@@ -49,7 +49,8 @@ namespace PeerConnectionClient.Utilities
         public static void Initialize(CoreDispatcher dispatcher)
         {
             Settings.ApplyDefaults();
-            OrtcWithDispatcher.Setup(dispatcher);
+
+            OrtcLib.Setup(EventQueueMaker.Bind(dispatcher));
         }
 
         //public static bool IsTracing();
