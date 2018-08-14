@@ -175,7 +175,7 @@ namespace PeerConnectionClient.Signalling
 #if !ORTCLIB
         public class CodecInfo
         {
-            public int Id { get; set; }
+            public byte PreferredPayloadType { get; set; }
             public string Name { get; set; }
             public int ClockRate { get; set; }
         }
@@ -354,9 +354,9 @@ namespace PeerConnectionClient.Signalling
                     Id = deviceInfo.DeviceId,
                     Name = deviceInfo.Label
 #else
-                    Id = deviceInfo.Id,
-                    Name = deviceInfo.Name,
-                    Location = deviceInfo.EnclosureLocation
+                    Id = deviceInfo.Info.Id,
+                    Name = deviceInfo.Info.Name,
+                    Location = deviceInfo.Info.EnclosureLocation
 #endif
                 });
             }
@@ -973,7 +973,7 @@ namespace PeerConnectionClient.Signalling
 #else
                 // Alter sdp to force usage of selected codecs
                 string modifiedSdp = offer.Sdp;
-                SdpUtils.SelectCodecs(ref modifiedSdp, AudioCodec.Id, VideoCodec.Id);
+                SdpUtils.SelectCodecs(ref modifiedSdp, AudioCodec.PreferredPayloadType, VideoCodec.PreferredPayloadType);
                 RTCSessionDescriptionInit sdpInit = new RTCSessionDescriptionInit();
                 sdpInit.Sdp = modifiedSdp;
                 sdpInit.Type = offer.SdpType;

@@ -43,8 +43,8 @@ using FrameCounterHelper = PeerConnectionClient.Ortc.OrtcStatsManager;
 using MediaDevice = PeerConnectionClient.Ortc.MediaDevice;
 #else
 using Org.WebRtc;
-using CodecInfo = Conductor.CodecInfo;
-using MediaDevice = Conductor.MediaDevice;
+using CodecInfo = PeerConnectionClient.Signalling.Conductor.CodecInfo;
+using MediaDevice = PeerConnectionClient.Signalling.Conductor.MediaDevice;
 #endif
 
 
@@ -438,18 +438,10 @@ namespace PeerConnectionClient.ViewModels
                 {
                     if (settings.Values["SelectedAudioCodecId"] != null)
                     {
-#if ORTCLIB
                         byte id = Convert.ToByte(settings.Values["SelectedAudioCodecId"]);
-#else
-                        int id = Convert.ToInt32(settings.Values["SelectedAudioCodecId"]);
-#endif
                         foreach (var audioCodec in AudioCodecs)
                         {
-#if ORTCLIB
-                            byte audioCodecId = audioCodec.PreferredPayloadType;
-#else
-                            int audioCodecId = audioCodec.Id;
-#endif
+                            var audioCodecId = audioCodec.PreferredPayloadType;
                             if (audioCodecId == id)
                             {
                                 SelectedAudioCodec = audioCodec;
@@ -479,11 +471,7 @@ namespace PeerConnectionClient.ViewModels
 #endif
                         foreach (var videoCodec in VideoCodecs)
                         {
-#if ORTCLIB
-                            byte videoCodecId = videoCodec.PreferredPayloadType;
-#else
-                            int videoCodecId = videoCodec.Id;
-#endif
+                            var videoCodecId = videoCodec.PreferredPayloadType;
                             if (videoCodecId == id)
                             {
                                 SelectedVideoCodec = videoCodec;
@@ -1724,11 +1712,7 @@ namespace PeerConnectionClient.ViewModels
                 Conductor.Instance.AudioCodec = value;
                 OnPropertyChanged(() => SelectedAudioCodec);
                 var localSettings = ApplicationData.Current.LocalSettings;
-#if ORTCLIB
                 localSettings.Values["SelectedAudioCodecId"] = Conductor.Instance.AudioCodec.PreferredPayloadType;
-#else
-                localSettings.Values["SelectedAudioCodecId"] = Conductor.Instance.AudioCodec.Id;
-#endif
             }
         }
 
@@ -1859,11 +1843,7 @@ namespace PeerConnectionClient.ViewModels
                 Conductor.Instance.VideoCodec = value;
                 OnPropertyChanged(() => SelectedVideoCodec);
                 var localSettings = ApplicationData.Current.LocalSettings;
-#if ORTCLIB
                 localSettings.Values["SelectedVideoCodecId"] = Conductor.Instance.VideoCodec.PreferredPayloadType;
-#else
-                localSettings.Values["SelectedVideoCodecId"] = Conductor.Instance.VideoCodec.Id;
-#endif
             }
         }
 
