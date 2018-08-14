@@ -168,8 +168,8 @@ namespace PeerConnectionClient.Signalling
         public enum MediaDeviceType
         {
             AudioCapture,
-			AudioPlayout,
-			VideoCapture
+            AudioPlayout,
+            VideoCapture
         };
 
 #if !ORTCLIB
