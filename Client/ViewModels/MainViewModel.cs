@@ -45,6 +45,11 @@ using MediaDevice = PeerConnectionClient.Ortc.MediaDevice;
 using Org.WebRtc;
 using CodecInfo = PeerConnectionClient.Signalling.Conductor.CodecInfo;
 using MediaDevice = PeerConnectionClient.Signalling.Conductor.MediaDevice;
+#if USE_CX_VERSION
+using UseMediaStreamTrack = Org.WebRtc.MediaStreamTrack;
+#else
+using UseMediaStreamTrack = Org.WebRtc.IMediaStreamTrack;
+#endif
 #endif
 
 
@@ -133,10 +138,10 @@ namespace PeerConnectionClient.ViewModels
         readonly DisplayRequest _keepScreenOnRequest = new DisplayRequest();
         private bool _keepOnScreenRequested;
 
-        private IMediaStreamTrack _peerVideoTrack;
-        private IMediaStreamTrack _selfVideoTrack;
-        private IMediaStreamTrack _peerAudioTrack;
-        private IMediaStreamTrack _selfAudioTrack;
+        private UseMediaStreamTrack _peerVideoTrack;
+        private UseMediaStreamTrack _selfVideoTrack;
+        private UseMediaStreamTrack _peerAudioTrack;
+        private UseMediaStreamTrack _selfAudioTrack;
 
         private readonly NtpService _ntpService;
 
@@ -366,10 +371,12 @@ namespace PeerConnectionClient.ViewModels
                     if (null != _selfVideoTrack) _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
 #endif
 
+#if !USE_CX_VERSION
                     (_peerVideoTrack as IDisposable)?.Dispose();
                     (_selfVideoTrack as IDisposable)?.Dispose();
                     (_peerAudioTrack as IDisposable)?.Dispose();
                     (_selfAudioTrack as IDisposable)?.Dispose();
+#endif
 
                     _peerVideoTrack = null;
                     _selfVideoTrack = null;
@@ -669,7 +676,7 @@ namespace PeerConnectionClient.ViewModels
                 /// Add remote stream event handler.
                 /// </summary>
                 /// <param name="evt">Details about Media stream event.</param>
-                private void Conductor_OnAddRemoteTrack(IMediaStreamTrack track)
+                private void Conductor_OnAddRemoteTrack(UseMediaStreamTrack track)
         {
             if (track.Kind == "video")
             {
@@ -707,7 +714,7 @@ namespace PeerConnectionClient.ViewModels
         /// Remove remote stream event handler.
         /// </summary>
         /// <param name="evt">Details about Media stream event.</param>
-        private void Conductor_OnRemoveRemoteTrack(IMediaStreamTrack track)
+        private void Conductor_OnRemoveRemoteTrack(UseMediaStreamTrack track)
         {
             RunOnUiThread(() =>
             {
@@ -723,7 +730,7 @@ namespace PeerConnectionClient.ViewModels
         /// Add local stream event handler.
         /// </summary>
         /// <param name="evt">Details about Media stream event.</param>
-        private void Conductor_OnAddLocalTrack(IMediaStreamTrack track)
+        private void Conductor_OnAddLocalTrack(UseMediaStreamTrack track)
         {
 #if ORTCLIB
             if (track.Kind == MediaStreamTrackKind.Video)

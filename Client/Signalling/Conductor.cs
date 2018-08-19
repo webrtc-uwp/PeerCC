@@ -39,6 +39,21 @@ using MediaDevice = PeerConnectionClient.Ortc.MediaDevice;
 #else
 using Org.WebRtc;
 using PeerConnectionClient.Utilities;
+#if USE_CX_VERSION
+using UseMediaStreamTrack = Org.WebRtc.MediaStreamTrack;
+using UseRTCPeerConnectionIceEvent = Org.WebRtc.RTCPeerConnectionIceEvent;
+using UseRTCTrackEvent = Org.WebRtc.RTCTrackEvent;
+using UseRTCSessionDescription = Org.WebRtc.RTCSessionDescription;
+using UseConstraint = Org.WebRtc.Constraint;
+using UseMediaConstraints = Org.WebRtc.MediaConstraints;
+#else
+using UseMediaStreamTrack = Org.WebRtc.IMediaStreamTrack;
+using UseRTCPeerConnectionIceEvent = Org.WebRtc.IRTCPeerConnectionIceEvent;
+using UseRTCTrackEvent = Org.WebRtc.IRTCTrackEvent;
+using UseRTCSessionDescription = Org.WebRtc.IRTCSessionDescription;
+using UseConstraint = Org.WebRtc.IConstraint;
+using UseMediaConstraints = Org.WebRtc.IMediaConstraints;
+#endif
 #endif
 
 namespace PeerConnectionClient.Signalling
@@ -301,7 +316,7 @@ namespace PeerConnectionClient.Signalling
         Task<bool> _connectToPeerTask;
 
         // Public events for adding and removing the local track
-        public event Action<IMediaStreamTrack> OnAddLocalTrack;
+        public event Action<UseMediaStreamTrack> OnAddLocalTrack;
 
         // Public events to notify about connection status
         public event Action OnPeerConnectionCreated;
@@ -452,7 +467,7 @@ namespace PeerConnectionClient.Signalling
 
             Debug.WriteLine("Conductor: Getting user media.");
 
-            IReadOnlyList<IConstraint> mandatoryConstraints = new List<IConstraint>() {
+            IReadOnlyList<UseConstraint> mandatoryConstraints = new List<UseConstraint>() {
                 new Constraint("maxWidth", VideoCaptureProfile.Width.ToString()),
                 new Constraint("minWidth", VideoCaptureProfile.Width.ToString()),
                 new Constraint("maxHeight", VideoCaptureProfile.Height.ToString()),
@@ -460,8 +475,8 @@ namespace PeerConnectionClient.Signalling
                 new Constraint("maxFrameRate", VideoCaptureProfile.FrameRate.ToString()),
                 new Constraint("minFrameRate", VideoCaptureProfile.FrameRate.ToString())
             };
-            IReadOnlyList<IConstraint> optionalConstraints = new List<IConstraint>();
-            IMediaConstraints mediaConstraints = new MediaConstraints(mandatoryConstraints, optionalConstraints);
+            IReadOnlyList<UseConstraint> optionalConstraints = new List<UseConstraint>();
+            UseMediaConstraints mediaConstraints = new MediaConstraints(mandatoryConstraints, optionalConstraints);
 
             if (cancelationToken.IsCancellationRequested)
             {
@@ -503,13 +518,13 @@ namespace PeerConnectionClient.Signalling
                 }
             }
 #else
-            IVideoCapturer videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id);
-            IVideoTrackSource videoTrackSource = VideoTrackSource.Create(videoCapturer, mediaConstraints);
-            IMediaStreamTrack localVideoTrack = MediaStreamTrack.CreateVideoTrack("SELF_VIDEO", videoTrackSource);
+            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id);
+            var videoTrackSource = VideoTrackSource.Create(videoCapturer, mediaConstraints);
+            var localVideoTrack = MediaStreamTrack.CreateVideoTrack("SELF_VIDEO", videoTrackSource);
 
             AudioOptions audioOptions = new AudioOptions();
-            IAudioTrackSource audioTrackSource = AudioTrackSource.Create(audioOptions);
-            IMediaStreamTrack localAudioTrack = MediaStreamTrack.CreateAudioTrack("SELF_AUDIO", audioTrackSource);
+            var audioTrackSource = AudioTrackSource.Create(audioOptions);
+            var localAudioTrack = MediaStreamTrack.CreateAudioTrack("SELF_AUDIO", audioTrackSource);
 #endif
 
             if (cancelationToken.IsCancellationRequested)
@@ -545,7 +560,9 @@ namespace PeerConnectionClient.Signalling
 
                     OnPeerConnectionClosed?.Invoke();
 
+#if !USE_CX_VERSION
                     (_peerConnection as IDisposable)?.Dispose();
+#endif
 
                     SessionId = null;
 #if ORTCLIB
@@ -566,7 +583,7 @@ namespace PeerConnectionClient.Signalling
         /// This candidate needs to be sent to the other peer.
         /// </summary>
         /// <param name="evt">Details about RTC Peer Connection Ice event.</param>
-        private void PeerConnection_OnIceCandidate(IRTCPeerConnectionIceEvent evt)
+        private void PeerConnection_OnIceCandidate(UseRTCPeerConnectionIceEvent evt)
         {
             if (evt.Candidate == null) // relevant: GlobalObserver::OnIceComplete in Org.WebRtc
             {
@@ -617,8 +634,8 @@ namespace PeerConnectionClient.Signalling
         /// <summary>
         /// Invoked when the remote peer added a media stream to the peer connection.
         /// </summary>
-        public event Action<IMediaStreamTrack> OnAddRemoteTrack;
-        private void PeerConnection_OnTrack(IRTCTrackEvent evt)
+        public event Action<UseMediaStreamTrack> OnAddRemoteTrack;
+        private void PeerConnection_OnTrack(UseRTCTrackEvent evt)
         {
             OnAddRemoteTrack?.Invoke(evt.Track);
         }
@@ -626,8 +643,8 @@ namespace PeerConnectionClient.Signalling
         /// <summary>
         /// Invoked when the remote peer removed a media stream from the peer connection.
         /// </summary>
-        public event Action<IMediaStreamTrack> OnRemoveRemoteTrack;
-        private void PeerConnection_OnRemoveTrack(IRTCTrackEvent evt)
+        public event Action<UseMediaStreamTrack> OnRemoveRemoteTrack;
+        private void PeerConnection_OnRemoveTrack(UseRTCTrackEvent evt)
         {
             OnRemoveRemoteTrack?.Invoke(evt.Track);
         }
@@ -966,7 +983,7 @@ namespace PeerConnectionClient.Signalling
             if (connectResult)
             {
                 _peerId = peer.Id;
-                IRTCOfferOptions offerOptions = new RTCOfferOptions();
+                var offerOptions = new RTCOfferOptions();
                 var offer = await _peerConnection.CreateOffer(offerOptions);
 #if ORTCLIB
                 var modifiedOffer = offer;
@@ -977,7 +994,7 @@ namespace PeerConnectionClient.Signalling
                 RTCSessionDescriptionInit sdpInit = new RTCSessionDescriptionInit();
                 sdpInit.Sdp = modifiedSdp;
                 sdpInit.Type = offer.SdpType;
-                IRTCSessionDescription modifiedOffer = new RTCSessionDescription(sdpInit);
+                var modifiedOffer = new RTCSessionDescription(sdpInit);
 #endif
                 await _peerConnection.SetLocalDescription(modifiedOffer);
                 Debug.WriteLine("Conductor: Sending offer:\n" + modifiedOffer.Sdp);
@@ -1015,7 +1032,7 @@ namespace PeerConnectionClient.Signalling
         /// Sends SDP message.
         /// </summary>
         /// <param name="description">RTC session description.</param>
-        private void SendSdp(IRTCSessionDescription description)
+        private void SendSdp(UseRTCSessionDescription description)
         {
             JsonObject json = null;
 #if ORTCLIB
