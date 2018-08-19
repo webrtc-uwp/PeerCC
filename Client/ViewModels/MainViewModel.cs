@@ -41,6 +41,8 @@ using MediaVideoTrack = Org.Ortc.MediaStreamTrack;
 using MediaAudioTrack = Org.Ortc.MediaStreamTrack;
 using FrameCounterHelper = PeerConnectionClient.Ortc.OrtcStatsManager;
 using MediaDevice = PeerConnectionClient.Ortc.MediaDevice;
+
+using UseMediaStreamTrack = Org.Ortc.IMediaStreamTrack;
 #else
 using Org.WebRtc;
 using CodecInfo = PeerConnectionClient.Signalling.Conductor.CodecInfo;

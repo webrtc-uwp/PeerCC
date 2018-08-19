@@ -36,6 +36,11 @@ using MediaVideoTrack = Org.Ortc.MediaStreamTrack;
 using MediaAudioTrack = Org.Ortc.MediaStreamTrack;
 using RTCIceCandidate = Org.Ortc.Adapter.RTCIceCandidate;
 using MediaDevice = PeerConnectionClient.Ortc.MediaDevice;
+
+using UseMediaStreamTrack = Org.Ortc.IMediaStreamTrack;
+using UseRTCPeerConnectionIceEvent = Org.Ortc.Adapter.IRTCPeerConnectionIceEvent;
+using UseRTCTrackEvent = Org.Ortc.Adapter.IRTCTrackEvent;
+using UseRTCSessionDescription = Org.Ortc.Adapter.IRTCSessionDescription;
 #else
 using Org.WebRtc;
 using PeerConnectionClient.Utilities;
