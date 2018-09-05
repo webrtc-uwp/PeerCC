@@ -414,6 +414,135 @@ namespace PeerConnectionClient.Signalling
             _selectedVideoDevice = device;
         }
 
+        private static Dictionary<RTCStatsType, object> MakeDictionaryOfAllStats()
+        {
+            return new Dictionary<RTCStatsType, object>
+            {
+                { RTCStatsType.Codec, null },
+                { RTCStatsType.InboundRtp, null },
+                { RTCStatsType.OutboundRtp, null },
+                { RTCStatsType.RemoteInboundRtp, null },
+                { RTCStatsType.RemoteOutboundRtp, null },
+                { RTCStatsType.Csrc, null },
+                { RTCStatsType.PeerConnection, null },
+                { RTCStatsType.DataChannel, null },
+                { RTCStatsType.Stream, null },
+                { RTCStatsType.Track, null },
+                { RTCStatsType.Sender, null },
+                { RTCStatsType.Receiver, null },
+                { RTCStatsType.Transport, null },
+                { RTCStatsType.CandidatePair, null },
+                { RTCStatsType.LocalCandidate, null },
+                { RTCStatsType.RemoteCandidate, null },
+                { RTCStatsType.Certificate, null }
+            };
+        }
+        RTCStatsTypeSet statsType = new RTCStatsTypeSet(MakeDictionaryOfAllStats());
+
+        public async Task<IRTCStatsReport> GetStatsReport()
+        {
+            return await _peerConnection.GetStats(statsType);
+        }
+
+        public async Task GetAllStats()
+        {
+            IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
+
+            for (int i = 0; i < statsReport.StatsIds.Count; i++)
+            {
+                Debug.WriteLine($"statsReport: {statsReport.StatsIds[i]}");
+                var x = statsReport.StatsIds[i];
+
+                IRTCStats rtcStats = statsReport.GetStats(statsReport.StatsIds[i]);
+
+                RTCStatsType? statsType = rtcStats.StatsType;
+
+                string statsTypeStr = statsType.ToString();
+
+                Debug.WriteLine($"statsType: {statsTypeStr.ToString()}");
+
+                if (statsTypeStr == RTCStatsType.Track.ToString())
+                {
+                    if (rtcStats.Id == "RTCMediaStreamTrack_sender_1")
+                    {
+                        RTCSenderVideoTrackAttachmentStats videoTrack = RTCSenderVideoTrackAttachmentStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"videoTrack: {videoTrack.ToString()}");
+
+                        bool vtEnded = videoTrack.Ended;
+                        ulong vtFrameHeight = videoTrack.FrameHeight;
+                        ulong vtFramesCaptured = videoTrack.FramesCaptured;
+                        double vtFramesPerSecond = videoTrack.FramesPerSecond;
+                        ulong vtFramesSent = videoTrack.FramesSent;
+                        ulong vtFrameWidth = videoTrack.FrameWidth;
+                        ulong vtHugeFramesSent = videoTrack.HugeFramesSent;
+                        string vtId = videoTrack.Id;
+                        ulong vtKeyFramesSent = videoTrack.KeyFramesSent;
+                        string vtKind = videoTrack.Kind;
+                        RTCPriorityType vtPriority = videoTrack.Priority;
+                        bool vtRemoteSource = (bool)videoTrack.RemoteSource;
+                        RTCStatsType vtStatsType = (RTCStatsType)videoTrack.StatsType;
+                        string vtStatsTypeOther = videoTrack.StatsTypeOther;
+                        //DateTime vtTimestamp = videoTrack.Timestamp.DateTime;
+                        string vtTrackIdentifier = videoTrack.TrackIdentifier;
+
+                    }
+                    if (rtcStats.Id == "RTCMediaStreamTrack_sender_2")
+                    {
+                        RTCSenderAudioTrackAttachmentStats audioTrack = RTCSenderAudioTrackAttachmentStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"audioTrack: {audioTrack.ToString()}");
+
+                        var atAudioLevel = audioTrack.AudioLevel;
+                        var atEchoReturnLoss = audioTrack.EchoReturnLoss;
+                        var atEchoReturnLossEnhancement = audioTrack.EchoReturnLossEnhancement;
+                        var atEnded = audioTrack.Ended;
+                        var atId = audioTrack.Id;
+                        var atKind = audioTrack.Kind;
+                        var atPriority = audioTrack.Priority;
+                        var atRemoteSource = audioTrack.RemoteSource;
+                        var atStatsType = audioTrack.StatsType;
+                        var atStatsTypeOther = audioTrack.StatsTypeOther;
+                        //audioTrack.Timestamp;
+                        var atTotalAudioEnergy = audioTrack.TotalAudioEnergy;
+                        var atTotalSamplesDuration = audioTrack.TotalSamplesDuration;
+                        var atTotalSamplesSent = audioTrack.TotalSamplesSent;
+                        var atTrackIdentifier = audioTrack.TrackIdentifier;
+                        var atVoiceActivityFlag = audioTrack.VoiceActivityFlag;
+                    }
+                }
+                if (statsTypeStr == RTCStatsType.Stream.ToString())
+                {
+                    RTCMediaStreamStats mediaStream = RTCMediaStreamStats.Cast(rtcStats);
+
+                    Debug.WriteLine($"mediaStream: {mediaStream.ToString()}");
+
+                    var msId = mediaStream.Id;
+                    var msStatsType = mediaStream.StatsType;
+                    var msStatsTypeOther = mediaStream.StatsTypeOther;
+                    var msStreamIdentifier = mediaStream.StreamIdentifier;
+                    //mediaStream.Timestamp;
+                    var msTrackIds = mediaStream.TrackIds;
+                }
+                if (statsTypeStr == RTCStatsType.PeerConnection.ToString())
+                {
+                    RTCPeerConnectionStats peerConnectionStats = RTCPeerConnectionStats.Cast(rtcStats);
+
+                    Debug.WriteLine($"peerConnectionStats: {peerConnectionStats.ToString()}");
+
+                    var pcDataChannelsAccepted = peerConnectionStats.DataChannelsAccepted;
+                    var pcDataChannelsClosed = peerConnectionStats.DataChannelsClosed;
+                    var pcDataChannelsOpened = peerConnectionStats.DataChannelsOpened;
+                    var pcDataChannelsRequested = peerConnectionStats.DataChannelsRequested;
+                    var pcId = peerConnectionStats.Id;
+                    var pcStatsType = peerConnectionStats.StatsType;
+                    var pcStatsTypeOther = peerConnectionStats.StatsTypeOther;
+                    //peerConnectionStats.Timestamp;
+                }
+            }
+        }
+
+
         /// <summary>
         /// Creates a peer connection.
         /// </summary>
@@ -425,7 +554,7 @@ namespace PeerConnectionClient.Signalling
             {
                 return false;
             }
-            
+
             var config = new RTCConfiguration()
             {
                 BundlePolicy = RTCBundlePolicy.Balanced,
@@ -778,7 +907,7 @@ namespace PeerConnectionClient.Signalling
                         if (type == "offer" || type == "answer" || type == "json")
                         {
                             Debug.Assert(_peerId == -1);
-                            _peerId = peerId;              
+                            _peerId = peerId;
 
                             IEnumerable<Peer> enumerablePeer = Peers.Where(x => x.Id == peerId);
                             Peer = enumerablePeer.First();
@@ -864,7 +993,7 @@ namespace PeerConnectionClient.Signalling
                     var description = new RTCSessionDescription(sdpInit);
 #endif
                     await _peerConnection.SetRemoteDescription(description);
-
+                    await GetAllStats();
 #if ORTCLIB
                     if ((messageType == RTCSessionDescriptionSignalingType.SdpOffer) ||
                         ((created) && (messageType == RTCSessionDescriptionSignalingType.Json)))
