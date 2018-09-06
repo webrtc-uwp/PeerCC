@@ -451,94 +451,205 @@ namespace PeerConnectionClient.Signalling
             for (int i = 0; i < statsReport.StatsIds.Count; i++)
             {
                 Debug.WriteLine($"statsReport: {statsReport.StatsIds[i]}");
-                var x = statsReport.StatsIds[i];
+                //var x = statsReport.StatsIds[i];
+                //if (!x.Contains("RTCIceCandidate_"))
+                //{
+                    IRTCStats rtcStats = statsReport.GetStats(statsReport.StatsIds[i]);
 
-                IRTCStats rtcStats = statsReport.GetStats(statsReport.StatsIds[i]);
+                    RTCStatsType? statsType = rtcStats.StatsType;
 
-                RTCStatsType? statsType = rtcStats.StatsType;
+                    string statsTypeStr = statsType.ToString();
 
-                string statsTypeStr = statsType.ToString();
+                    Debug.WriteLine($"statsType: {statsTypeStr.ToString()}");
 
-                Debug.WriteLine($"statsType: {statsTypeStr.ToString()}");
-
-                if (statsTypeStr == RTCStatsType.Track.ToString())
-                {
-                    if (rtcStats.Id == "RTCMediaStreamTrack_sender_1")
+                    if (statsTypeStr == RTCStatsType.Codec.ToString())
                     {
-                        RTCSenderVideoTrackAttachmentStats videoTrack = RTCSenderVideoTrackAttachmentStats.Cast(rtcStats);
+                        RTCCodecStats codec = RTCCodecStats.Cast(rtcStats);
 
-                        Debug.WriteLine($"videoTrack: {videoTrack.ToString()}");
-
-                        bool vtEnded = videoTrack.Ended;
-                        ulong vtFrameHeight = videoTrack.FrameHeight;
-                        ulong vtFramesCaptured = videoTrack.FramesCaptured;
-                        double vtFramesPerSecond = videoTrack.FramesPerSecond;
-                        ulong vtFramesSent = videoTrack.FramesSent;
-                        ulong vtFrameWidth = videoTrack.FrameWidth;
-                        ulong vtHugeFramesSent = videoTrack.HugeFramesSent;
-                        string vtId = videoTrack.Id;
-                        ulong vtKeyFramesSent = videoTrack.KeyFramesSent;
-                        string vtKind = videoTrack.Kind;
-                        RTCPriorityType vtPriority = videoTrack.Priority;
-                        bool vtRemoteSource = (bool)videoTrack.RemoteSource;
-                        RTCStatsType vtStatsType = (RTCStatsType)videoTrack.StatsType;
-                        string vtStatsTypeOther = videoTrack.StatsTypeOther;
-                        //DateTime vtTimestamp = videoTrack.Timestamp.DateTime;
-                        string vtTrackIdentifier = videoTrack.TrackIdentifier;
-
+                        Debug.WriteLine($"codec: {codec.ToString()}");
                     }
-                    if (rtcStats.Id == "RTCMediaStreamTrack_sender_2")
+
+                    if (statsTypeStr == RTCStatsType.InboundRtp.ToString())
                     {
-                        RTCSenderAudioTrackAttachmentStats audioTrack = RTCSenderAudioTrackAttachmentStats.Cast(rtcStats);
+                        RTCInboundRtpStreamStats inboundRtp = RTCInboundRtpStreamStats.Cast(rtcStats);
 
-                        Debug.WriteLine($"audioTrack: {audioTrack.ToString()}");
-
-                        var atAudioLevel = audioTrack.AudioLevel;
-                        var atEchoReturnLoss = audioTrack.EchoReturnLoss;
-                        var atEchoReturnLossEnhancement = audioTrack.EchoReturnLossEnhancement;
-                        var atEnded = audioTrack.Ended;
-                        var atId = audioTrack.Id;
-                        var atKind = audioTrack.Kind;
-                        var atPriority = audioTrack.Priority;
-                        var atRemoteSource = audioTrack.RemoteSource;
-                        var atStatsType = audioTrack.StatsType;
-                        var atStatsTypeOther = audioTrack.StatsTypeOther;
-                        //audioTrack.Timestamp;
-                        var atTotalAudioEnergy = audioTrack.TotalAudioEnergy;
-                        var atTotalSamplesDuration = audioTrack.TotalSamplesDuration;
-                        var atTotalSamplesSent = audioTrack.TotalSamplesSent;
-                        var atTrackIdentifier = audioTrack.TrackIdentifier;
-                        var atVoiceActivityFlag = audioTrack.VoiceActivityFlag;
+                        Debug.WriteLine($"inboundRtp: {inboundRtp}");
                     }
-                }
-                if (statsTypeStr == RTCStatsType.Stream.ToString())
-                {
-                    RTCMediaStreamStats mediaStream = RTCMediaStreamStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"mediaStream: {mediaStream.ToString()}");
+                    if (statsTypeStr == RTCStatsType.OutboundRtp.ToString())
+                    {
+                        RTCOutboundRtpStreamStats outboundRtp = RTCOutboundRtpStreamStats.Cast(rtcStats);
 
-                    var msId = mediaStream.Id;
-                    var msStatsType = mediaStream.StatsType;
-                    var msStatsTypeOther = mediaStream.StatsTypeOther;
-                    var msStreamIdentifier = mediaStream.StreamIdentifier;
-                    //mediaStream.Timestamp;
-                    var msTrackIds = mediaStream.TrackIds;
-                }
-                if (statsTypeStr == RTCStatsType.PeerConnection.ToString())
-                {
-                    RTCPeerConnectionStats peerConnectionStats = RTCPeerConnectionStats.Cast(rtcStats);
+                        Debug.WriteLine($"outboundRtp: {outboundRtp}");
+                    }
 
-                    Debug.WriteLine($"peerConnectionStats: {peerConnectionStats.ToString()}");
+                    if (statsTypeStr == RTCStatsType.RemoteInboundRtp.ToString())
+                    {
+                        RTCRemoteInboundRtpStreamStats remoteInboundRtp = RTCRemoteInboundRtpStreamStats.Cast(rtcStats);
 
-                    var pcDataChannelsAccepted = peerConnectionStats.DataChannelsAccepted;
-                    var pcDataChannelsClosed = peerConnectionStats.DataChannelsClosed;
-                    var pcDataChannelsOpened = peerConnectionStats.DataChannelsOpened;
-                    var pcDataChannelsRequested = peerConnectionStats.DataChannelsRequested;
-                    var pcId = peerConnectionStats.Id;
-                    var pcStatsType = peerConnectionStats.StatsType;
-                    var pcStatsTypeOther = peerConnectionStats.StatsTypeOther;
-                    //peerConnectionStats.Timestamp;
-                }
+                        Debug.WriteLine($"remoteInboundRtp: {remoteInboundRtp}");
+                    }
+
+                    if (statsTypeStr == RTCStatsType.RemoteOutboundRtp.ToString())
+                    {
+                        RTCRemoteOutboundRtpStreamStats remoteOutboundRtp = RTCRemoteOutboundRtpStreamStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"remoteOutboundRtp: {remoteOutboundRtp}");
+                    }
+
+                    if (statsTypeStr == RTCStatsType.Csrc.ToString())
+                    {
+                        RTCRtpContributingSourceStats csrc = RTCRtpContributingSourceStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"csrc: {csrc}");
+                    }
+
+                    if (statsTypeStr == RTCStatsType.PeerConnection.ToString())
+                    {
+                        RTCPeerConnectionStats peerConnectionStats = RTCPeerConnectionStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"peerConnectionStats: {peerConnectionStats.ToString()}");
+
+                        ulong pcDataChannelsAccepted = peerConnectionStats.DataChannelsAccepted;
+                        ulong pcDataChannelsClosed = peerConnectionStats.DataChannelsClosed;
+                        ulong pcDataChannelsOpened = peerConnectionStats.DataChannelsOpened;
+                        ulong pcDataChannelsRequested = peerConnectionStats.DataChannelsRequested;
+                        string pcId = peerConnectionStats.Id;
+                        RTCStatsType? pcStatsType = peerConnectionStats.StatsType;
+                        string pcStatsTypeOther = peerConnectionStats.StatsTypeOther;
+                        //peerConnectionStats.Timestamp;
+                    }
+
+                    if (statsTypeStr == RTCStatsType.DataChannel.ToString())
+                    {
+                        RTCDataChannelStats dataChannel = RTCDataChannelStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"dataChannel: {dataChannel}");
+                    }
+
+                    if (statsTypeStr == RTCStatsType.Stream.ToString())
+                    {
+                        RTCMediaStreamStats mediaStream = RTCMediaStreamStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"mediaStream: {mediaStream.ToString()}");
+
+                        string msId = mediaStream.Id;
+                        RTCStatsType? msStatsType = mediaStream.StatsType;
+                        string msStatsTypeOther = mediaStream.StatsTypeOther;
+                        var msStreamIdentifier = mediaStream.StreamIdentifier;
+                        //mediaStream.Timestamp;
+                        IReadOnlyList<string> msTrackIds = mediaStream.TrackIds;
+                    }
+
+                    if (statsTypeStr == RTCStatsType.Track.ToString())
+                    {
+                        if (rtcStats.Id == "RTCMediaStreamTrack_sender_1")
+                        {
+                            RTCSenderVideoTrackAttachmentStats videoTrack = RTCSenderVideoTrackAttachmentStats.Cast(rtcStats);
+
+                            Debug.WriteLine($"videoTrack: {videoTrack.ToString()}");
+
+                            bool vtEnded = videoTrack.Ended;
+                            ulong vtFrameHeight = videoTrack.FrameHeight;
+                            ulong vtFramesCaptured = videoTrack.FramesCaptured;
+                            double vtFramesPerSecond = videoTrack.FramesPerSecond;
+                            ulong vtFramesSent = videoTrack.FramesSent;
+                            ulong vtFrameWidth = videoTrack.FrameWidth;
+                            ulong vtHugeFramesSent = videoTrack.HugeFramesSent;
+                            string vtId = videoTrack.Id;
+                            ulong vtKeyFramesSent = videoTrack.KeyFramesSent;
+                            string vtKind = videoTrack.Kind;
+                            RTCPriorityType vtPriority = videoTrack.Priority;
+                            bool? vtRemoteSource = videoTrack.RemoteSource;
+                            RTCStatsType? vtStatsType = videoTrack.StatsType;
+                            string vtStatsTypeOther = videoTrack.StatsTypeOther;
+                            //DateTime vtTimestamp = videoTrack.Timestamp.DateTime;
+                            string vtTrackIdentifier = videoTrack.TrackIdentifier;
+
+                        }
+
+                        if (rtcStats.Id == "RTCMediaStreamTrack_sender_2")
+                        {
+                            RTCSenderAudioTrackAttachmentStats audioTrack = RTCSenderAudioTrackAttachmentStats.Cast(rtcStats);
+
+                            Debug.WriteLine($"audioTrack: {audioTrack.ToString()}");
+
+                            double atAudioLevel = audioTrack.AudioLevel;
+                            double? atEchoReturnLoss = audioTrack.EchoReturnLoss;
+                            double? atEchoReturnLossEnhancement = audioTrack.EchoReturnLossEnhancement;
+                            bool atEnded = audioTrack.Ended;
+                            string atId = audioTrack.Id;
+                            string atKind = audioTrack.Kind;
+                            RTCPriorityType atPriority = audioTrack.Priority;
+                            bool? atRemoteSource = audioTrack.RemoteSource;
+                            RTCStatsType? atStatsType = audioTrack.StatsType;
+                            string atStatsTypeOther = audioTrack.StatsTypeOther;
+                            //audioTrack.Timestamp;
+                            double atTotalAudioEnergy = audioTrack.TotalAudioEnergy;
+                            double atTotalSamplesDuration = audioTrack.TotalSamplesDuration;
+                            ulong atTotalSamplesSent = audioTrack.TotalSamplesSent;
+                            string atTrackIdentifier = audioTrack.TrackIdentifier;
+                            bool atVoiceActivityFlag = audioTrack.VoiceActivityFlag;
+                        }
+                    }
+
+                    if (statsTypeStr == RTCStatsType.Sender.ToString())
+                    {
+                        RTCAudioSenderStats audioSender = RTCAudioSenderStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"audioSender: {audioSender}");
+
+                        RTCVideoSenderStats videoSender = RTCVideoSenderStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"videoSender: {videoSender}");
+                    }
+
+                    if (statsTypeStr == RTCStatsType.Receiver.ToString())
+                    {
+                        RTCAudioReceiverStats audioReceiver = RTCAudioReceiverStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"audioReceiver: {audioReceiver}");
+
+                        RTCVideoReceiverStats videoReceiver = RTCVideoReceiverStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"videoReceiver: {videoReceiver}");
+                    }
+
+                    if (statsTypeStr == RTCStatsType.Transport.ToString())
+                    {
+                        RTCTransportStats transport = RTCTransportStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"transport: {transport}");
+                    }
+
+                    if (statsTypeStr == RTCStatsType.CandidatePair.ToString())
+                    {
+                        RTCIceCandidatePairStats candidatePair = RTCIceCandidatePairStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"candidatePair: {candidatePair}");
+                    }
+
+                    if (statsTypeStr == RTCStatsType.LocalCandidate.ToString())
+                    {
+                        RTCIceCandidateStats localCandidate = RTCIceCandidateStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"localCandidate: {localCandidate}");
+                    }
+
+                    if (statsTypeStr == RTCStatsType.RemoteCandidate.ToString())
+                    {
+                        RTCIceCandidateStats remoteCandidate = RTCIceCandidateStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"remoteCandidate: {remoteCandidate}");
+                    }
+
+                    if (statsTypeStr == RTCStatsType.Certificate.ToString())
+                    {
+                        RTCCertificateStats certificate = RTCCertificateStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"certificate: {certificate.ToString()}");
+                    }
+                //}
             }
         }
 
