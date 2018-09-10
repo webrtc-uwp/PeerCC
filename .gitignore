@@ -6,3 +6,7 @@ packages/
 project.lock.json
 *.sdf
 *.bak
+Client/.vs/PeerConnectionClient.WebRtc/v15/Server/sqlite3/db.lock
+Client/.vs/PeerConnectionClient.WebRtc/v15/Server/sqlite3/storage.ide
+Client/.vs/PeerConnectionClient.WebRtc/v15/Server/sqlite3/storage.ide-shm
+Client/.vs/PeerConnectionClient.WebRtc/v15/Server/sqlite3/storage.ide-wal

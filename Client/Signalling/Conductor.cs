@@ -68,6 +68,8 @@ namespace PeerConnectionClient.Signalling
     /// </summary>
     internal class Conductor
     {
+        CallStatsClient callStatsClient = new CallStatsClient();
+
         private static readonly object InstanceLock = new object();
         private static Conductor _instance;
 #if ORTCLIB
