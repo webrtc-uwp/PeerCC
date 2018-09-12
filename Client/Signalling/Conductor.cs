@@ -660,6 +660,17 @@ namespace PeerConnectionClient.Signalling
             {
                 return false;
             }
+
+            try
+            {
+                Task task = callStatsClient.InitializeCallStats();
+                Task fabricSetup = callStatsClient.FabricSetup();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[Error] InitializeCallStats, message: '{ex.Message}'");
+            }
+
 #if ORTCLIB
             OrtcStatsManager.Instance.Initialize(_peerConnection);
 #endif
