@@ -183,14 +183,15 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.1.5</Version>
     </PackageReference>
-    <PackageReference Include="WebRtc">
-      <Version>1.66.0.1-Alpha</Version>
-    </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CallStatsLib\CallStatsLib.csproj">
-      <Project>{2f8f89b6-e350-4841-be30-ac9e5fd84153}</Project>
+    <ProjectReference Include="..\..\..\..\..\..\..\optical\CSLib\CallStatsClient\CallStatsLib\CallStatsLib.csproj">
+      <Project>{a2f8892b-621e-44df-bbe4-0e819c7c41b1}</Project>
       <Name>CallStatsLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
+      <Project>{3dd8fdcd-b703-4b75-826a-2c7e844f903e}</Project>
+      <Name>Org.WebRtc</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
