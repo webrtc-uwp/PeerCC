@@ -161,11 +161,6 @@
                                RelativePanel.AlignRightWithPanel="True"
                                RelativePanel.AlignBottomWithPanel="True"
                                RelativePanel.AlignTopWithPanel="True">
-                    <SwapChainPanel x:Name="DXSwapChainPanel" 
-                                    RelativePanel.AlignLeftWithPanel="True"
-                                    RelativePanel.AlignRightWithPanel="True"
-                                    RelativePanel.AlignBottomWithPanel="True"
-                                    RelativePanel.AlignTopWithPanel="True"/>
                     <MediaElement 
                         Name="PeerVideo"
                         RealTimePlayback="True"

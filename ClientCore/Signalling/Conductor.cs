@@ -238,17 +238,7 @@ namespace PeerConnectionClient.Signalling
                     if (_selfVideoTrack != null)
                     {
                         Debug.WriteLine("Enabling video loopback");
-#if UNITY_XAML
-                        if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
-                        {
-                            UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
-                            {
-                                UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                                go.GetComponent<ControlScript>().CreateRemoteMediaStreamSource(_selfVideoTrack, "I420", "SELF");
-                            }
-                            ), false);
-                        }
-#elif !UNITY
+#if !UNITY
                         _media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
 #endif
                         Debug.WriteLine("Video loopback enabled");
@@ -264,17 +254,7 @@ namespace PeerConnectionClient.Signalling
                     // internal stream source is destroyed.
                     // Apparently, with webrtc package version < 1.1.175, the internal stream source was destroyed
                     // corectly, only by setting SelfVideo.Source to null.
-#if UNITY_XAML
-                    if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
-                    {
-                        UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
-                        {
-                            UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                            go.GetComponent<ControlScript>().DestroyRemoteMediaStreamSource();
-                        }
-                        ), false);
-                    }
-#elif !UNITY
+#if !UNITY
                     _media.RemoveVideoTrackMediaElementPair(_selfVideoTrack);
 #endif
                     GC.Collect(); // Ensure all references are truly dropped.
@@ -696,17 +676,7 @@ namespace PeerConnectionClient.Signalling
             {
                 if (VideoLoopbackEnabled)
                 {
-#if UNITY_XAML
-                    if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
-                    {
-                        UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
-                        {
-                            UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                            go.GetComponent<ControlScript>().CreateLocalMediaStreamSource(_selfVideoTrack, "I420", "SELF");
-                        }
-                        ), false);
-                    }
-#elif !UNITY
+#if !UNITY
                     Conductor.Instance.Media.AddVideoTrackMediaElementPair(_selfVideoTrack, SelfVideo, "SELF");
 #endif
                 }
@@ -741,18 +711,7 @@ namespace PeerConnectionClient.Signalling
                     }
                     _mediaStream = null;
 
-#if UNITY_XAML
-                    if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
-                    {
-                        UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
-                        {
-                            UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                            go.GetComponent<ControlScript>().DestroyLocalMediaStreamSource();
-                            go.GetComponent<ControlScript>().DestroyRemoteMediaStreamSource();
-                        }
-                        ), false);
-                    }
-#elif !UNITY
+#if !UNITY
                     _uiDispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
                     {
                         Conductor.Instance.Media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
@@ -867,24 +826,7 @@ namespace PeerConnectionClient.Signalling
             _peerVideoTrack = evt.Stream.GetVideoTracks().FirstOrDefault();
             if (_peerVideoTrack != null)
             {
-#if UNITY_XAML
-                if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
-                {
-                    UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
-                    {
-                        UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                        if (VideoCodec.Name == "H264")
-                        {
-                            go.GetComponent<ControlScript>().CreateRemoteMediaStreamSource(_peerVideoTrack, "H264", "PEER");
-                        }
-                        else
-                        {
-                            go.GetComponent<ControlScript>().CreateRemoteMediaStreamSource(_peerVideoTrack, "I420", "PEER");
-                        }
-                    }
-                    ), false);
-                }
-#elif !UNITY
+#if !UNITY
                 _media.AddVideoTrackMediaElementPair(_peerVideoTrack, PeerVideo, "PEER");
 #endif
             }
@@ -898,17 +840,7 @@ namespace PeerConnectionClient.Signalling
         public event Action OnRemoveRemoteStream;
         private void PeerConnection_OnRemoveStream(MediaStreamEvent evt)
         {
-#if UNITY_XAML
-            if (UnityPlayer.AppCallbacks.Instance.IsInitialized())
-            {
-                UnityPlayer.AppCallbacks.Instance.InvokeOnAppThread(new UnityPlayer.AppCallbackItem(() =>
-                {
-                    UnityEngine.GameObject go = UnityEngine.GameObject.Find("Control");
-                    go.GetComponent<ControlScript>().DestroyRemoteMediaStreamSource();
-                }
-                ), false);
-            }
-#elif !UNITY
+#if !UNITY
             _media.RemoveVideoTrackMediaElementPair(_peerVideoTrack);
 #endif
             OnRemoveRemoteStream?.Invoke();

@@ -115,7 +115,7 @@
   <PropertyGroup>
     <PostBuildEvent>
 SETLOCAL
-      set TARGET_PLUGIN_PATH=$(ProjectDir)..\ClientUnity\Unity\PeerCCUnity\Assets\
+      set TARGET_PLUGIN_PATH=$(ProjectDir)..\ClientUnity\Assets\
 
       echo Target Plugin Path is %TARGET_PLUGIN_PATH%
 

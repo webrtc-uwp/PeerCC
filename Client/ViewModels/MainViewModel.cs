@@ -1819,7 +1819,6 @@ namespace PeerConnectionClient.ViewModels
             set { SetProperty(ref _showLoopbackVideo, value); }
         }
 
-#if !UNITY
         private MediaElement _selfVideo;
 
         public MediaElement SelfVideo
@@ -1843,7 +1842,6 @@ namespace PeerConnectionClient.ViewModels
                 Conductor.Instance.PeerVideo = _peerVideo;
             }
         }
-#endif
 
 #endregion
 

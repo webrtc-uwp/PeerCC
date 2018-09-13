@@ -28,9 +28,6 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-#if UNITY
-using UnityPlayer;
-#endif
 
 namespace PeerConnectionClient
 {
@@ -39,9 +36,6 @@ namespace PeerConnectionClient
     /// </summary>
     sealed partial class App : Application
     {
-#if UNITY
-        private AppCallbacks appCallbacks;
-#endif
         public SplashScreen splashScreen;
 
         /// <summary>
@@ -60,50 +54,6 @@ namespace PeerConnectionClient
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
-            SetupOrientation();
-#if UNITY
-            appCallbacks = new AppCallbacks();
-#endif
-        }
-
-        /// <summary>
-        /// Invoked when application is launched through protocol.
-        /// </summary>
-        /// <param name="args">Arguments</param>
-        protected override void OnActivated(IActivatedEventArgs args)
-        {
-            string appArgs = "";
-
-            switch (args.Kind)
-            {
-                case ActivationKind.Protocol:
-                    ProtocolActivatedEventArgs eventArgs = args as ProtocolActivatedEventArgs;
-                    splashScreen = eventArgs.SplashScreen;
-                    appArgs += string.Format("Uri={0}", eventArgs.Uri.AbsoluteUri);
-                    break;
-            }
-            InitializeUnity(appArgs);
-        }
-
-        /// <summary>
-        /// Invoked when application is launched via file
-        /// </summary>
-        /// <param name="args">Arguments</param>
-        protected override void OnFileActivated(FileActivatedEventArgs args)
-        {
-            string appArgs = "";
-
-            splashScreen = args.SplashScreen;
-            appArgs += "File=";
-            bool firstFileAdded = false;
-            foreach (var file in args.Files)
-            {
-                if (firstFileAdded) appArgs += ";";
-                appArgs += file.Path;
-                firstFileAdded = true;
-            }
-
-            InitializeUnity(appArgs);
         }
 
         /// <summary>
@@ -119,29 +69,11 @@ namespace PeerConnectionClient
                 this.DebugSettings.EnableFrameRateCounter = true;
             }
 #endif
-
-            splashScreen = args.SplashScreen;
-            InitializeUnity(args.Arguments);
-        }
-
-        private void InitializeUnity(string args)
-        {
-#if UNITY
-#if UNITY_UWP
-            ApplicationView.GetForCurrentView().SuppressSystemOverlays = true;
-#endif
-            appCallbacks.SetAppArguments(args);
-            appCallbacks.AddCommandLineArg("-force-d3d11-no-singlethreaded");
-#endif // UNITY
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active
-#if UNITY
-            if (rootFrame == null && !appCallbacks.IsInitialized())
-#else
             if (rootFrame == null)
-#endif
             {
                 rootFrame = new Frame();
                 // Set the default language
@@ -161,14 +93,6 @@ namespace PeerConnectionClient
             //asynchronously and there is no guaranteed way to predict when rendering will be complete."
             mainViewModel = new ViewModels.MainViewModel(CoreApplication.MainView.CoreWindow.Dispatcher);
             mainViewModel.OnInitialized += OnMainViewModelInitialized;
-        }
-
-        void SetupOrientation()
-        {
-#if UNITY_UWP
-            DisplayInformation.AutoRotationPreferences = DisplayOrientations.Landscape | DisplayOrientations.LandscapeFlipped | DisplayOrientations.Portrait | DisplayOrientations.PortraitFlipped;
-            ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.FullScreen;
-#endif
         }
 
         /// <summary>
