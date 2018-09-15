@@ -17,4 +17,5 @@ ClientUnity/Assets/Plugins/WSA/x64/*.pdb
 ClientUnity/Library
 ClientUnity/*.sln
 ClientUnity/*.csproj
+ClientUnity/.vs
 ClientUnity/Temp
