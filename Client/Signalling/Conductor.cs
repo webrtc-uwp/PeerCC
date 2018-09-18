@@ -44,6 +44,8 @@ using UseRTCSessionDescription = Org.Ortc.Adapter.IRTCSessionDescription;
 #else
 using Org.WebRtc;
 using PeerConnectionClient.Utilities;
+using CallStatsLib;
+using CallStatsLib.Request;
 #if USE_CX_VERSION
 using UseMediaStreamTrack = Org.WebRtc.MediaStreamTrack;
 using UseRTCPeerConnectionIceEvent = Org.WebRtc.RTCPeerConnectionIceEvent;
@@ -69,6 +71,29 @@ namespace PeerConnectionClient.Signalling
     internal class Conductor
     {
         CallStatsClient callStatsClient = new CallStatsClient();
+
+        private List<RTCIceCandidateStats> localIceCandidateStatsList = new List<RTCIceCandidateStats>();
+        private List<RTCIceCandidateStats> remoteIceCandidateStatsList = new List<RTCIceCandidateStats>();
+
+        RTCCodecStats _codecStats;
+        RTCInboundRtpStreamStats _inboundRtpStats;
+        RTCOutboundRtpStreamStats _outboundRtpStats;
+        RTCRemoteInboundRtpStreamStats _remoteInboundRtpStats;
+        RTCRemoteOutboundRtpStreamStats _remoteOutboundRtpStats;
+        RTCRtpContributingSourceStats _csrcStats;
+        RTCPeerConnectionStats _peerConnectionStats;
+        RTCDataChannelStats _dataChannelStats;
+        RTCMediaStreamStats _mediaStreamStats;
+        RTCSenderVideoTrackAttachmentStats _videoTrackStats;
+        RTCSenderAudioTrackAttachmentStats _audioTrackStats;
+        RTCAudioSenderStats _audioSenderStats;
+        RTCVideoSenderStats _videoSenderStats;
+        RTCAudioReceiverStats _audioReceiverStats;
+        RTCVideoReceiverStats _videoReceiverStats;
+        RTCTransportStats _transportStats;
+        RTCIceCandidatePairStats _candidatePairStats;
+        
+        RTCCertificateStats _certificateStats;
 
         private static readonly object InstanceLock = new object();
         private static Conductor _instance;
@@ -446,29 +471,71 @@ namespace PeerConnectionClient.Signalling
             return await _peerConnection.GetStats(statsType);
         }
 
-        public async Task GetAllStats()
+        public async Task GetLocalIceCandidateStats()
         {
             IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
 
-            RTCCodecStats codec;
-            RTCInboundRtpStreamStats inboundRtp;
-            RTCOutboundRtpStreamStats outboundRtp;
-            RTCRemoteInboundRtpStreamStats remoteInboundRtp;
-            RTCRemoteOutboundRtpStreamStats remoteOutboundRtp;
-            RTCRtpContributingSourceStats csrc;
-            RTCPeerConnectionStats peerConnectionStats;
-            RTCDataChannelStats dataChannel;
-            RTCMediaStreamStats mediaStream;
-            RTCSenderVideoTrackAttachmentStats videoTrack;
-            RTCSenderAudioTrackAttachmentStats audioTrack;
-            RTCAudioSenderStats audioSender;
-            RTCVideoSenderStats videoSender;
-            RTCAudioReceiverStats audioReceiver;
-            RTCVideoReceiverStats videoReceiver;
-            RTCTransportStats transport;
-            RTCIceCandidatePairStats candidatePair;
-            RTCIceCandidateStats iceCandidate;
-            RTCCertificateStats certificate;
+            for (int i = 0; i < statsReport.StatsIds.Count; i++)
+            {
+                Debug.WriteLine($"statsReport: {statsReport.StatsIds[i]}");
+
+                IRTCStats rtcStats = statsReport.GetStats(statsReport.StatsIds[i]);
+
+                RTCStatsType? statsType = rtcStats.StatsType;
+
+                string statsTypeOther = rtcStats.StatsTypeOther;
+
+                Debug.WriteLine($"statsType: {statsType}");
+                Debug.WriteLine($"statsTypeOther: {statsTypeOther}");
+
+                if (statsType == null)
+                {
+                    if (statsTypeOther == "ice-candidate")
+                    {
+                        RTCIceCandidateStats iceCandidateStats;
+
+                        iceCandidateStats = RTCIceCandidateStats.Cast(rtcStats);
+
+                        localIceCandidateStatsList.Add(iceCandidateStats);
+                    }
+                }
+            }
+        }
+
+        public async Task GetRemoteIceCandidateStats()
+        {
+            IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
+
+            for (int i = 0; i < statsReport.StatsIds.Count; i++)
+            {
+                Debug.WriteLine($"statsReport: {statsReport.StatsIds[i]}");
+
+                IRTCStats rtcStats = statsReport.GetStats(statsReport.StatsIds[i]);
+
+                RTCStatsType? statsType = rtcStats.StatsType;
+
+                string statsTypeOther = rtcStats.StatsTypeOther;
+
+                Debug.WriteLine($"statsType: {statsType}");
+                Debug.WriteLine($"statsTypeOther: {statsTypeOther}");
+
+                if (statsType == null)
+                {
+                    if (statsTypeOther == "ice-candidate")
+                    {
+                        RTCIceCandidateStats iceCandidateStats;
+
+                        iceCandidateStats = RTCIceCandidateStats.Cast(rtcStats);
+
+                        remoteIceCandidateStatsList.Add(iceCandidateStats);
+                    }
+                }
+            }
+        }
+
+        public async Task GetAllStats()
+        {
+            IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
 
             for (int i = 0; i < statsReport.StatsIds.Count; i++)
             {
@@ -487,133 +554,141 @@ namespace PeerConnectionClient.Signalling
                 {
                     if (statsTypeOther == "ice-candidate")
                     {
-                        iceCandidate = RTCIceCandidateStats.Cast(rtcStats);
+                        RTCIceCandidateStats iceCandidateStats;
 
-                        Debug.WriteLine($"ice-candidate: {iceCandidate}");
+                        iceCandidateStats = RTCIceCandidateStats.Cast(rtcStats);
+
+                        Debug.WriteLine($"ice-candidate: {iceCandidateStats}");
+
+                        RTCIceCandidateStats cand = iceCandidateStats;
+
+                        var cType = cand.CandidateType;
+
+                        Debug.WriteLine($"CAND: {cand}, type: {cType}");
                     }
                 }
 
                 if (statsType == RTCStatsType.Codec)
                 {
-                    codec = RTCCodecStats.Cast(rtcStats);
+                    _codecStats = RTCCodecStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"codec: {codec}");
+                    Debug.WriteLine($"codec: {_codecStats}");
                 }
 
                 if (statsType == RTCStatsType.InboundRtp)
                 {
-                    inboundRtp = RTCInboundRtpStreamStats.Cast(rtcStats);
+                    _inboundRtpStats = RTCInboundRtpStreamStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"inboundRtp: {inboundRtp}");
+                    Debug.WriteLine($"inboundRtp: {_inboundRtpStats}");
                 }
 
                 if (statsType == RTCStatsType.OutboundRtp)
                 {
-                    outboundRtp = RTCOutboundRtpStreamStats.Cast(rtcStats);
+                    _outboundRtpStats = RTCOutboundRtpStreamStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"outboundRtp: {outboundRtp}");
+                    Debug.WriteLine($"outboundRtp: {_outboundRtpStats}");
                 }
 
                 if (statsType == RTCStatsType.RemoteInboundRtp)
                 {
-                    remoteInboundRtp = RTCRemoteInboundRtpStreamStats.Cast(rtcStats);
+                    _remoteInboundRtpStats = RTCRemoteInboundRtpStreamStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"remoteInboundRtp: {remoteInboundRtp}");
+                    Debug.WriteLine($"remoteInboundRtp: {_remoteInboundRtpStats}");
                 }
 
                 if (statsType == RTCStatsType.RemoteOutboundRtp)
                 {
-                    remoteOutboundRtp = RTCRemoteOutboundRtpStreamStats.Cast(rtcStats);
+                    _remoteOutboundRtpStats = RTCRemoteOutboundRtpStreamStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"remoteOutboundRtp: {remoteOutboundRtp}");
+                    Debug.WriteLine($"remoteOutboundRtp: {_remoteOutboundRtpStats}");
                 }
 
                 if (statsType == RTCStatsType.Csrc)
                 {
-                    csrc = RTCRtpContributingSourceStats.Cast(rtcStats);
+                    _csrcStats = RTCRtpContributingSourceStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"csrc: {csrc}");
+                    Debug.WriteLine($"csrc: {_csrcStats}");
                 }
 
                 if (statsType == RTCStatsType.PeerConnection)
                 {
-                    peerConnectionStats = RTCPeerConnectionStats.Cast(rtcStats);
+                    _peerConnectionStats = RTCPeerConnectionStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"peerConnectionStats: {peerConnectionStats.ToString()}");
+                    Debug.WriteLine($"peerConnectionStats: {_peerConnectionStats.ToString()}");
                 }
 
                 if (statsType == RTCStatsType.DataChannel)
                 {
-                    dataChannel = RTCDataChannelStats.Cast(rtcStats);
+                    _dataChannelStats = RTCDataChannelStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"dataChannel: {dataChannel}");
+                    Debug.WriteLine($"dataChannel: {_dataChannelStats}");
                 }
 
                 if (statsType == RTCStatsType.Stream)
                 {
-                    mediaStream = RTCMediaStreamStats.Cast(rtcStats);
+                    _mediaStreamStats = RTCMediaStreamStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"mediaStream: {mediaStream.ToString()}");
+                    Debug.WriteLine($"mediaStream: {_mediaStreamStats.ToString()}");
                 }
 
                 if (statsType == RTCStatsType.Track)
                 {
                     if (rtcStats.Id == "RTCMediaStreamTrack_sender_1")
                     {
-                        videoTrack = RTCSenderVideoTrackAttachmentStats.Cast(rtcStats);
+                        _videoTrackStats = RTCSenderVideoTrackAttachmentStats.Cast(rtcStats);
 
-                        Debug.WriteLine($"videoTrack: {videoTrack}");
+                        Debug.WriteLine($"videoTrack: {_videoTrackStats}");
                     }
 
                     if (rtcStats.Id == "RTCMediaStreamTrack_sender_2")
                     {
-                        audioTrack = RTCSenderAudioTrackAttachmentStats.Cast(rtcStats);
+                        _audioTrackStats = RTCSenderAudioTrackAttachmentStats.Cast(rtcStats);
 
-                        Debug.WriteLine($"audioTrack: {audioTrack}");
+                        Debug.WriteLine($"audioTrack: {_audioTrackStats}");
                     }
                 }
 
                 if (statsType == RTCStatsType.Sender)
                 {
-                    audioSender = RTCAudioSenderStats.Cast(rtcStats);
+                    _audioSenderStats = RTCAudioSenderStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"audioSender: {audioSender}");
+                    Debug.WriteLine($"audioSender: {_audioSenderStats}");
 
-                    videoSender = RTCVideoSenderStats.Cast(rtcStats);
+                    _videoSenderStats = RTCVideoSenderStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"videoSender: {videoSender}");
+                    Debug.WriteLine($"videoSender: {_videoSenderStats}");
                 }
 
                 if (statsType == RTCStatsType.Receiver)
                 {
-                    audioReceiver = RTCAudioReceiverStats.Cast(rtcStats);
+                    _audioReceiverStats = RTCAudioReceiverStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"audioReceiver: {audioReceiver}");
+                    Debug.WriteLine($"audioReceiver: {_audioReceiverStats}");
 
-                    videoReceiver = RTCVideoReceiverStats.Cast(rtcStats);
+                    _videoReceiverStats = RTCVideoReceiverStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"videoReceiver: {videoReceiver}");
+                    Debug.WriteLine($"videoReceiver: {_videoReceiverStats}");
                 }
 
                 if (statsType == RTCStatsType.Transport)
                 {
-                    transport = RTCTransportStats.Cast(rtcStats);
+                    _transportStats = RTCTransportStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"transport: {transport}");
+                    Debug.WriteLine($"transport: {_transportStats}");
                 }
 
                 if (statsType == RTCStatsType.CandidatePair)
                 {
-                    candidatePair = RTCIceCandidatePairStats.Cast(rtcStats);
+                    _candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"candidatePair: {candidatePair}");
+                    Debug.WriteLine($"candidatePair: {_candidatePairStats}");
                 }
 
                 if (statsType == RTCStatsType.Certificate)
                 {
-                    certificate = RTCCertificateStats.Cast(rtcStats);
+                    _certificateStats = RTCCertificateStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"certificate: {certificate}");
+                    Debug.WriteLine($"certificate: {_certificateStats}");
                 }
             }
         }
@@ -646,8 +721,42 @@ namespace PeerConnectionClient.Signalling
 #endif
             };
 
+            try
+            {
+                Task task = callStatsClient.InitializeCallStats();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[Error] InitializeCallStats, message: '{ex.Message}'");
+            }
+
             Debug.WriteLine("Conductor: Creating peer connection.");
             _peerConnection = new RTCPeerConnection(config);
+
+            _peerConnection.OnIceConnectionStateChange += async() => 
+            {
+                if (_peerConnection.IceConnectionState.ToString() == "Checking")
+                {
+                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
+                }
+
+                if (_peerConnection.IceConnectionState.ToString() == "Connected")
+                {
+                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
+                    //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
+
+                    callStatsClient.FabricSetupLocalCandidate(localIceCandidateStatsList);
+                    callStatsClient.FabricSetupRemoteCandidate(remoteIceCandidateStatsList);
+                    await callStatsClient.FabricSetup();
+                }
+
+                if (_peerConnection.IceConnectionState.ToString() == "Completed")
+                {
+                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
+                }
+
+                Debug.WriteLine("Conductor: Ice connection state change, state=" + (null != _peerConnection ? _peerConnection.IceConnectionState.ToString() : "closed"));
+            };
 
             if (_peerConnection == null)
                 throw new NullReferenceException("Peer connection is not created.");
@@ -659,16 +768,6 @@ namespace PeerConnectionClient.Signalling
             if (cancelationToken.IsCancellationRequested)
             {
                 return false;
-            }
-
-            try
-            {
-                Task task = callStatsClient.InitializeCallStats();
-                Task fabricSetup = callStatsClient.FabricSetup();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[Error] InitializeCallStats, message: '{ex.Message}'");
             }
 
 #if ORTCLIB
@@ -804,7 +903,7 @@ namespace PeerConnectionClient.Signalling
         /// This candidate needs to be sent to the other peer.
         /// </summary>
         /// <param name="evt">Details about RTC Peer Connection Ice event.</param>
-        private void PeerConnection_OnIceCandidate(UseRTCPeerConnectionIceEvent evt)
+        private async void PeerConnection_OnIceCandidate(UseRTCPeerConnectionIceEvent evt)
         {
             if (evt.Candidate == null) // relevant: GlobalObserver::OnIceComplete in Org.WebRtc
             {
@@ -887,6 +986,7 @@ namespace PeerConnectionClient.Signalling
         /// </summary>
         private Conductor()
         {
+            Config.AppSettings();
 #if ORTCLIB
             _signalingMode = RTCPeerConnectionSignalingMode.Json;
 //#else
@@ -1080,7 +1180,9 @@ namespace PeerConnectionClient.Signalling
                     var description = new RTCSessionDescription(sdpInit);
 #endif
                     await _peerConnection.SetRemoteDescription(description);
-                    await GetAllStats();
+                    //await GetAllStats();
+                    await GetLocalIceCandidateStats();
+                    await GetRemoteIceCandidateStats();
 #if ORTCLIB
                     if ((messageType == RTCSessionDescriptionSignalingType.SdpOffer) ||
                         ((created) && (messageType == RTCSessionDescriptionSignalingType.Json)))
@@ -1139,8 +1241,6 @@ namespace PeerConnectionClient.Signalling
 #else
                     await _peerConnection.AddIceCandidate(candidate);
 #endif
-
-
                     Debug.WriteLine("Conductor: Receiving ice candidate:\n" + message);
                 }
             }).Wait();

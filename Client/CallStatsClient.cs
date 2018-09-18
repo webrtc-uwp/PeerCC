@@ -1,6 +1,8 @@
 ﻿using CallStatsLib;
 using CallStatsLib.Request;
 using Jose;
+using Org.WebRtc;
+using PeerConnectionClient.Signalling;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,9 +18,10 @@ namespace PeerConnectionClient
 {
     public class CallStatsClient
     {
-        private static string _localID = GetLocalPeerName();
-        private static string _appID = (string)Config.localSettings.Values["appID"];
-        private static string _keyID = (string)Config.localSettings.Values["keyID"];
+        private static string _userID;
+        private static string _localID;
+        private static string _appID;
+        private static string _keyID;
         private static readonly string _jti = new Func<string>(() =>
         {
             Random random = new Random();
@@ -29,10 +32,18 @@ namespace PeerConnectionClient
 
         private static string _confID = Config.localSettings.Values["confID"].ToString();
 
-        private static string _originID = "PeerCC";
+        private static string _originID = null;
         private static string _deviceID = "desktop";
         private static string _connectionID = "SampleConnection";
         private static string _remoteID = "RemotePeer";
+
+        public CallStatsClient()
+        {
+            _userID = GetLocalPeerName();
+            _localID = _userID;
+            _appID = (string)Config.localSettings.Values["appID"];
+            _keyID = (string)Config.localSettings.Values["keyID"];
+        }
 
         private static string GenerateJWT()
         {
@@ -326,7 +337,7 @@ namespace PeerConnectionClient
                 ssrcData.streamType = StreamType.inbound.ToString();
                 ssrcData.reportType = ReportType.local.ToString();
                 ssrcData.mediaType = MediaType.audio.ToString();
-                ssrcData.userID = GetLocalPeerName();
+                ssrcData.userID = _userID;
 
                 ssrcData.localStartTime = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
@@ -379,20 +390,18 @@ namespace PeerConnectionClient
             return dict;
         }
 
-        private enum EndpointInfoType { browser, native, plugin, middlebox }
-
         private CreateConferenceData CreateConference()
         {
             EndpointInfo endpointInfo = new EndpointInfo();
-            endpointInfo.type = EndpointInfoType.native.ToString();
+            endpointInfo.type = "native";
             endpointInfo.os = Environment.OSVersion.ToString();
-            endpointInfo.buildName = "SampleBuild";
-            endpointInfo.buildVersion = "sb01";
+            endpointInfo.buildName = "UWP";
+            endpointInfo.buildVersion = "10.0";
             endpointInfo.appVersion = "1.0";
 
             CreateConferenceData data = new CreateConferenceData();
             data.localID = _localID;
-            data.originID = "SampleOrigin";
+            data.originID = _originID;
             data.deviceID = GetLocalPeerName();
             data.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             data.endpointInfo = endpointInfo;
@@ -415,82 +424,55 @@ namespace PeerConnectionClient
         private List<IceCandidate> remoteIceCandidatesList = new List<IceCandidate>();
         private List<IceCandidatePair> iceCandidatePairsList = new List<IceCandidatePair>();
 
-        public void FabricSetupLocalCandidate(string candidateStr)
+        public void FabricSetupLocalCandidate(List<RTCIceCandidateStats> localIceCandidateStatsList)
         {
-            string candidate = candidateStr.Substring(candidateStr.LastIndexOf(':') + 1);
+            for (int i = 0; i < localIceCandidateStatsList.Count; i++)
+            {
+                RTCIceCandidateStats iceCandidateStats = localIceCandidateStatsList[i];
 
-            string[] separatingChars = { " " };
-            string[] words = candidate.Split(separatingChars, StringSplitOptions.None);
+                IceCandidate iceCandidate = new IceCandidate();
 
-            var candidateID = words[0];
-            var candidateTransport = words[2];
-            var localCandidate = words[3];
-            var candidateIp = words[4];
-            var candidatePort = words[5];
-            var candidateType = words[7];
+                iceCandidate.id = iceCandidateStats.Id;
+                iceCandidate.type = iceCandidateStats.StatsType.ToString();
+                iceCandidate.ip = iceCandidateStats.Ip;
+                iceCandidate.port = (int)iceCandidateStats.Port;
+                iceCandidate.candidateType = iceCandidateStats.CandidateType.ToString();
+                iceCandidate.transport = iceCandidateStats.TransportId;
 
-            Debug.WriteLine($"!!!candidateID: {candidateID}, " +
-                $"candidateTransport: {candidateTransport}, " +
-                $"localCandidate: {localCandidate}, " +
-                $"candidateIp: {candidateIp}, " +
-                $"candidatePort: {candidatePort}, " +
-                $"candidateType: {candidateType}");
-
-            IceCandidate localIceCandidateObj = new IceCandidate();
-            localIceCandidateObj.id = localCandidate;
-            localIceCandidateObj.type = "localcandidate";
-            localIceCandidateObj.ip = candidateIp;
-            localIceCandidateObj.port = int.Parse(candidatePort);
-            localIceCandidateObj.candidateType = candidateType;
-            localIceCandidateObj.transport = candidateTransport;
-            localIceCandidatesList.Add(localIceCandidateObj);
+                localIceCandidatesList.Add(iceCandidate);
+            }
         }
 
-        public void FabricSetupRemoteCandidate(string candidate)
+        public void FabricSetupRemoteCandidate(List<RTCIceCandidateStats> remoteIceCandidateStatsList)
         {
-            string[] separatingChars = { " " };
-            string[] words = candidate.Split(separatingChars, StringSplitOptions.None);
+            for (int i = 0; i < remoteIceCandidateStatsList.Count; i++)
+            {
+                RTCIceCandidateStats iceCandidateStats = remoteIceCandidateStatsList[i];
 
-            string[] candidateStr = words[0].Split(":", StringSplitOptions.None);
+                IceCandidate iceCandidate = new IceCandidate();
 
-            var candidateID = candidateStr[1];
-            var candidateTransport = words[2];
-            var localCandidateID = words[3];
-            var candidateIp = words[4];
-            var candidatePort = words[5];
-            var candidateType = words[7];
+                iceCandidate.id = iceCandidateStats.Id;
+                iceCandidate.type = iceCandidateStats.StatsType.ToString();
+                iceCandidate.ip = iceCandidateStats.Ip;
+                iceCandidate.port = (int)iceCandidateStats.Port;
+                iceCandidate.candidateType = iceCandidateStats.CandidateType.ToString();
+                iceCandidate.transport = iceCandidateStats.TransportId;
 
-            Debug.WriteLine($"!!!candidateID: {candidateID}, " +
-               $"candidateTransport: {candidateTransport}, " +
-               $"localCandidateID: {localCandidateID}, " +
-               $"candidateIp: {candidateIp}, " +
-               $"candidatePort: {candidatePort}, " +
-               $"candidateType: {candidateType}");
-
-            IceCandidate remoteIceCandidateObj = new IceCandidate();
-            remoteIceCandidateObj.id = candidateID;
-            remoteIceCandidateObj.type = "remotecandidate";
-            remoteIceCandidateObj.ip = candidateIp;
-            remoteIceCandidateObj.port = int.Parse(candidatePort);
-            remoteIceCandidateObj.candidateType = candidateType;
-            remoteIceCandidateObj.transport = candidateTransport;
-            remoteIceCandidatesList.Add(remoteIceCandidateObj);
-
-            IceCandidatePair iceCandidatePairObj = new IceCandidatePair();
-            iceCandidatePairObj.id = candidateID;
-            iceCandidatePairObj.localCandidateId = localCandidateID;
-            iceCandidatePairObj.remoteCandidateId = candidateID;
-            iceCandidatePairObj.state = IceCandidateState.succeeded.ToString();
-            iceCandidatePairObj.priority = 1;
-            iceCandidatePairObj.nominated = true;
-            iceCandidatePairsList.Add(iceCandidatePairObj);
+                remoteIceCandidatesList.Add(iceCandidate);
+            }
         }
+
+        public void CandidatePair()
+        {
+
+        }
+
+        
 
         public async Task FabricSetup()
         {
-            await Task.Delay(20000);
             Debug.WriteLine("FabricSetup: ");
-            var fabricStatus = await callstats.FabricSetup(fabricSetupData);
+            await callstats.FabricSetup(fabricSetupData);
         }
 
         private enum FabricSetupFailedReason

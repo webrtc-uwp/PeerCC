@@ -99,6 +99,7 @@
   <ItemGroup>
     <Compile Include="CallStatsClient.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="RenameToConfig.cs" />
     <Compile Include="Main\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -134,6 +135,7 @@
     <AppxManifest Include="Package.WebRtc.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <Content Include="ecc-key.p12" />
     <None Include="PeerConnectionClient.WebRtc_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>

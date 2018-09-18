@@ -29,4 +29,9 @@
     <DeviceCapability Name="microphone" />
     <DeviceCapability Name="webcam" />
   </Capabilities>
+  <Extensions>
+    <Extension Category="windows.certificates">
+      <Certificates />
+    </Extension>
+  </Extensions>
 </Package>
