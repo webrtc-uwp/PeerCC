@@ -74,6 +74,7 @@ namespace PeerConnectionClient.Signalling
 
         private List<RTCIceCandidateStats> localIceCandidateStatsList = new List<RTCIceCandidateStats>();
         private List<RTCIceCandidateStats> remoteIceCandidateStatsList = new List<RTCIceCandidateStats>();
+        private List<RTCIceCandidatePairStats> iceCandidatePairStatsList = new List<RTCIceCandidatePairStats>();
 
         RTCCodecStats _codecStats;
         RTCInboundRtpStreamStats _inboundRtpStats;
@@ -91,7 +92,7 @@ namespace PeerConnectionClient.Signalling
         RTCAudioReceiverStats _audioReceiverStats;
         RTCVideoReceiverStats _videoReceiverStats;
         RTCTransportStats _transportStats;
-        RTCIceCandidatePairStats _candidatePairStats;
+        
         
         RTCCertificateStats _certificateStats;
 
@@ -533,6 +534,36 @@ namespace PeerConnectionClient.Signalling
             }
         }
 
+        public async Task GetIceCandidatePairs()
+        {
+            IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
+
+            for (int i = 0; i < statsReport.StatsIds.Count; i++)
+            {
+                Debug.WriteLine($"statsReport: {statsReport.StatsIds[i]}");
+
+                IRTCStats rtcStats = statsReport.GetStats(statsReport.StatsIds[i]);
+
+                RTCStatsType? statsType = rtcStats.StatsType;
+
+                string statsTypeOther = rtcStats.StatsTypeOther;
+
+                Debug.WriteLine($"statsType: {statsType}");
+                Debug.WriteLine($"statsTypeOther: {statsTypeOther}");
+
+                if (statsType == RTCStatsType.CandidatePair)
+                {
+                    RTCIceCandidatePairStats candidatePairStats;
+
+                    candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
+
+                    Debug.WriteLine($"candidatePair: {candidatePairStats}");
+
+                    iceCandidatePairStatsList.Add(candidatePairStats);
+                }
+            }
+        }
+
         public async Task GetAllStats()
         {
             IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
@@ -559,12 +590,6 @@ namespace PeerConnectionClient.Signalling
                         iceCandidateStats = RTCIceCandidateStats.Cast(rtcStats);
 
                         Debug.WriteLine($"ice-candidate: {iceCandidateStats}");
-
-                        RTCIceCandidateStats cand = iceCandidateStats;
-
-                        var cType = cand.CandidateType;
-
-                        Debug.WriteLine($"CAND: {cand}, type: {cType}");
                     }
                 }
 
@@ -679,9 +704,11 @@ namespace PeerConnectionClient.Signalling
 
                 if (statsType == RTCStatsType.CandidatePair)
                 {
-                    _candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
+                    RTCIceCandidatePairStats candidatePairStats;
 
-                    Debug.WriteLine($"candidatePair: {_candidatePairStats}");
+                    candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
+
+                    Debug.WriteLine($"candidatePair: {candidatePairStats}");
                 }
 
                 if (statsType == RTCStatsType.Certificate)
@@ -747,6 +774,7 @@ namespace PeerConnectionClient.Signalling
 
                     callStatsClient.FabricSetupLocalCandidate(localIceCandidateStatsList);
                     callStatsClient.FabricSetupRemoteCandidate(remoteIceCandidateStatsList);
+                    callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
                     await callStatsClient.FabricSetup();
                 }
 
@@ -1183,6 +1211,7 @@ namespace PeerConnectionClient.Signalling
                     //await GetAllStats();
                     await GetLocalIceCandidateStats();
                     await GetRemoteIceCandidateStats();
+                    await GetIceCandidatePairs();
 #if ORTCLIB
                     if ((messageType == RTCSessionDescriptionSignalingType.SdpOffer) ||
                         ((created) && (messageType == RTCSessionDescriptionSignalingType.Json)))

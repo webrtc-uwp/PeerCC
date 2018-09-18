@@ -462,15 +462,43 @@ namespace PeerConnectionClient
             }
         }
 
-        public void CandidatePair()
+        public void FabricSetupCandidatePair(List<RTCIceCandidatePairStats> iceCandidatePairStatsList)
         {
+            for (int i = 0; i < iceCandidatePairsList.Count; i++)
+            {
+                RTCIceCandidatePairStats pairStats = iceCandidatePairStatsList[i];
 
+                IceCandidatePair pair = new IceCandidatePair();
+                pair.id = pairStats.Id;
+                pair.localCandidateId = pairStats.LocalCandidateId;
+                pair.remoteCandidateId = pairStats.RemoteCandidateId;
+                pair.state = pairStats.State.ToString();
+                pair.priority = 1;
+                pair.nominated = pairStats.Nominated;
+
+                iceCandidatePairsList.Add(pair);
+            }
         }
 
         
 
         public async Task FabricSetup()
         {
+            fabricSetupData.localID = _localID;
+            fabricSetupData.originID = _originID;
+            fabricSetupData.deviceID = _deviceID;
+            fabricSetupData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fabricSetupData.connectionID = _connectionID;
+            fabricSetupData.remoteID = _remoteID;
+            fabricSetupData.delay = 5;
+            fabricSetupData.iceGatheringDelay = 3;
+            fabricSetupData.iceConnectivityDelay = 2;
+            fabricSetupData.fabricTransmissionDirection = FabricTransmissionDirection.sendrecv.ToString();
+            fabricSetupData.remoteEndpointType = RemoteEndpointType.peer.ToString();
+            fabricSetupData.localIceCandidates = localIceCandidatesList;
+            fabricSetupData.remoteIceCandidates = remoteIceCandidatesList;
+            fabricSetupData.iceCandidatePairs = iceCandidatePairsList;
+
             Debug.WriteLine("FabricSetup: ");
             await callstats.FabricSetup(fabricSetupData);
         }
