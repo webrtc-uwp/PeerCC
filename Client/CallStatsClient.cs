@@ -422,13 +422,15 @@ namespace PeerConnectionClient
 
         private List<IceCandidate> localIceCandidatesList = new List<IceCandidate>();
         private List<IceCandidate> remoteIceCandidatesList = new List<IceCandidate>();
+
+        private List<IceCandidate> iceCandidateList = new List<IceCandidate>();
         private List<IceCandidatePair> iceCandidatePairsList = new List<IceCandidatePair>();
 
-        public void FabricSetupLocalCandidate(List<RTCIceCandidateStats> localIceCandidateStatsList)
+        public void FabricSetupIceCandidate(List<RTCIceCandidateStats> iceCandidateStatsList)
         {
-            for (int i = 0; i < localIceCandidateStatsList.Count; i++)
+            for (int i = 0; i < iceCandidateStatsList.Count; i++)
             {
-                RTCIceCandidateStats iceCandidateStats = localIceCandidateStatsList[i];
+                RTCIceCandidateStats iceCandidateStats = iceCandidateStatsList[i];
 
                 IceCandidate iceCandidate = new IceCandidate();
 
@@ -439,32 +441,13 @@ namespace PeerConnectionClient
                 iceCandidate.candidateType = iceCandidateStats.CandidateType.ToString();
                 iceCandidate.transport = iceCandidateStats.TransportId;
 
-                localIceCandidatesList.Add(iceCandidate);
-            }
-        }
-
-        public void FabricSetupRemoteCandidate(List<RTCIceCandidateStats> remoteIceCandidateStatsList)
-        {
-            for (int i = 0; i < remoteIceCandidateStatsList.Count; i++)
-            {
-                RTCIceCandidateStats iceCandidateStats = remoteIceCandidateStatsList[i];
-
-                IceCandidate iceCandidate = new IceCandidate();
-
-                iceCandidate.id = iceCandidateStats.Id;
-                iceCandidate.type = iceCandidateStats.StatsType.ToString();
-                iceCandidate.ip = iceCandidateStats.Ip;
-                iceCandidate.port = (int)iceCandidateStats.Port;
-                iceCandidate.candidateType = iceCandidateStats.CandidateType.ToString();
-                iceCandidate.transport = iceCandidateStats.TransportId;
-
-                remoteIceCandidatesList.Add(iceCandidate);
+                iceCandidateList.Add(iceCandidate);
             }
         }
 
         public void FabricSetupCandidatePair(List<RTCIceCandidatePairStats> iceCandidatePairStatsList)
         {
-            for (int i = 0; i < iceCandidatePairsList.Count; i++)
+            for (int i = 0; i < iceCandidatePairStatsList.Count; i++)
             {
                 RTCIceCandidatePairStats pairStats = iceCandidatePairStatsList[i];
 
@@ -480,10 +463,32 @@ namespace PeerConnectionClient
             }
         }
 
+        public void SetLocalAndRemoteIceCandidateLists()
+        {
+            for (int i = 0; i < iceCandidatePairsList.Count; i++)
+            {
+                var local = iceCandidatePairsList[i].localCandidateId;
+                var remote = iceCandidatePairsList[i].remoteCandidateId;
+
+                for (int c = 0; c < iceCandidateList.Count; c++)
+                {
+                    if (iceCandidateList[c].id == local)
+                    {
+                        localIceCandidatesList.Add(iceCandidateList[c]);
+                    }
+                    if (iceCandidateList[c].id == remote)
+                    {
+                        remoteIceCandidatesList.Add(iceCandidateList[c]);
+                    }
+                }
+            }
+        }
         
 
         public async Task FabricSetup()
         {
+            SetLocalAndRemoteIceCandidateLists();
+
             fabricSetupData.localID = _localID;
             fabricSetupData.originID = _originID;
             fabricSetupData.deviceID = _deviceID;

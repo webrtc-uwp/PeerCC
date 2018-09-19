@@ -72,8 +72,7 @@ namespace PeerConnectionClient.Signalling
     {
         CallStatsClient callStatsClient = new CallStatsClient();
 
-        private List<RTCIceCandidateStats> localIceCandidateStatsList = new List<RTCIceCandidateStats>();
-        private List<RTCIceCandidateStats> remoteIceCandidateStatsList = new List<RTCIceCandidateStats>();
+        private List<RTCIceCandidateStats> iceCandidateStatsList = new List<RTCIceCandidateStats>();
         private List<RTCIceCandidatePairStats> iceCandidatePairStatsList = new List<RTCIceCandidatePairStats>();
 
         RTCCodecStats _codecStats;
@@ -472,98 +471,6 @@ namespace PeerConnectionClient.Signalling
             return await _peerConnection.GetStats(statsType);
         }
 
-        public async Task GetLocalIceCandidateStats()
-        {
-            IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
-
-            for (int i = 0; i < statsReport.StatsIds.Count; i++)
-            {
-                Debug.WriteLine($"statsReport: {statsReport.StatsIds[i]}");
-
-                IRTCStats rtcStats = statsReport.GetStats(statsReport.StatsIds[i]);
-
-                RTCStatsType? statsType = rtcStats.StatsType;
-
-                string statsTypeOther = rtcStats.StatsTypeOther;
-
-                Debug.WriteLine($"statsType: {statsType}");
-                Debug.WriteLine($"statsTypeOther: {statsTypeOther}");
-
-                if (statsType == null)
-                {
-                    if (statsTypeOther == "ice-candidate")
-                    {
-                        RTCIceCandidateStats iceCandidateStats;
-
-                        iceCandidateStats = RTCIceCandidateStats.Cast(rtcStats);
-
-                        localIceCandidateStatsList.Add(iceCandidateStats);
-                    }
-                }
-            }
-        }
-
-        public async Task GetRemoteIceCandidateStats()
-        {
-            IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
-
-            for (int i = 0; i < statsReport.StatsIds.Count; i++)
-            {
-                Debug.WriteLine($"statsReport: {statsReport.StatsIds[i]}");
-
-                IRTCStats rtcStats = statsReport.GetStats(statsReport.StatsIds[i]);
-
-                RTCStatsType? statsType = rtcStats.StatsType;
-
-                string statsTypeOther = rtcStats.StatsTypeOther;
-
-                Debug.WriteLine($"statsType: {statsType}");
-                Debug.WriteLine($"statsTypeOther: {statsTypeOther}");
-
-                if (statsType == null)
-                {
-                    if (statsTypeOther == "ice-candidate")
-                    {
-                        RTCIceCandidateStats iceCandidateStats;
-
-                        iceCandidateStats = RTCIceCandidateStats.Cast(rtcStats);
-
-                        remoteIceCandidateStatsList.Add(iceCandidateStats);
-                    }
-                }
-            }
-        }
-
-        public async Task GetIceCandidatePairs()
-        {
-            IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
-
-            for (int i = 0; i < statsReport.StatsIds.Count; i++)
-            {
-                Debug.WriteLine($"statsReport: {statsReport.StatsIds[i]}");
-
-                IRTCStats rtcStats = statsReport.GetStats(statsReport.StatsIds[i]);
-
-                RTCStatsType? statsType = rtcStats.StatsType;
-
-                string statsTypeOther = rtcStats.StatsTypeOther;
-
-                Debug.WriteLine($"statsType: {statsType}");
-                Debug.WriteLine($"statsTypeOther: {statsTypeOther}");
-
-                if (statsType == RTCStatsType.CandidatePair)
-                {
-                    RTCIceCandidatePairStats candidatePairStats;
-
-                    candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"candidatePair: {candidatePairStats}");
-
-                    iceCandidatePairStatsList.Add(candidatePairStats);
-                }
-            }
-        }
-
         public async Task GetAllStats()
         {
             IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
@@ -590,6 +497,8 @@ namespace PeerConnectionClient.Signalling
                         iceCandidateStats = RTCIceCandidateStats.Cast(rtcStats);
 
                         Debug.WriteLine($"ice-candidate: {iceCandidateStats}");
+
+                        iceCandidateStatsList.Add(iceCandidateStats);
                     }
                 }
 
@@ -709,6 +618,8 @@ namespace PeerConnectionClient.Signalling
                     candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
 
                     Debug.WriteLine($"candidatePair: {candidatePairStats}");
+
+                    iceCandidatePairStatsList.Add(candidatePairStats);
                 }
 
                 if (statsType == RTCStatsType.Certificate)
@@ -770,12 +681,10 @@ namespace PeerConnectionClient.Signalling
                 if (_peerConnection.IceConnectionState.ToString() == "Connected")
                 {
                     Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
-                    //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
 
-                    callStatsClient.FabricSetupLocalCandidate(localIceCandidateStatsList);
-                    callStatsClient.FabricSetupRemoteCandidate(remoteIceCandidateStatsList);
-                    callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
+                    //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
                     await callStatsClient.FabricSetup();
+
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Completed")
@@ -931,7 +840,7 @@ namespace PeerConnectionClient.Signalling
         /// This candidate needs to be sent to the other peer.
         /// </summary>
         /// <param name="evt">Details about RTC Peer Connection Ice event.</param>
-        private async void PeerConnection_OnIceCandidate(UseRTCPeerConnectionIceEvent evt)
+        private void PeerConnection_OnIceCandidate(UseRTCPeerConnectionIceEvent evt)
         {
             if (evt.Candidate == null) // relevant: GlobalObserver::OnIceComplete in Org.WebRtc
             {
@@ -939,6 +848,7 @@ namespace PeerConnectionClient.Signalling
             }
 
             double index = null != evt.Candidate.SdpMLineIndex ? (double)evt.Candidate.SdpMLineIndex : -1;
+            
 
             JsonObject json = null;
 #if ORTCLIB
@@ -1208,10 +1118,6 @@ namespace PeerConnectionClient.Signalling
                     var description = new RTCSessionDescription(sdpInit);
 #endif
                     await _peerConnection.SetRemoteDescription(description);
-                    //await GetAllStats();
-                    await GetLocalIceCandidateStats();
-                    await GetRemoteIceCandidateStats();
-                    await GetIceCandidatePairs();
 #if ORTCLIB
                     if ((messageType == RTCSessionDescriptionSignalingType.SdpOffer) ||
                         ((created) && (messageType == RTCSessionDescriptionSignalingType.Json)))
@@ -1270,6 +1176,11 @@ namespace PeerConnectionClient.Signalling
 #else
                     await _peerConnection.AddIceCandidate(candidate);
 #endif
+                    await GetAllStats();
+
+                    callStatsClient.FabricSetupIceCandidate(iceCandidateStatsList);
+                    callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
+
                     Debug.WriteLine("Conductor: Receiving ice candidate:\n" + message);
                 }
             }).Wait();
