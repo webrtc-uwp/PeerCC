@@ -484,8 +484,20 @@ namespace PeerConnectionClient
             }
         }
         
+        public async Task SSRCMap()
+        {
+            ssrcMapData.localID = _localID;
+            ssrcMapData.originID = _originID;
+            ssrcMapData.deviceID = _deviceID;
+            ssrcMapData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            ssrcMapData.connectionID = _connectionID;
+            ssrcMapData.remoteID = _remoteID;
+            ssrcMapData.ssrcData = ssrcDataList;
 
-        public async Task FabricSetup()
+            await callstats.SSRCMap(ssrcMapData);
+        }
+
+        public async Task FabricSetup(int gatheringTimeMiliseconds)
         {
             SetLocalAndRemoteIceCandidateLists();
 
@@ -496,7 +508,7 @@ namespace PeerConnectionClient
             fabricSetupData.connectionID = _connectionID;
             fabricSetupData.remoteID = _remoteID;
             fabricSetupData.delay = 5;
-            fabricSetupData.iceGatheringDelay = 3;
+            fabricSetupData.iceGatheringDelay = gatheringTimeMiliseconds;
             fabricSetupData.iceConnectivityDelay = 2;
             fabricSetupData.fabricTransmissionDirection = FabricTransmissionDirection.sendrecv.ToString();
             fabricSetupData.remoteEndpointType = RemoteEndpointType.peer.ToString();

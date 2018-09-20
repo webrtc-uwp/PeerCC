@@ -75,6 +75,8 @@ namespace PeerConnectionClient.Signalling
         private List<RTCIceCandidateStats> iceCandidateStatsList = new List<RTCIceCandidateStats>();
         private List<RTCIceCandidatePairStats> iceCandidatePairStatsList = new List<RTCIceCandidatePairStats>();
 
+        private int _gatheringTimeMiliseconds;
+
         RTCCodecStats _codecStats;
         RTCInboundRtpStreamStats _inboundRtpStats;
         RTCOutboundRtpStreamStats _outboundRtpStats;
@@ -671,6 +673,22 @@ namespace PeerConnectionClient.Signalling
             Debug.WriteLine("Conductor: Creating peer connection.");
             _peerConnection = new RTCPeerConnection(config);
 
+            Stopwatch clock = Stopwatch.StartNew();
+
+            _peerConnection.OnIceGatheringStateChange += () =>
+            {
+                if (_peerConnection.IceGatheringState.ToString() == "Complete")
+                {
+                    clock.Stop();
+
+                    _gatheringTimeMiliseconds = clock.Elapsed.Milliseconds;
+
+                    Debug.WriteLine("Ice gathering delay: " + _gatheringTimeMiliseconds);
+                }
+
+                Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString());
+            };
+
             _peerConnection.OnIceConnectionStateChange += async() => 
             {
                 if (_peerConnection.IceConnectionState.ToString() == "Checking")
@@ -683,7 +701,7 @@ namespace PeerConnectionClient.Signalling
                     Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
 
                     //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
-                    await callStatsClient.FabricSetup();
+                    await callStatsClient.FabricSetup(_gatheringTimeMiliseconds);
 
                 }
 
@@ -896,6 +914,8 @@ namespace PeerConnectionClient.Signalling
         private void PeerConnection_OnTrack(UseRTCTrackEvent evt)
         {
             OnAddRemoteTrack?.Invoke(evt.Track);
+
+            var task = callStatsClient.SSRCMap();
         }
 
         /// <summary>
@@ -1090,6 +1110,8 @@ namespace PeerConnectionClient.Signalling
                         Debug.WriteLine("[Error] Conductor: Can't parse received session description message.");
                         return;
                     }
+
+                    callStatsClient.SSRCMapDataSetup(sdp);
 
                     Debug.WriteLine("Conductor: Received session description:\n" + message);
 #if ORTCLIB
