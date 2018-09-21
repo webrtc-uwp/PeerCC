@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Networking.Connectivity;
+using System.Timers;
 
 namespace PeerConnectionClient
 {
@@ -133,19 +134,19 @@ namespace PeerConnectionClient
             ssrcMapData.remoteID = _remoteID;
             ssrcMapData.ssrcData = ssrcDataList;
 
-            Stats confSubmissionStats = new Stats();
-            confSubmissionStats.tracks = "tracks";
-            confSubmissionStats.candidatePairs = "3";
-            confSubmissionStats.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            confSubmissionStatsList.Add(confSubmissionStats);
+            //Stats confSubmissionStats = new Stats();
+            //confSubmissionStats.tracks = "tracks";
+            //confSubmissionStats.candidatePairs = "3";
+            //confSubmissionStats.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            //confSubmissionStatsList.Add(confSubmissionStats);
 
-            conferenceStatsSubmissionData.localID = _localID;
-            conferenceStatsSubmissionData.originID = _originID;
-            conferenceStatsSubmissionData.deviceID = _deviceID;
-            conferenceStatsSubmissionData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            conferenceStatsSubmissionData.connectionID = _connectionID;
-            conferenceStatsSubmissionData.remoteID = _remoteID;
-            conferenceStatsSubmissionData.stats = confSubmissionStatsList;
+            //conferenceStatsSubmissionData.localID = _localID;
+            //conferenceStatsSubmissionData.originID = _originID;
+            //conferenceStatsSubmissionData.deviceID = _deviceID;
+            //conferenceStatsSubmissionData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            //conferenceStatsSubmissionData.connectionID = _connectionID;
+            //conferenceStatsSubmissionData.remoteID = _remoteID;
+            //conferenceStatsSubmissionData.stats = confSubmissionStatsList;
 
             await callstats.StepsToIntegrate(
                 CreateConference(),
@@ -156,6 +157,14 @@ namespace PeerConnectionClient
                 conferenceStatsSubmissionData,
                 FabricTerminated(),
                 UserLeft());
+
+            Timer timer = new Timer(10000);
+            timer.Elapsed += async (sender, e) =>
+            {
+                Debug.WriteLine("ConferenceStatsSubmission: ");
+                await ConferenceStatsSubmission();
+            };
+            timer.Start();
 
             //Debug.WriteLine("FabricStateChange: ");
             //await callstats.FabricStateChange(FabricStateChange());
@@ -497,7 +506,32 @@ namespace PeerConnectionClient
             await callstats.SSRCMap(ssrcMapData);
         }
 
-        public async Task FabricSetup(int gatheringTimeMiliseconds)
+        public void ConferenceStats(List<string> trackStatsList)
+        {
+            for (int i = 0; i < trackStatsList.Count; i++)
+            {
+                Stats confSubmissionStats = new Stats();
+                confSubmissionStats.tracks = trackStatsList[i];
+                confSubmissionStats.candidatePairs = "";
+                confSubmissionStats.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                confSubmissionStatsList.Add(confSubmissionStats);
+            }
+        }
+
+        public async Task ConferenceStatsSubmission()
+        {
+            conferenceStatsSubmissionData.localID = _localID;
+            conferenceStatsSubmissionData.originID = _originID;
+            conferenceStatsSubmissionData.deviceID = _deviceID;
+            conferenceStatsSubmissionData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            conferenceStatsSubmissionData.connectionID = _connectionID;
+            conferenceStatsSubmissionData.remoteID = _remoteID;
+            conferenceStatsSubmissionData.stats = confSubmissionStatsList;
+
+            await callstats.ConferenceStatsSubmission(conferenceStatsSubmissionData);
+        }
+
+        public async Task FabricSetup(int gatheringDelayMiliseconds, int connectivityDelayMiliseconds, int totalSetupDelay)
         {
             SetLocalAndRemoteIceCandidateLists();
 
@@ -507,9 +541,9 @@ namespace PeerConnectionClient
             fabricSetupData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             fabricSetupData.connectionID = _connectionID;
             fabricSetupData.remoteID = _remoteID;
-            fabricSetupData.delay = 5;
-            fabricSetupData.iceGatheringDelay = gatheringTimeMiliseconds;
-            fabricSetupData.iceConnectivityDelay = 2;
+            fabricSetupData.delay = totalSetupDelay;
+            fabricSetupData.iceGatheringDelay = gatheringDelayMiliseconds;
+            fabricSetupData.iceConnectivityDelay = connectivityDelayMiliseconds;
             fabricSetupData.fabricTransmissionDirection = FabricTransmissionDirection.sendrecv.ToString();
             fabricSetupData.remoteEndpointType = RemoteEndpointType.peer.ToString();
             fabricSetupData.localIceCandidates = localIceCandidatesList;

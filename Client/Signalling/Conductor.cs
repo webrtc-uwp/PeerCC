@@ -75,7 +75,11 @@ namespace PeerConnectionClient.Signalling
         private List<RTCIceCandidateStats> iceCandidateStatsList = new List<RTCIceCandidateStats>();
         private List<RTCIceCandidatePairStats> iceCandidatePairStatsList = new List<RTCIceCandidatePairStats>();
 
-        private int _gatheringTimeMiliseconds;
+        private List<string> trackStatsList = new List<string>();
+
+        private int _gatheringDelayMiliseconds;
+        private int _connectivityDelayMiliseconds;
+        private int _totalSetupDelay;
 
         RTCCodecStats _codecStats;
         RTCInboundRtpStreamStats _inboundRtpStats;
@@ -569,6 +573,8 @@ namespace PeerConnectionClient.Signalling
 
                 if (statsType == RTCStatsType.Track)
                 {
+                    trackStatsList.Add(rtcStats.Id);
+
                     if (rtcStats.Id == "RTCMediaStreamTrack_sender_1")
                     {
                         _videoTrackStats = RTCSenderVideoTrackAttachmentStats.Cast(rtcStats);
@@ -661,33 +667,37 @@ namespace PeerConnectionClient.Signalling
 #endif
             };
 
+            Debug.WriteLine("Conductor: Creating peer connection.");
+            _peerConnection = new RTCPeerConnection(config);
+
+            Stopwatch setupClock = Stopwatch.StartNew();
+
             try
             {
-                Task task = callStatsClient.InitializeCallStats();
+                await callStatsClient.InitializeCallStats();
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"[Error] InitializeCallStats, message: '{ex.Message}'");
             }
 
-            Debug.WriteLine("Conductor: Creating peer connection.");
-            _peerConnection = new RTCPeerConnection(config);
-
-            Stopwatch clock = Stopwatch.StartNew();
+            Stopwatch gatheringClock = Stopwatch.StartNew();
 
             _peerConnection.OnIceGatheringStateChange += () =>
             {
                 if (_peerConnection.IceGatheringState.ToString() == "Complete")
                 {
-                    clock.Stop();
+                    gatheringClock.Stop();
 
-                    _gatheringTimeMiliseconds = clock.Elapsed.Milliseconds;
+                    _gatheringDelayMiliseconds = gatheringClock.Elapsed.Milliseconds;
 
-                    Debug.WriteLine("Ice gathering delay: " + _gatheringTimeMiliseconds);
+                    Debug.WriteLine("Ice gathering delay: " + _gatheringDelayMiliseconds);
                 }
 
                 Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString());
             };
+
+            Stopwatch connectivityClock = Stopwatch.StartNew();
 
             _peerConnection.OnIceConnectionStateChange += async() => 
             {
@@ -698,10 +708,18 @@ namespace PeerConnectionClient.Signalling
 
                 if (_peerConnection.IceConnectionState.ToString() == "Connected")
                 {
+                    connectivityClock.Stop();
+                    setupClock.Stop();
+
+                    _connectivityDelayMiliseconds = connectivityClock.Elapsed.Milliseconds;
+                    _totalSetupDelay = setupClock.Elapsed.Milliseconds;
+
+                    Debug.WriteLine("Ice connectivity delay: " + _connectivityDelayMiliseconds);
+                    Debug.WriteLine("Total setup delay: " + _totalSetupDelay);
                     Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
 
                     //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
-                    await callStatsClient.FabricSetup(_gatheringTimeMiliseconds);
+                    await callStatsClient.FabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
 
                 }
 
@@ -1202,6 +1220,8 @@ namespace PeerConnectionClient.Signalling
 
                     callStatsClient.FabricSetupIceCandidate(iceCandidateStatsList);
                     callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
+
+                    callStatsClient.ConferenceStats(trackStatsList);
 
                     Debug.WriteLine("Conductor: Receiving ice candidate:\n" + message);
                 }
