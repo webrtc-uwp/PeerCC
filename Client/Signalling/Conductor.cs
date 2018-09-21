@@ -672,14 +672,14 @@ namespace PeerConnectionClient.Signalling
 
             Stopwatch setupClock = Stopwatch.StartNew();
 
-            try
-            {
-                await callStatsClient.InitializeCallStats();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[Error] InitializeCallStats, message: '{ex.Message}'");
-            }
+            //try
+            //{
+            //    var task = callStatsClient.InitializeCallStats();
+            //}
+            //catch (Exception ex)
+            //{
+            //    Debug.WriteLine($"[Error] InitializeCallStats, message: '{ex.Message}'");
+            //}
 
             Stopwatch gatheringClock = Stopwatch.StartNew();
 
@@ -718,9 +718,26 @@ namespace PeerConnectionClient.Signalling
                     Debug.WriteLine("Total setup delay: " + _totalSetupDelay);
                     Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
 
-                    //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
-                    await callStatsClient.FabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
+                    await GetAllStats();
 
+                    callStatsClient.FabricSetupIceCandidate(iceCandidateStatsList);
+                    callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
+
+                    
+
+                    callStatsClient.ConferenceStats(trackStatsList);
+
+                    //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
+                    callStatsClient.FabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
+
+                    try
+                    {
+                        await callStatsClient.InitializeCallStats();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[Error] InitializeCallStats, message: '{ex.Message}'");
+                    }
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Completed")
@@ -1216,12 +1233,12 @@ namespace PeerConnectionClient.Signalling
 #else
                     await _peerConnection.AddIceCandidate(candidate);
 #endif
-                    await GetAllStats();
+                    //await GetAllStats();
 
-                    callStatsClient.FabricSetupIceCandidate(iceCandidateStatsList);
-                    callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
+                    //callStatsClient.FabricSetupIceCandidate(iceCandidateStatsList);
+                    //callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
 
-                    callStatsClient.ConferenceStats(trackStatsList);
+                    //callStatsClient.ConferenceStats(trackStatsList);
 
                     Debug.WriteLine("Conductor: Receiving ice candidate:\n" + message);
                 }

@@ -111,56 +111,29 @@ namespace PeerConnectionClient
         {
             callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
 
-            fabricSetupData.localID = _localID;
-            fabricSetupData.originID = _originID;
-            fabricSetupData.deviceID = _deviceID;
-            fabricSetupData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            fabricSetupData.connectionID = _connectionID;
-            fabricSetupData.remoteID = _remoteID;
-            fabricSetupData.delay = 5;
-            fabricSetupData.iceGatheringDelay = 3;
-            fabricSetupData.iceConnectivityDelay = 2;
-            fabricSetupData.fabricTransmissionDirection = FabricTransmissionDirection.sendrecv.ToString();
-            fabricSetupData.remoteEndpointType = RemoteEndpointType.peer.ToString();
-            fabricSetupData.localIceCandidates = localIceCandidatesList;
-            fabricSetupData.remoteIceCandidates = remoteIceCandidatesList;
-            fabricSetupData.iceCandidatePairs = iceCandidatePairsList;
+            await callstats.StartCallStats(CreateConference(), UserAlive());
 
-            ssrcMapData.localID = _localID;
-            ssrcMapData.originID = _originID;
-            ssrcMapData.deviceID = _deviceID;
-            ssrcMapData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            ssrcMapData.connectionID = _connectionID;
-            ssrcMapData.remoteID = _remoteID;
-            ssrcMapData.ssrcData = ssrcDataList;
+            Debug.WriteLine("FabricSetup: ");
+            await callstats.FabricSetup(fabricSetupData);
 
-            //Stats confSubmissionStats = new Stats();
-            //confSubmissionStats.tracks = "tracks";
-            //confSubmissionStats.candidatePairs = "3";
-            //confSubmissionStats.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            //confSubmissionStatsList.Add(confSubmissionStats);
+            //await callstats.StepsToIntegrate(
+            //    CreateConference(),
+            //    UserAlive(),
+            //    fabricSetupData,
+            //    FabricSetupFailed(),
+            //    ssrcMapData,
+            //    conferenceStatsSubmissionData,
+            //    FabricTerminated(),
+            //    UserLeft());
 
-            //conferenceStatsSubmissionData.localID = _localID;
-            //conferenceStatsSubmissionData.originID = _originID;
-            //conferenceStatsSubmissionData.deviceID = _deviceID;
-            //conferenceStatsSubmissionData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            //conferenceStatsSubmissionData.connectionID = _connectionID;
-            //conferenceStatsSubmissionData.remoteID = _remoteID;
-            //conferenceStatsSubmissionData.stats = confSubmissionStatsList;
 
-            await callstats.StepsToIntegrate(
-                CreateConference(),
-                UserAlive(),
-                fabricSetupData,
-                FabricSetupFailed(),
-                ssrcMapData,
-                conferenceStatsSubmissionData,
-                FabricTerminated(),
-                UserLeft());
 
             Timer timer = new Timer(10000);
             timer.Elapsed += async (sender, e) =>
             {
+                Debug.WriteLine("UserAlive: ");
+                await callstats.UserAlive(UserAlive());
+
                 Debug.WriteLine("ConferenceStatsSubmission: ");
                 await ConferenceStatsSubmission();
             };
@@ -444,11 +417,11 @@ namespace PeerConnectionClient
                 IceCandidate iceCandidate = new IceCandidate();
 
                 iceCandidate.id = iceCandidateStats.Id;
-                iceCandidate.type = iceCandidateStats.StatsType.ToString();
+                iceCandidate.type = "";
                 iceCandidate.ip = iceCandidateStats.Ip;
                 iceCandidate.port = (int)iceCandidateStats.Port;
-                iceCandidate.candidateType = iceCandidateStats.CandidateType.ToString();
-                iceCandidate.transport = iceCandidateStats.TransportId;
+                iceCandidate.candidateType = iceCandidateStats.CandidateType.ToString().ToLower();
+                iceCandidate.transport = iceCandidateStats.Protocol.ToString().ToLower();
 
                 iceCandidateList.Add(iceCandidate);
             }
@@ -464,7 +437,7 @@ namespace PeerConnectionClient
                 pair.id = pairStats.Id;
                 pair.localCandidateId = pairStats.LocalCandidateId;
                 pair.remoteCandidateId = pairStats.RemoteCandidateId;
-                pair.state = pairStats.State.ToString();
+                pair.state = pairStats.State.ToString().ToLower();
                 pair.priority = 1;
                 pair.nominated = pairStats.Nominated;
 
@@ -483,10 +456,12 @@ namespace PeerConnectionClient
                 {
                     if (iceCandidateList[c].id == local)
                     {
+                        iceCandidateList[c].type = "localcandidate";
                         localIceCandidatesList.Add(iceCandidateList[c]);
                     }
                     if (iceCandidateList[c].id == remote)
                     {
+                        iceCandidateList[c].type = "remotecandidate";
                         remoteIceCandidatesList.Add(iceCandidateList[c]);
                     }
                 }
@@ -531,7 +506,7 @@ namespace PeerConnectionClient
             await callstats.ConferenceStatsSubmission(conferenceStatsSubmissionData);
         }
 
-        public async Task FabricSetup(int gatheringDelayMiliseconds, int connectivityDelayMiliseconds, int totalSetupDelay)
+        public void FabricSetup(int gatheringDelayMiliseconds, int connectivityDelayMiliseconds, int totalSetupDelay)
         {
             SetLocalAndRemoteIceCandidateLists();
 
@@ -550,8 +525,8 @@ namespace PeerConnectionClient
             fabricSetupData.remoteIceCandidates = remoteIceCandidatesList;
             fabricSetupData.iceCandidatePairs = iceCandidatePairsList;
 
-            Debug.WriteLine("FabricSetup: ");
-            await callstats.FabricSetup(fabricSetupData);
+            //Debug.WriteLine("FabricSetup: ");
+            //await callstats.FabricSetup(fabricSetupData);
         }
 
         private enum FabricSetupFailedReason
