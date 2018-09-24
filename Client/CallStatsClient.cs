@@ -35,7 +35,7 @@ namespace PeerConnectionClient
 
         private static string _originID = null;
         private static string _deviceID = "desktop";
-        private static string _connectionID = $"{_userID}-{_jti}";
+        private static string _connectionID = $"{GetLocalPeerName()}-{_jti}";
         private static string _remoteID = "RemotePeer";
 
         public CallStatsClient()
@@ -226,7 +226,6 @@ namespace PeerConnectionClient
 
         private enum StreamType { inbound, outbound }
         private enum ReportType { local, remote }
-        private enum MediaType { audio, video, screen }
 
         public void SSRCMapDataSetup(string sdp)
         {
@@ -240,17 +239,22 @@ namespace PeerConnectionClient
 
                 foreach (var k in d.Value)
                 {
-                    if (k.Key == "cname") ssrcData.cname = k.Value;
-                    if (k.Key == "msid") ssrcData.msid = k.Value;
-                    if (k.Key == "mslabel") ssrcData.mslabel = k.Value;
-                    if (k.Key == "label") ssrcData.label = k.Value;
+                    if (k.Key == "cname") ssrcData.cname = k.Value.Replace("\r", "");
+                    if (k.Key == "msid") ssrcData.msid = k.Value.Replace("\r", ""); 
+                    if (k.Key == "mslabel") ssrcData.mslabel = k.Value.Replace("\r", "");
+                    if (k.Key == "label")
+                    {
+                        ssrcData.label = k.Value.Replace("\r", "");
+
+                        if (k.Value.Contains("audio")) ssrcData.mediaType = "audio";
+                        if (k.Value.Contains("video")) ssrcData.mediaType = "video";
+                        if (k.Value.Contains("screen")) ssrcData.mediaType = "screen";
+                    }
                 }
 
                 ssrcData.streamType = StreamType.inbound.ToString();
                 ssrcData.reportType = ReportType.local.ToString();
-                ssrcData.mediaType = MediaType.audio.ToString();
                 ssrcData.userID = _userID;
-
                 ssrcData.localStartTime = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
                 ssrcDataList.Add(ssrcData);
