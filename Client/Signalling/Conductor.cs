@@ -76,6 +76,7 @@ namespace PeerConnectionClient.Signalling
         private List<RTCIceCandidatePairStats> iceCandidatePairStatsList = new List<RTCIceCandidatePairStats>();
 
         private List<string> trackStatsList = new List<string>();
+        private List<string> candidatePairsList = new List<string>();
 
         private int _gatheringDelayMiliseconds;
         private int _connectivityDelayMiliseconds;
@@ -621,6 +622,8 @@ namespace PeerConnectionClient.Signalling
 
                 if (statsType == RTCStatsType.CandidatePair)
                 {
+                    candidatePairsList.Add(rtcStats.Id);
+
                     RTCIceCandidatePairStats candidatePairStats;
 
                     candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
@@ -723,9 +726,7 @@ namespace PeerConnectionClient.Signalling
                     callStatsClient.FabricSetupIceCandidate(iceCandidateStatsList);
                     callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
 
-                    
-
-                    callStatsClient.ConferenceStats(trackStatsList);
+                    callStatsClient.ConferenceStats(trackStatsList, candidatePairsList);
 
                     //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
                     callStatsClient.FabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
@@ -743,6 +744,20 @@ namespace PeerConnectionClient.Signalling
                 if (_peerConnection.IceConnectionState.ToString() == "Completed")
                 {
                     Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
+                }
+
+                if (_peerConnection.IceConnectionState.ToString() == "Failed")
+                {
+                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
+
+                    await callStatsClient.FabricFailed();
+                }
+
+                if (_peerConnection.IceConnectionState.ToString() == "Closed")
+                {
+                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
+
+                    await callStatsClient.FabricSetupTerminated();
                 }
 
                 Debug.WriteLine("Conductor: Ice connection state change, state=" + (null != _peerConnection ? _peerConnection.IceConnectionState.ToString() : "closed"));
