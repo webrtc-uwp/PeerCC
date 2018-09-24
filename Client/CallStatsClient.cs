@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Networking.Connectivity;
 using System.Timers;
+using System.Dynamic;
 
 namespace PeerConnectionClient
 {
@@ -106,7 +107,7 @@ namespace PeerConnectionClient
         private List<SSRCData> ssrcDataList = new List<SSRCData>();
 
         private ConferenceStatsSubmissionData conferenceStatsSubmissionData = new ConferenceStatsSubmissionData();
-        private List<Stats> confSubmissionStatsList = new List<Stats>();
+        private List<object> confSubmissionStatsList = new List<object>();
 
         public async Task InitializeCallStats()
         {
@@ -121,7 +122,7 @@ namespace PeerConnectionClient
             timer.Elapsed += async (sender, e) =>
             {
                 Debug.WriteLine("ConferenceStatsSubmission: ");
-                await ConferenceStatsSubmission();
+                //await ConferenceStatsSubmission();
             };
             timer.Start();
 
@@ -415,11 +416,11 @@ namespace PeerConnectionClient
             await callstats.SSRCMap(ssrcMapData);
         }
 
-        public void ConferenceStats(List<string> trackStatsList, List<string> candidatePairsList)
+        public void ConferenceStats2(List<string> trackStatsList, List<string> candidatePairsList)
         {
             for (int i = 0; i < trackStatsList.Count; i++)
             {
-                Stats confSubmissionStats = new Stats();
+                dynamic confSubmissionStats = new ExpandoObject();
                 confSubmissionStats.tracks = trackStatsList[i];
                 confSubmissionStats.candidatePairs = "";
                 confSubmissionStats.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
@@ -428,7 +429,7 @@ namespace PeerConnectionClient
 
             for (int i = 0; i < candidatePairsList.Count; i++)
             {
-                Stats confSubmissionStats = new Stats();
+                dynamic confSubmissionStats = new ExpandoObject();
                 confSubmissionStats.tracks = "";
                 confSubmissionStats.candidatePairs = candidatePairsList[i];
                 confSubmissionStats.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
@@ -436,7 +437,23 @@ namespace PeerConnectionClient
             }
         }
 
+        public void ConferenceStats(List<dynamic> allStatsObjectsList)
+        {
+            conferenceStatsSubmissionData.localID = _localID;
+            conferenceStatsSubmissionData.originID = _originID;
+            conferenceStatsSubmissionData.deviceID = _deviceID;
+            conferenceStatsSubmissionData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            conferenceStatsSubmissionData.connectionID = _connectionID;
+            conferenceStatsSubmissionData.remoteID = _remoteID;
+            conferenceStatsSubmissionData.stats = allStatsObjectsList;
+        }
+
         public async Task ConferenceStatsSubmission()
+        {
+             await callstats.ConferenceStatsSubmission(conferenceStatsSubmissionData);
+        }
+
+        public async Task ConferenceStatsSubmission2()
         {
             conferenceStatsSubmissionData.localID = _localID;
             conferenceStatsSubmissionData.originID = _originID;
