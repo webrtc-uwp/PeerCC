@@ -690,7 +690,7 @@ namespace PeerConnectionClient.Signalling
 
                     certificateStats = RTCCertificateStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"certificate: {certificateStats.Timestamp}");
+                    Debug.WriteLine($"certificate: {certificateStats}");
 
                     allStatsObjectsList.Add(certificateStats);
                 }
@@ -1077,6 +1077,8 @@ namespace PeerConnectionClient.Signalling
         void Signaller_OnPeerHangup(int peerId)
         {
             if (peerId != _peerId) return;
+
+            var task = callStatsClient.SendUserLeft();
 
             Debug.WriteLine("Conductor: Our peer hung up.");
             ClosePeerConnection();

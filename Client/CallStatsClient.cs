@@ -201,15 +201,15 @@ namespace PeerConnectionClient
             //timer.Start();
         }
 
-        private UserLeftData UserLeft()
+        public async Task SendUserLeft()
         {
             UserLeftData userLeftData = new UserLeftData();
             userLeftData.localID = _localID;
-            userLeftData.originID = "SampleOrigin";
+            userLeftData.originID = _originID;
             userLeftData.deviceID = GetLocalPeerName();
             userLeftData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
-            return userLeftData;
+            await callstats.UserLeft(userLeftData);
         }
 
         private FabricTerminatedData FabricTerminated()
