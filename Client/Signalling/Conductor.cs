@@ -84,6 +84,8 @@ namespace PeerConnectionClient.Signalling
         private int _gatheringDelayMiliseconds;
         private int _connectivityDelayMiliseconds;
         private int _totalSetupDelay;
+
+        private string localSDP;
         
         private static readonly object InstanceLock = new object();
         private static Conductor _instance;
@@ -767,6 +769,10 @@ namespace PeerConnectionClient.Signalling
             Stopwatch gatheringClock = Stopwatch.StartNew();
             Stopwatch connectivityClock = Stopwatch.StartNew();
 
+            await callStatsClient.InitializeCallStats();
+
+            setupClock.Stop();
+
             _peerConnection.OnIceGatheringStateChange += () =>
             {
                 if (_peerConnection.IceGatheringState.ToString() == "Complete")
@@ -809,16 +815,17 @@ namespace PeerConnectionClient.Signalling
                     callStatsClient.FabricSetupIceCandidate(iceCandidateStatsList);
                     callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
 
-                    //callStatsClient.ConferenceStats(trackStatsList, candidatePairsList);
-
                     callStatsClient.ConferenceStats(allStatsObjectsList);
 
                     //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
                     callStatsClient.FabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
 
-                    await callStatsClient.InitializeCallStats();
+                    await callStatsClient.SendFabricSetup();
 
-                    setupClock.Stop();
+
+                    //await callStatsClient.InitializeCallStats();
+
+                    //setupClock.Stop();
 
                     await GetIceCandidatePairStats();
 
@@ -1280,6 +1287,9 @@ namespace PeerConnectionClient.Signalling
 
                     callStatsClient.SSRCMapDataSetup(sdp);
 
+                    Debug.WriteLine("SDPEvent: ");
+                    await callStatsClient.SendSDP(localSDP, sdp);
+
                     Debug.WriteLine("Conductor: Received session description:\n" + message);
 #if ORTCLIB
                     RTCSessionDescriptionSignalingType messageType = RTCSessionDescriptionSignalingType.SdpOffer;
@@ -1451,6 +1461,8 @@ namespace PeerConnectionClient.Signalling
                 await _peerConnection.SetLocalDescription(modifiedOffer);
                 Debug.WriteLine("Conductor: Sending offer:\n" + modifiedOffer.Sdp);
                 SendSdp(modifiedOffer);
+
+                localSDP = offer.Sdp;
 #if ORTCLIB
                 OrtcStatsManager.Instance.StartCallWatch(SessionId, true);
 #endif

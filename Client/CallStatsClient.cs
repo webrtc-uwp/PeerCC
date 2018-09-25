@@ -101,14 +101,19 @@ namespace PeerConnectionClient
         private ConferenceStatsSubmissionData conferenceStatsSubmissionData = new ConferenceStatsSubmissionData();
         private List<object> confSubmissionStatsList = new List<object>();
 
+        public async Task SendFabricSetup()
+        {
+            Debug.WriteLine("FabricSetup: ");
+            await callstats.FabricSetup(fabricSetupData);
+        }
+
         public async Task InitializeCallStats()
         {
             callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
 
             await callstats.StartCallStats(CreateConference(), UserAlive());
 
-            Debug.WriteLine("FabricSetup: ");
-            await callstats.FabricSetup(fabricSetupData);
+            
 
             Timer timer = new Timer(10000);
             timer.Elapsed += async (sender, e) =>
@@ -194,6 +199,21 @@ namespace PeerConnectionClient
             //    await callstats.BridgeAlive(BridgeAliveData());
             //};
             //timer.Start();
+        }
+
+        public async Task SendSDP(string localSDP, string remoteSDP)
+        {
+            SDPEventData sdpEventData = new SDPEventData();
+            sdpEventData.localID = _localID;
+            sdpEventData.originID = _originID;
+            sdpEventData.deviceID = _deviceID;
+            sdpEventData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            sdpEventData.connectionID = _connectionID;
+            sdpEventData.remoteID = _remoteID;
+            sdpEventData.localSDP = localSDP;
+            sdpEventData.remoteSDP = remoteSDP;
+
+            await callstats.SDPEvent(sdpEventData);
         }
 
         public async Task SendFabricTransportChange(IceCandidatePair currIceCandidatePairObj, IceCandidatePair prevIceCandidatePairObj)
