@@ -201,6 +201,18 @@ namespace PeerConnectionClient
             //timer.Start();
         }
 
+        public async Task SendUserDetails()
+        {
+            UserDetailsData userDetailsData = new UserDetailsData();
+            userDetailsData.localID = _localID;
+            userDetailsData.originID = _originID;
+            userDetailsData.deviceID = _deviceID;
+            userDetailsData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            userDetailsData.userName = _userID;
+
+            await callstats.UserDetails(userDetailsData);
+        }
+
         public async Task SendUserLeft()
         {
             UserLeftData userLeftData = new UserLeftData();

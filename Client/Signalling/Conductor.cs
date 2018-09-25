@@ -801,6 +801,8 @@ namespace PeerConnectionClient.Signalling
                 if (_peerConnection.IceConnectionState.ToString() == "Completed")
                 {
                     Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
+
+                    await callStatsClient.SendUserDetails();
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Failed")
