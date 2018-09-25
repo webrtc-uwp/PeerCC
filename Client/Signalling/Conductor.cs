@@ -461,6 +461,38 @@ namespace PeerConnectionClient.Signalling
             return await _peerConnection.GetStats(statsType);
         }
 
+        public async Task GetIceCandidatePairStats()
+        {
+            IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
+
+            for (int i = 0; i < statsReport.StatsIds.Count; i++)
+            {
+                Debug.WriteLine($"statsReport: {statsReport.StatsIds[i]}");
+
+                IRTCStats rtcStats = statsReport.GetStats(statsReport.StatsIds[i]);
+
+                RTCStatsType? statsType = rtcStats.StatsType;
+
+                string statsTypeOther = rtcStats.StatsTypeOther;
+
+                if (statsType == RTCStatsType.CandidatePair)
+                {
+                    RTCIceCandidatePairStats candidatePairStats;
+
+                    candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
+
+                    iceCandidatePairObj = new IceCandidatePair();
+
+                    iceCandidatePairObj.id = candidatePairStats.Id;
+                    iceCandidatePairObj.localCandidateId = candidatePairStats.LocalCandidateId;
+                    iceCandidatePairObj.remoteCandidateId = candidatePairStats.RemoteCandidateId;
+                    iceCandidatePairObj.state = candidatePairStats.State.ToString().ToLower();
+                    iceCandidatePairObj.priority = 1;
+                    iceCandidatePairObj.nominated = candidatePairStats.Nominated;
+                }
+            }
+        }
+
         public async Task GetAllStats()
         {
             IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
@@ -697,6 +729,9 @@ namespace PeerConnectionClient.Signalling
             }
         }
 
+        IceCandidatePair prevIceCandidatePairObj;
+        IceCandidatePair currIceCandidatePairObj;
+        IceCandidatePair iceCandidatePairObj;
 
         /// <summary>
         /// Creates a peer connection.
@@ -729,17 +764,8 @@ namespace PeerConnectionClient.Signalling
             _peerConnection = new RTCPeerConnection(config);
 
             Stopwatch setupClock = Stopwatch.StartNew();
-
-            //try
-            //{
-            //    var task = callStatsClient.InitializeCallStats();
-            //}
-            //catch (Exception ex)
-            //{
-            //    Debug.WriteLine($"[Error] InitializeCallStats, message: '{ex.Message}'");
-            //}
-
             Stopwatch gatheringClock = Stopwatch.StartNew();
+            Stopwatch connectivityClock = Stopwatch.StartNew();
 
             _peerConnection.OnIceGatheringStateChange += () =>
             {
@@ -755,10 +781,13 @@ namespace PeerConnectionClient.Signalling
                 Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString());
             };
 
-            Stopwatch connectivityClock = Stopwatch.StartNew();
-
             _peerConnection.OnIceConnectionStateChange += async() => 
             {
+                if (_peerConnection.IceConnectionState.ToString() == "New")
+                {
+                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
+                }
+
                 if (_peerConnection.IceConnectionState.ToString() == "Checking")
                 {
                     Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
@@ -767,7 +796,6 @@ namespace PeerConnectionClient.Signalling
                 if (_peerConnection.IceConnectionState.ToString() == "Connected")
                 {
                     connectivityClock.Stop();
-                    setupClock.Stop();
 
                     _connectivityDelayMiliseconds = connectivityClock.Elapsed.Milliseconds;
                     _totalSetupDelay = setupClock.Elapsed.Milliseconds;
@@ -788,21 +816,44 @@ namespace PeerConnectionClient.Signalling
                     //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
                     callStatsClient.FabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
 
-                    try
-                    {
-                        await callStatsClient.InitializeCallStats();
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine($"[Error] InitializeCallStats, message: '{ex.Message}'");
-                    }
+                    await callStatsClient.InitializeCallStats();
+
+                    setupClock.Stop();
+
+                    await GetIceCandidatePairStats();
+
+                    currIceCandidatePairObj = new IceCandidatePair();
+                    currIceCandidatePairObj.id = iceCandidatePairObj.id;
+                    currIceCandidatePairObj.localCandidateId = iceCandidatePairObj.localCandidateId;
+                    currIceCandidatePairObj.remoteCandidateId = iceCandidatePairObj.remoteCandidateId;
+                    currIceCandidatePairObj.state = iceCandidatePairObj.state;
+                    currIceCandidatePairObj.priority = 1;
+                    currIceCandidatePairObj.nominated = iceCandidatePairObj.nominated;
+
+                    //prevIceCandidatePairObj = new IceCandidatePair();
+                    //prevIceCandidatePairObj.id = iceCandidatePairObj.id;
+                    //prevIceCandidatePairObj.localCandidateId = iceCandidatePairObj.localCandidateId;
+                    //prevIceCandidatePairObj.remoteCandidateId = iceCandidatePairObj.remoteCandidateId;
+                    //prevIceCandidatePairObj.state = iceCandidatePairObj.state;
+                    //prevIceCandidatePairObj.priority = 1;
+                    //prevIceCandidatePairObj.nominated = iceCandidatePairObj.nominated;
+
+                    //await callStatsClient.SendFabricTransportChange(currIceCandidatePairObj, prevIceCandidatePairObj);
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Completed")
                 {
-                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
+                    await GetIceCandidatePairStats();
 
-                    await callStatsClient.SendUserDetails();
+                    prevIceCandidatePairObj = new IceCandidatePair();
+                    prevIceCandidatePairObj.id = iceCandidatePairObj.id;
+                    prevIceCandidatePairObj.localCandidateId = iceCandidatePairObj.localCandidateId;
+                    prevIceCandidatePairObj.remoteCandidateId = iceCandidatePairObj.remoteCandidateId;
+                    prevIceCandidatePairObj.state = iceCandidatePairObj.state;
+                    prevIceCandidatePairObj.priority = 1;
+                    prevIceCandidatePairObj.nominated = iceCandidatePairObj.nominated;
+
+                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Failed")
@@ -810,6 +861,11 @@ namespace PeerConnectionClient.Signalling
                     Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
 
                     await callStatsClient.FabricFailed();
+                }
+
+                if (_peerConnection.IceConnectionState.ToString() == "Disconnected")
+                {
+                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Closed")

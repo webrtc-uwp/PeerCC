@@ -20,10 +20,10 @@ namespace PeerConnectionClient
 {
     public class CallStatsClient
     {
-        private static string _userID;
-        private static string _localID;
-        private static string _appID;
-        private static string _keyID;
+        private static string _userID = GetLocalPeerName();
+        private static string _localID = GetLocalPeerName();
+        private static string _appID = (string)Config.localSettings.Values["appID"];
+        private static string _keyID = (string)Config.localSettings.Values["keyID"];
         private static readonly string _jti = new Func<string>(() =>
         {
             Random random = new Random();
@@ -38,14 +38,6 @@ namespace PeerConnectionClient
         private static string _deviceID = "desktop";
         private static string _connectionID = $"{GetLocalPeerName()}-{_jti}";
         private static string _remoteID = "RemotePeer";
-
-        public CallStatsClient()
-        {
-            _userID = GetLocalPeerName();
-            _localID = _userID;
-            _appID = (string)Config.localSettings.Values["appID"];
-            _keyID = (string)Config.localSettings.Values["keyID"];
-        }
 
         private static string GenerateJWT()
         {
@@ -126,6 +118,9 @@ namespace PeerConnectionClient
             };
             timer.Start();
 
+            Debug.WriteLine("UserDetails: ");
+            await SendUserDetails();
+
             //Debug.WriteLine("FabricStateChange: ");
             //await callstats.FabricStateChange(FabricStateChange());
 
@@ -199,6 +194,25 @@ namespace PeerConnectionClient
             //    await callstats.BridgeAlive(BridgeAliveData());
             //};
             //timer.Start();
+        }
+
+        public async Task SendFabricTransportChange(IceCandidatePair currIceCandidatePairObj, IceCandidatePair prevIceCandidatePairObj)
+        {
+            FabricTransportChangeData fabricTransportChangeData = new FabricTransportChangeData();
+            fabricTransportChangeData.localID = _localID;
+            fabricTransportChangeData.originID = _originID;
+            fabricTransportChangeData.deviceID = _deviceID;
+            fabricTransportChangeData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fabricTransportChangeData.connectionID = _connectionID;
+            fabricTransportChangeData.remoteID = _remoteID;
+            fabricTransportChangeData.currIceCandidatePair = currIceCandidatePairObj;
+            fabricTransportChangeData.prevIceCandidatePair = prevIceCandidatePairObj;
+            fabricTransportChangeData.currIceConnectionState = "connected";
+            fabricTransportChangeData.prevIceConnectionState = "completed";
+            fabricTransportChangeData.delay = 2;
+            fabricTransportChangeData.relayType = "turn/tcp";
+
+            await callstats.FabricTransportChange(fabricTransportChangeData);
         }
 
         public async Task SendUserDetails()
