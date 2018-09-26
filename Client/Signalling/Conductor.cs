@@ -603,7 +603,19 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"peerConnectionStats: {peerConnectionStats.ToString()}");
 
-                    allStatsObjectsList.Add(peerConnectionStats);
+                    PeerConnectionStats pcs = new PeerConnectionStats();
+                    pcs.dataChannelsAccepted = peerConnectionStats.DataChannelsAccepted;
+                    pcs.dataChannelsClosed = peerConnectionStats.DataChannelsClosed;
+                    pcs.dataChannelsOpened = peerConnectionStats.DataChannelsOpened;
+                    pcs.dataChannelsRequested = peerConnectionStats.DataChannelsRequested;
+                    pcs.id = peerConnectionStats.Id;
+                    pcs.statsType = peerConnectionStats.StatsType.ToString().ToLower();
+                    pcs.statsTypeOther = peerConnectionStats.StatsTypeOther;
+                    pcs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+
+                    statsObjects.Add(pcs);
+
+                    //allStatsObjectsList.Add(peerConnectionStats);
                 }
 
                 if (statsType == RTCStatsType.DataChannel)
@@ -680,7 +692,27 @@ namespace PeerConnectionClient.Signalling
 
                         Debug.WriteLine($"audioTrack: {audioTrackStats}");
 
-                        allStatsObjectsList.Add(audioTrackStats);
+                        SenderAudioTrackAttachmentStats satas = new SenderAudioTrackAttachmentStats();
+                        satas.audioLevel = audioTrackStats.AudioLevel;
+                        satas.echoReturnLoss = audioTrackStats.EchoReturnLoss;
+                        satas.echoReturnLossEnhancement = audioTrackStats.EchoReturnLossEnhancement;
+                        satas.ended = audioTrackStats.Ended;
+                        satas.id = audioTrackStats.Id;
+                        satas.kind = audioTrackStats.Kind;
+                        satas.priority = audioTrackStats.Priority.ToString();
+                        satas.remoteSource = audioTrackStats.RemoteSource;
+                        satas.statsType = audioTrackStats.StatsType.ToString().ToLower();
+                        satas.statsTypeOther = audioTrackStats.StatsTypeOther;
+                        satas.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        satas.totalAudioEnergy = audioTrackStats.TotalAudioEnergy;
+                        satas.totalSamplesDuration = audioTrackStats.TotalSamplesDuration;
+                        satas.totalSamplesSent = audioTrackStats.TotalSamplesSent;
+                        satas.trackIdentifier = audioTrackStats.TrackIdentifier;
+                        satas.voiceActivityFlag = audioTrackStats.VoiceActivityFlag;
+
+                        statsObjects.Add(satas);
+
+                        //allStatsObjectsList.Add(audioTrackStats);
                     }
                 }
                 //TODO: if?
