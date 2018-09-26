@@ -74,6 +74,7 @@ namespace PeerConnectionClient.Signalling
         CallStatsClient callStatsClient = new CallStatsClient();
 
         List<dynamic> allStatsObjectsList = new List<object>();
+        List<object> statsObjects = new List<object>();
 
         private List<RTCIceCandidateStats> iceCandidateStatsList = new List<RTCIceCandidateStats>();
         private List<RTCIceCandidatePairStats> iceCandidatePairStatsList = new List<RTCIceCandidatePairStats>();
@@ -624,7 +625,17 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"mediaStream: {mediaStreamStats.ToString()}");
 
-                    allStatsObjectsList.Add(mediaStreamStats);
+                    MediaStreamStats mss = new MediaStreamStats();
+                    mss.id = mediaStreamStats.Id;
+                    mss.statsType = mediaStreamStats.StatsType.ToString().ToLower();
+                    mss.statsTypeOther = mediaStreamStats.StatsTypeOther;
+                    mss.streamIdentifier = mediaStreamStats.StreamIdentifier;
+                    mss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    mss.trackIds = mediaStreamStats.TrackIds.ToList();
+
+                    statsObjects.Add(mss);
+
+                    //allStatsObjectsList.Add(mediaStreamStats);
                 }
 
                 if (statsType == RTCStatsType.Track)
@@ -639,7 +650,26 @@ namespace PeerConnectionClient.Signalling
 
                         Debug.WriteLine($"videoTrack: {videoTrackStats}");
 
-                        allStatsObjectsList.Add(videoTrackStats);
+                        SenderVideoTrackAttachmentStats svtas = new SenderVideoTrackAttachmentStats();
+                        svtas.ended = videoTrackStats.Ended;
+                        svtas.frameHeight = videoTrackStats.FrameHeight;
+                        svtas.framesCaptured = videoTrackStats.FramesCaptured;
+                        svtas.framesPerSecond = videoTrackStats.FramesPerSecond;
+                        svtas.framesSent = videoTrackStats.FramesSent;
+                        svtas.frameWidth = videoTrackStats.FrameWidth;
+                        svtas.hugeFramesSent = videoTrackStats.HugeFramesSent;
+                        svtas.id = videoTrackStats.Id;
+                        svtas.keyFramesSent = videoTrackStats.KeyFramesSent;
+                        svtas.kind = videoTrackStats.Kind;
+                        svtas.priority = videoTrackStats.Priority.ToString();
+                        svtas.remoteSource = (bool)videoTrackStats.RemoteSource;
+                        svtas.statsType = videoTrackStats.StatsType.ToString().ToLower();
+                        svtas.statsTypeOther = videoTrackStats.StatsTypeOther;
+                        svtas.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        svtas.trackIdentifier = videoTrackStats.TrackIdentifier;
+
+                        statsObjects.Add(svtas);
+                        //allStatsObjectsList.Add(videoTrackStats);
                     }
 
                     if (rtcStats.Id == "RTCMediaStreamTrack_sender_2")
@@ -815,10 +845,24 @@ namespace PeerConnectionClient.Signalling
                     callStatsClient.FabricSetupIceCandidate(iceCandidateStatsList);
                     callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
 
-                    callStatsClient.ConferenceStats(allStatsObjectsList);
+                    
 
                     //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
                     callStatsClient.FabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
+
+                    
+
+                    System.Timers.Timer timer = new System.Timers.Timer(10000);
+                    timer.Elapsed += async (sender, e) =>
+                    {
+                        await GetAllStats();
+
+                        callStatsClient.ConferenceStats(statsObjects);
+
+                        Debug.WriteLine("ConferenceStatsSubmission: ");
+                        await callStatsClient.ConferenceStatsSubmission();
+                    };
+                    timer.Start();
 
                     await callStatsClient.SendFabricSetup();
 

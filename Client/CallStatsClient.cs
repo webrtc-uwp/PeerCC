@@ -115,13 +115,7 @@ namespace PeerConnectionClient
 
             
 
-            Timer timer = new Timer(10000);
-            timer.Elapsed += async (sender, e) =>
-            {
-                Debug.WriteLine("ConferenceStatsSubmission: ");
-                //await ConferenceStatsSubmission();
-            };
-            timer.Start();
+            
 
             Debug.WriteLine("UserDetails: ");
             await SendUserDetails();
@@ -483,7 +477,7 @@ namespace PeerConnectionClient
             }
         }
 
-        public void ConferenceStats(List<dynamic> allStatsObjectsList)
+        public void ConferenceStats(List<object> statsObjects)
         {
             conferenceStatsSubmissionData.localID = _localID;
             conferenceStatsSubmissionData.originID = _originID;
@@ -491,7 +485,7 @@ namespace PeerConnectionClient
             conferenceStatsSubmissionData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             conferenceStatsSubmissionData.connectionID = _connectionID;
             conferenceStatsSubmissionData.remoteID = _remoteID;
-            conferenceStatsSubmissionData.stats = allStatsObjectsList;
+            conferenceStatsSubmissionData.stats = statsObjects;
         }
 
         public async Task ConferenceStatsSubmission()
