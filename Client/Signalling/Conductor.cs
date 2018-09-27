@@ -73,7 +73,7 @@ namespace PeerConnectionClient.Signalling
     {
         CallStatsClient callStatsClient = new CallStatsClient();
 
-        List<dynamic> allStatsObjectsList = new List<object>();
+        //List<dynamic> allStatsObjectsList = new List<object>();
         List<object> statsObjects = new List<object>();
 
         private List<RTCIceCandidateStats> iceCandidateStatsList = new List<RTCIceCandidateStats>();
@@ -523,9 +523,27 @@ namespace PeerConnectionClient.Signalling
 
                         Debug.WriteLine($"ice-candidate: {iceCandidateStats}");
 
+                        IceCandidateStats ics = new IceCandidateStats();
+                        ics.candidateType = iceCandidateStats.CandidateType.ToString();
+                        ics.deleted = iceCandidateStats.Deleted;
+                        ics.id = iceCandidateStats.Id;
+                        ics.ip = iceCandidateStats.Ip;
+                        ics.networkType = iceCandidateStats.NetworkType.ToString();
+                        ics.port = iceCandidateStats.Port;
+                        ics.priority = iceCandidateStats.Priority;
+                        ics.protocol = iceCandidateStats.Protocol;
+                        ics.relayProtocol = iceCandidateStats.RelayProtocol;
+                        ics.statsType = iceCandidateStats.StatsType.ToString().ToLower();
+                        ics.statsTypeOther = iceCandidateStats.StatsTypeOther;
+                        ics.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        ics.transportId = iceCandidateStats.TransportId;
+                        ics.url = iceCandidateStats.Url;
+
                         iceCandidateStatsList.Add(iceCandidateStats);
 
-                        allStatsObjectsList.Add(iceCandidateStats);
+                        statsObjects.Add(ics);
+
+                        //allStatsObjectsList.Add(iceCandidateStats);
                     }
                 }
 
@@ -537,7 +555,21 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"codec: {codecStats}");
 
-                    allStatsObjectsList.Add(codecStats);
+                    CodecStats cs = new CodecStats();
+                    cs.channels = codecStats.Channels;
+                    cs.clockRate = codecStats.ClockRate;
+                    cs.codecType = codecStats.CodecType.ToString();
+                    cs.id = codecStats.Id;
+                    cs.implementation = codecStats.Implementation;
+                    cs.mimeType = codecStats.MimeType;
+                    cs.payloadType = codecStats.PayloadType;
+                    cs.sdpFmtpLine = codecStats.SdpFmtpLine;
+                    cs.statsType = codecStats.StatsType.ToString().ToLower();
+                    cs.statsTypeOther = codecStats.StatsTypeOther;
+                    cs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    cs.transportId = codecStats.TransportId;
+
+                    statsObjects.Add(cs);
                 }
 
                 if (statsType == RTCStatsType.InboundRtp)
@@ -548,7 +580,48 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"inboundRtp: {inboundRtpStats}");
 
-                    allStatsObjectsList.Add(inboundRtpStats);
+                    InboundRtpStreamStats irss = new InboundRtpStreamStats();
+                    irss.averageRtcpInterval = inboundRtpStats.AverageRtcpInterval;
+                    irss.burstDiscardCount = inboundRtpStats.BurstDiscardCount;
+                    irss.burstDiscardRate = inboundRtpStats.BurstDiscardRate;
+                    irss.burstLossCount = inboundRtpStats.BurstLossCount;
+                    irss.burstLossRate = inboundRtpStats.BurstLossRate;
+                    irss.burstPacketsDiscarded = inboundRtpStats.BurstPacketsLost;
+                    irss.burstPacketsLost = inboundRtpStats.BurstPacketsLost;
+                    irss.bytesReceived = inboundRtpStats.BytesReceived;
+                    irss.codecId = inboundRtpStats.CodecId;
+                    irss.fecPacketsReceived = inboundRtpStats.FecPacketsReceived;
+                    irss.firCount = inboundRtpStats.FirCount;
+                    irss.framesDecoded = inboundRtpStats.FramesDecoded;
+                    irss.gapDiscardRate = inboundRtpStats.GapDiscardRate;
+                    irss.gapLossRate = inboundRtpStats.GapLossRate;
+                    irss.id = inboundRtpStats.Id;
+                    irss.jitter = inboundRtpStats.Jitter;
+                    irss.kind = inboundRtpStats.Kind;
+                    //irss.lastPacketReceivedTimestamp = inboundRtpStats.LastPacketReceivedTimestamp;
+                    irss.nackCount = inboundRtpStats.NackCount;
+                    irss.packetsDiscarded = inboundRtpStats.PacketsDiscarded;
+                    irss.packetsDuplicated = inboundRtpStats.PacketsDuplicated;
+                    irss.packetsFailedDecryption = inboundRtpStats.PacketsFailedDecryption;
+                    irss.packetsLost = inboundRtpStats.PacketsLost;
+                    irss.packetsReceived = inboundRtpStats.PacketsReceived;
+                    irss.packetsRepaired = inboundRtpStats.PacketsRepaired;
+                    //irss.perDscpPacketsReceived = (Dictionary<string, ulong>)inboundRtpStats.PerDscpPacketsReceived;
+                    irss.pliCount = inboundRtpStats.PliCount;
+                    irss.qpSum = inboundRtpStats.QpSum;
+                    irss.receiverId = inboundRtpStats.ReceiverId;
+                    irss.remoteId = inboundRtpStats.RemoteId;
+                    irss.sliCount = inboundRtpStats.SliCount;
+                    irss.ssrc = inboundRtpStats.Ssrc;
+                    irss.statsType = inboundRtpStats.StatsType.ToString().ToLower();
+                    irss.statsTypeOther = inboundRtpStats.StatsTypeOther;
+                    irss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    irss.trackId = inboundRtpStats.TrackId;
+                    irss.transportId = inboundRtpStats.TransportId;
+
+                    statsObjects.Add(irss);
+
+                    //allStatsObjectsList.Add(inboundRtpStats);
                 }
 
                 if (statsType == RTCStatsType.OutboundRtp)
@@ -559,7 +632,37 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"outboundRtp: {outboundRtpStats}");
 
-                    allStatsObjectsList.Add(outboundRtpStats);
+                    OutboundRtpStreamStat orss = new OutboundRtpStreamStat();
+                    orss.averageRtcpInterval = outboundRtpStats.AverageRtcpInterval;
+                    orss.bytesDiscardedOnSend = outboundRtpStats.BytesDiscardedOnSend;
+                    orss.bytesSent = outboundRtpStats.BytesSent;
+                    orss.codecId = outboundRtpStats.CodecId;
+                    orss.fecPacketsSent = outboundRtpStats.FecPacketsSent;
+                    orss.firCount = outboundRtpStats.FirCount;
+                    orss.framesEncoded = outboundRtpStats.FramesEncoded;
+                    orss.id = outboundRtpStats.Id;
+                    orss.kind = outboundRtpStats.Kind;
+                    orss.nackCount = outboundRtpStats.NackCount;
+                    orss.packetsDiscardedOnSend = outboundRtpStats.PacketsDiscardedOnSend;
+                    orss.packetsSent = outboundRtpStats.PacketsSent;
+                    //orss.perDscpPacketsSent = (Dictionary<string, ulong>)outboundRtpStats.PerDscpPacketsSent;
+                    orss.pliCount = outboundRtpStats.PliCount;
+                    orss.qpSum = outboundRtpStats.QpSum;
+                    orss.qualityLimitationReason = outboundRtpStats.QualityLimitationDurations.ToString();
+                    orss.remoteId = outboundRtpStats.RemoteId;
+                    orss.senderId = outboundRtpStats.SenderId;
+                    orss.sliCount = outboundRtpStats.SliCount;
+                    orss.ssrc = outboundRtpStats.Ssrc;
+                    orss.statsType = outboundRtpStats.StatsType.ToString().ToLower();
+                    orss.statsTypeOther = outboundRtpStats.StatsTypeOther;
+                    orss.targetBitrate = outboundRtpStats.TargetBitrate;
+                    orss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    orss.trackId = outboundRtpStats.TrackId;
+                    orss.transportId = outboundRtpStats.TransportId;
+
+                    statsObjects.Add(orss);
+
+                    //allStatsObjectsList.Add(outboundRtpStats);
                 }
 
                 if (statsType == RTCStatsType.RemoteInboundRtp)
@@ -570,7 +673,40 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"remoteInboundRtp: {remoteInboundRtpStats}");
 
-                    allStatsObjectsList.Add(remoteInboundRtpStats);
+                    RemoteInboundRtpStreamStats rirss = new RemoteInboundRtpStreamStats();
+                    rirss.burstDiscardCount = remoteInboundRtpStats.BurstDiscardCount;
+                    rirss.burstDiscardRate = remoteInboundRtpStats.BurstDiscardRate;
+                    rirss.burstLossCount = remoteInboundRtpStats.BurstLossCount;
+                    rirss.burstLossRate = remoteInboundRtpStats.BurstLossRate;
+                    rirss.burstPacketsDiscarded = remoteInboundRtpStats.BurstPacketsDiscarded;
+                    rirss.burstPacketsLost = remoteInboundRtpStats.BurstPacketsLost;
+                    rirss.codecId = remoteInboundRtpStats.CodecId;
+                    rirss.firCount = remoteInboundRtpStats.FirCount;
+                    rirss.fractionLost = remoteInboundRtpStats.FractionLost;
+                    rirss.gapDiscardRate = remoteInboundRtpStats.GapDiscardRate;
+                    rirss.gapLossRate = remoteInboundRtpStats.GapLossRate;
+                    rirss.id = remoteInboundRtpStats.Id;
+                    rirss.jitter = remoteInboundRtpStats.Jitter;
+                    rirss.kind = remoteInboundRtpStats.Kind;
+                    rirss.localId = remoteInboundRtpStats.LocalId;
+                    rirss.nackCount = remoteInboundRtpStats.NackCount;
+                    rirss.packetsDiscarded = remoteInboundRtpStats.PacketsDiscarded;
+                    rirss.packetsLost = remoteInboundRtpStats.PacketsLost;
+                    rirss.packetsReceived = remoteInboundRtpStats.PacketsReceived;
+                    rirss.packetsRepaired = remoteInboundRtpStats.PacketsRepaired;
+                    rirss.pliCount = remoteInboundRtpStats.PliCount;
+                    rirss.qpSum = remoteInboundRtpStats.QpSum;
+                    rirss.roundTripTime = remoteInboundRtpStats.RoundTripTime;
+                    rirss.sliCount = remoteInboundRtpStats.SliCount;
+                    rirss.ssrc = remoteInboundRtpStats.Ssrc;
+                    rirss.statsType = remoteInboundRtpStats.StatsType.ToString().ToLower();
+                    rirss.statsTypeOther = remoteInboundRtpStats.StatsTypeOther;
+                    rirss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    rirss.transportId = remoteInboundRtpStats.TransportId;
+
+                    statsObjects.Add(rirss);
+
+                    //allStatsObjectsList.Add(remoteInboundRtpStats);
                 }
 
                 if (statsType == RTCStatsType.RemoteOutboundRtp)
@@ -581,7 +717,7 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"remoteOutboundRtp: {remoteOutboundRtpStats}");
 
-                    allStatsObjectsList.Add(remoteOutboundRtpStats);
+                    //allStatsObjectsList.Add(remoteOutboundRtpStats);
                 }
 
                 if (statsType == RTCStatsType.Csrc)
@@ -592,7 +728,7 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"csrc: {csrcStats}");
 
-                    allStatsObjectsList.Add(csrcStats);
+                    //allStatsObjectsList.Add(csrcStats);
                 }
 
                 if (statsType == RTCStatsType.PeerConnection)
@@ -626,7 +762,7 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"dataChannel: {dataChannelStats}");
 
-                    allStatsObjectsList.Add(dataChannelStats);
+                    //allStatsObjectsList.Add(dataChannelStats);
                 }
 
                 if (statsType == RTCStatsType.Stream)
@@ -724,7 +860,7 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"audioSender: {audioSenderStats}");
 
-                    allStatsObjectsList.Add(audioSenderStats);
+                    //allStatsObjectsList.Add(audioSenderStats);
 
                     RTCVideoSenderStats videoSenderStats;
 
@@ -732,7 +868,7 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"videoSender: {videoSenderStats}");
 
-                    allStatsObjectsList.Add(videoSenderStats);
+                    //allStatsObjectsList.Add(videoSenderStats);
                 }
 
                 if (statsType == RTCStatsType.Receiver)
@@ -743,7 +879,7 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"audioReceiver: {audioReceiverStats}");
 
-                    allStatsObjectsList.Add(audioReceiverStats);
+                    //allStatsObjectsList.Add(audioReceiverStats);
 
                     RTCVideoReceiverStats videoReceiverStats;
 
@@ -751,7 +887,7 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"videoReceiver: {videoReceiverStats}");
 
-                    allStatsObjectsList.Add(videoReceiverStats);
+                    //allStatsObjectsList.Add(videoReceiverStats);
                 }
 
                 if (statsType == RTCStatsType.Transport)
@@ -762,7 +898,7 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"transport: {transportStats}");
 
-                    allStatsObjectsList.Add(transportStats);
+                    //allStatsObjectsList.Add(transportStats);
                 }
 
                 if (statsType == RTCStatsType.CandidatePair)
@@ -777,7 +913,7 @@ namespace PeerConnectionClient.Signalling
 
                     iceCandidatePairStatsList.Add(candidatePairStats);
 
-                    allStatsObjectsList.Add(candidatePairStats);
+                    //allStatsObjectsList.Add(candidatePairStats);
                 }
 
                 if (statsType == RTCStatsType.Certificate)
@@ -788,7 +924,7 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"certificate: {certificateStats}");
 
-                    allStatsObjectsList.Add(certificateStats);
+                    //allStatsObjectsList.Add(certificateStats);
                 }
             }
         }
