@@ -533,7 +533,7 @@ namespace PeerConnectionClient.Signalling
                         ics.priority = iceCandidateStats.Priority;
                         ics.protocol = iceCandidateStats.Protocol;
                         ics.relayProtocol = iceCandidateStats.RelayProtocol;
-                        ics.statsType = iceCandidateStats.StatsType.ToString().ToLower();
+                        ics.type = iceCandidateStats.StatsType.ToString().ToLower();
                         ics.statsTypeOther = iceCandidateStats.StatsTypeOther;
                         ics.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                         ics.transportId = iceCandidateStats.TransportId;
@@ -564,7 +564,7 @@ namespace PeerConnectionClient.Signalling
                     cs.mimeType = codecStats.MimeType;
                     cs.payloadType = codecStats.PayloadType;
                     cs.sdpFmtpLine = codecStats.SdpFmtpLine;
-                    cs.statsType = codecStats.StatsType.ToString().ToLower();
+                    cs.type = codecStats.StatsType.ToString().ToLower();
                     cs.statsTypeOther = codecStats.StatsTypeOther;
                     cs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     cs.transportId = codecStats.TransportId;
@@ -613,7 +613,7 @@ namespace PeerConnectionClient.Signalling
                     irss.remoteId = inboundRtpStats.RemoteId;
                     irss.sliCount = inboundRtpStats.SliCount;
                     irss.ssrc = inboundRtpStats.Ssrc;
-                    irss.statsType = inboundRtpStats.StatsType.ToString().ToLower();
+                    irss.type = inboundRtpStats.StatsType.ToString().ToLower();
                     irss.statsTypeOther = inboundRtpStats.StatsTypeOther;
                     irss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     irss.trackId = inboundRtpStats.TrackId;
@@ -648,12 +648,12 @@ namespace PeerConnectionClient.Signalling
                     //orss.perDscpPacketsSent = (Dictionary<string, ulong>)outboundRtpStats.PerDscpPacketsSent;
                     orss.pliCount = outboundRtpStats.PliCount;
                     orss.qpSum = outboundRtpStats.QpSum;
-                    orss.qualityLimitationReason = outboundRtpStats.QualityLimitationDurations.ToString();
+                    //orss.qualityLimitationReason = outboundRtpStats.QualityLimitationDurations.ToString();
                     orss.remoteId = outboundRtpStats.RemoteId;
                     orss.senderId = outboundRtpStats.SenderId;
                     orss.sliCount = outboundRtpStats.SliCount;
                     orss.ssrc = outboundRtpStats.Ssrc;
-                    orss.statsType = outboundRtpStats.StatsType.ToString().ToLower();
+                    orss.type = outboundRtpStats.StatsType.ToString().ToLower();
                     orss.statsTypeOther = outboundRtpStats.StatsTypeOther;
                     orss.targetBitrate = outboundRtpStats.TargetBitrate;
                     orss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
@@ -699,7 +699,7 @@ namespace PeerConnectionClient.Signalling
                     rirss.roundTripTime = remoteInboundRtpStats.RoundTripTime;
                     rirss.sliCount = remoteInboundRtpStats.SliCount;
                     rirss.ssrc = remoteInboundRtpStats.Ssrc;
-                    rirss.statsType = remoteInboundRtpStats.StatsType.ToString().ToLower();
+                    rirss.type = remoteInboundRtpStats.StatsType.ToString().ToLower();
                     rirss.statsTypeOther = remoteInboundRtpStats.StatsTypeOther;
                     rirss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     rirss.transportId = remoteInboundRtpStats.TransportId;
@@ -733,7 +733,7 @@ namespace PeerConnectionClient.Signalling
                     rorss.qpSum = remoteOutboundRtpStats.QpSum;
                     rorss.sliCount = remoteOutboundRtpStats.SliCount;
                     rorss.ssrc = remoteOutboundRtpStats.Ssrc;
-                    rorss.statsType = remoteOutboundRtpStats.StatsType.ToString().ToLower();
+                    rorss.type = remoteOutboundRtpStats.StatsType.ToString().ToLower();
                     rorss.StatsTypeOther = remoteOutboundRtpStats.StatsTypeOther;
                     rorss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     rorss.TransportId = remoteOutboundRtpStats.TransportId;
@@ -757,7 +757,7 @@ namespace PeerConnectionClient.Signalling
                     rcss.id = csrcStats.Id;
                     rcss.inboundRtpStreamId = csrcStats.InboundRtpStreamId;
                     rcss.packetsContributedTo = csrcStats.PacketsContributedTo;
-                    rcss.statsType = csrcStats.StatsType.ToString().ToLower();
+                    rcss.type = csrcStats.StatsType.ToString().ToLower();
                     rcss.statsTypeOther = csrcStats.StatsTypeOther;
                     rcss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
@@ -780,7 +780,7 @@ namespace PeerConnectionClient.Signalling
                     pcs.dataChannelsOpened = peerConnectionStats.DataChannelsOpened;
                     pcs.dataChannelsRequested = peerConnectionStats.DataChannelsRequested;
                     pcs.id = peerConnectionStats.Id;
-                    pcs.statsType = peerConnectionStats.StatsType.ToString().ToLower();
+                    pcs.type = peerConnectionStats.StatsType.ToString().ToLower();
                     pcs.statsTypeOther = peerConnectionStats.StatsTypeOther;
                     pcs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
@@ -810,7 +810,7 @@ namespace PeerConnectionClient.Signalling
 
                     MediaStreamStats mss = new MediaStreamStats();
                     mss.id = mediaStreamStats.Id;
-                    mss.statsType = mediaStreamStats.StatsType.ToString().ToLower();
+                    mss.type = mediaStreamStats.StatsType.ToString().ToLower();
                     mss.statsTypeOther = mediaStreamStats.StatsTypeOther;
                     mss.streamIdentifier = mediaStreamStats.StreamIdentifier;
                     mss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
@@ -846,7 +846,7 @@ namespace PeerConnectionClient.Signalling
                         svtas.kind = videoTrackStats.Kind;
                         svtas.priority = videoTrackStats.Priority.ToString();
                         svtas.remoteSource = (bool)videoTrackStats.RemoteSource;
-                        svtas.statsType = videoTrackStats.StatsType.ToString().ToLower();
+                        svtas.type = videoTrackStats.StatsType.ToString().ToLower();
                         svtas.statsTypeOther = videoTrackStats.StatsTypeOther;
                         svtas.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                         svtas.trackIdentifier = videoTrackStats.TrackIdentifier;
@@ -872,7 +872,7 @@ namespace PeerConnectionClient.Signalling
                         satas.kind = audioTrackStats.Kind;
                         satas.priority = audioTrackStats.Priority.ToString();
                         satas.remoteSource = audioTrackStats.RemoteSource;
-                        satas.statsType = audioTrackStats.StatsType.ToString().ToLower();
+                        satas.type = audioTrackStats.StatsType.ToString().ToLower();
                         satas.statsTypeOther = audioTrackStats.StatsTypeOther;
                         satas.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                         satas.totalAudioEnergy = audioTrackStats.TotalAudioEnergy;
@@ -947,7 +947,7 @@ namespace PeerConnectionClient.Signalling
                     ts.rtcpTransportStatsId = transportStats.RtcpTransportStatsId;
                     ts.selectedCandidatePairId = transportStats.SelectedCandidatePairId;
                     ts.srtpCipher = transportStats.SrtpCipher;
-                    ts.StatsType = transportStats.StatsType.ToString().ToLower();
+                    ts.type = transportStats.StatsType.ToString().ToLower();
                     ts.StatsTypeOther = transportStats.StatsTypeOther;
                     ts.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
