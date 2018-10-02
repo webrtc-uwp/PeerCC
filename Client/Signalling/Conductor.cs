@@ -73,7 +73,6 @@ namespace PeerConnectionClient.Signalling
     {
         CallStatsClient callStatsClient = new CallStatsClient();
 
-        //List<dynamic> allStatsObjectsList = new List<object>();
         List<object> statsObjects = new List<object>();
 
         private List<RTCIceCandidateStats> iceCandidateStatsList = new List<RTCIceCandidateStats>();
@@ -498,6 +497,8 @@ namespace PeerConnectionClient.Signalling
 
         public async Task GetAllStats()
         {
+            Dictionary<string, string> candidatePairsDict = new Dictionary<string, string>();
+
             IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
 
             for (int i = 0; i < statsReport.StatsIds.Count; i++)
@@ -533,7 +534,8 @@ namespace PeerConnectionClient.Signalling
                         ics.priority = iceCandidateStats.Priority;
                         ics.protocol = iceCandidateStats.Protocol;
                         ics.relayProtocol = iceCandidateStats.RelayProtocol;
-                        ics.type = iceCandidateStats.StatsType.ToString().ToLower();
+                        //ics.type = iceCandidateStats.StatsType.ToString().ToLower();
+                        ics.type = candidatePairsDict[ics.id];
                         ics.statsTypeOther = iceCandidateStats.StatsTypeOther;
                         ics.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                         ics.transportId = iceCandidateStats.TransportId;
@@ -542,8 +544,6 @@ namespace PeerConnectionClient.Signalling
                         iceCandidateStatsList.Add(iceCandidateStats);
 
                         statsObjects.Add(ics);
-
-                        //allStatsObjectsList.Add(iceCandidateStats);
                     }
                 }
 
@@ -620,8 +620,6 @@ namespace PeerConnectionClient.Signalling
                     irss.transportId = inboundRtpStats.TransportId;
 
                     statsObjects.Add(irss);
-
-                    //allStatsObjectsList.Add(inboundRtpStats);
                 }
 
                 if (statsType == RTCStatsType.OutboundRtp)
@@ -661,8 +659,6 @@ namespace PeerConnectionClient.Signalling
                     orss.transportId = outboundRtpStats.TransportId;
 
                     statsObjects.Add(orss);
-
-                    //allStatsObjectsList.Add(outboundRtpStats);
                 }
 
                 if (statsType == RTCStatsType.RemoteInboundRtp)
@@ -705,8 +701,6 @@ namespace PeerConnectionClient.Signalling
                     rirss.transportId = remoteInboundRtpStats.TransportId;
 
                     statsObjects.Add(rirss);
-
-                    //allStatsObjectsList.Add(remoteInboundRtpStats);
                 }
 
                 if (statsType == RTCStatsType.RemoteOutboundRtp)
@@ -739,8 +733,6 @@ namespace PeerConnectionClient.Signalling
                     rorss.TransportId = remoteOutboundRtpStats.TransportId;
 
                     statsObjects.Add(rorss);
-
-                    //allStatsObjectsList.Add(remoteOutboundRtpStats);
                 }
 
                 if (statsType == RTCStatsType.Csrc)
@@ -762,8 +754,6 @@ namespace PeerConnectionClient.Signalling
                     rcss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
                     statsObjects.Add(rcss);
-
-                    //allStatsObjectsList.Add(csrcStats);
                 }
 
                 if (statsType == RTCStatsType.PeerConnection)
@@ -785,8 +775,6 @@ namespace PeerConnectionClient.Signalling
                     pcs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
                     statsObjects.Add(pcs);
-
-                    //allStatsObjectsList.Add(peerConnectionStats);
                 }
 
                 if (statsType == RTCStatsType.DataChannel)
@@ -796,8 +784,6 @@ namespace PeerConnectionClient.Signalling
                     dataChannelStats = RTCDataChannelStats.Cast(rtcStats);
 
                     Debug.WriteLine($"dataChannel: {dataChannelStats}");
-
-                    //allStatsObjectsList.Add(dataChannelStats);
                 }
 
                 if (statsType == RTCStatsType.Stream)
@@ -817,8 +803,6 @@ namespace PeerConnectionClient.Signalling
                     mss.trackIds = mediaStreamStats.TrackIds.ToList();
 
                     statsObjects.Add(mss);
-
-                    //allStatsObjectsList.Add(mediaStreamStats);
                 }
 
                 if (statsType == RTCStatsType.Track)
@@ -852,7 +836,6 @@ namespace PeerConnectionClient.Signalling
                         svtas.trackIdentifier = videoTrackStats.TrackIdentifier;
 
                         statsObjects.Add(svtas);
-                        //allStatsObjectsList.Add(videoTrackStats);
                     }
 
                     if (rtcStats.Id == "RTCMediaStreamTrack_sender_2")
@@ -882,8 +865,6 @@ namespace PeerConnectionClient.Signalling
                         satas.voiceActivityFlag = audioTrackStats.VoiceActivityFlag;
 
                         statsObjects.Add(satas);
-
-                        //allStatsObjectsList.Add(audioTrackStats);
                     }
                 }
                 //TODO: if?
@@ -895,15 +876,11 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"audioSender: {audioSenderStats}");
 
-                    //allStatsObjectsList.Add(audioSenderStats);
-
                     RTCVideoSenderStats videoSenderStats;
 
                     videoSenderStats = RTCVideoSenderStats.Cast(rtcStats);
 
                     Debug.WriteLine($"videoSender: {videoSenderStats}");
-
-                    //allStatsObjectsList.Add(videoSenderStats);
                 }
 
                 if (statsType == RTCStatsType.Receiver)
@@ -914,15 +891,11 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"audioReceiver: {audioReceiverStats}");
 
-                    //allStatsObjectsList.Add(audioReceiverStats);
-
                     RTCVideoReceiverStats videoReceiverStats;
 
                     videoReceiverStats = RTCVideoReceiverStats.Cast(rtcStats);
 
                     Debug.WriteLine($"videoReceiver: {videoReceiverStats}");
-
-                    //allStatsObjectsList.Add(videoReceiverStats);
                 }
 
                 if (statsType == RTCStatsType.Transport)
@@ -948,12 +921,10 @@ namespace PeerConnectionClient.Signalling
                     ts.selectedCandidatePairId = transportStats.SelectedCandidatePairId;
                     ts.srtpCipher = transportStats.SrtpCipher;
                     ts.type = transportStats.StatsType.ToString().ToLower();
-                    ts.StatsTypeOther = transportStats.StatsTypeOther;
+                    ts.statsTypeOther = transportStats.StatsTypeOther;
                     ts.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
                     statsObjects.Add(ts);
-
-                    //allStatsObjectsList.Add(transportStats);
                 }
 
                 if (statsType == RTCStatsType.CandidatePair)
@@ -966,9 +937,47 @@ namespace PeerConnectionClient.Signalling
 
                     Debug.WriteLine($"candidatePair: {candidatePairStats}");
 
-                    iceCandidatePairStatsList.Add(candidatePairStats);
+                    IceCandidatePairStats icp = new IceCandidatePairStats();
+                    //icp.availableIncomingBitrate = candidatePairStats.AvailableIncomingBitrate;
+                    //icp.availableOutgoingBitrate = candidatePairStats.AvailableOutgoingBitrate;
+                    icp.bytesReceived = candidatePairStats.BytesReceived;
+                    icp.bytesSent = candidatePairStats.BytesSent;
+                    //icp.circuitBreakerTriggerCount = candidatePairStats.CircuitBreakerTriggerCount;
+                    //icp.consentExpiredTimestamp = candidatePairStats.ConsentExpiredTimestamp;
+                    icp.consentRequestsSent = candidatePairStats.ConsentRequestsSent;
+                    //icp.currentRoundTripTime = candidatePairStats.CurrentRoundTripTime;
+                    //icp.firstRequestTimestamp = candidatePairStats.FirstRequestTimestamp;
+                    icp.id = candidatePairStats.Id;
+                    //icp.lastPacketReceivedTimestamp = candidatePairStats.LastPacketReceivedTimestamp;
+                    //icp.lastPacketSentTimestamp = candidatePairStats.LastPacketSentTimestamp;
+                    //icp.lastRequestTimestamp = candidatePairStats.LastRequestTimestamp;
+                    //icp.lastResponseTimestamp = candidatePairStats.LastResponseTimestamp;
+                    icp.localCandidateId = candidatePairStats.LocalCandidateId;
+                    icp.nominated = candidatePairStats.Nominated;
+                    icp.packetsReceived = candidatePairStats.PacketsReceived;
+                    icp.packetsSent = candidatePairStats.PacketsSent;
+                    icp.remoteCandidateId = candidatePairStats.RemoteCandidateId;
+                    icp.requestsReceived = candidatePairStats.RequestsReceived;
+                    icp.requestsSent = candidatePairStats.RequestsSent;
+                    icp.responsesReceived = candidatePairStats.ResponsesReceived;
+                    icp.responsesSent = candidatePairStats.ResponsesSent;
+                    icp.retransmissionsReceived = candidatePairStats.RetransmissionsReceived;
+                    icp.retransmissionsSent = candidatePairStats.RetransmissionsSent;
+                    icp.state = candidatePairStats.State.ToString().ToLower();
+                    icp.type = candidatePairStats.StatsType.ToString().ToLower();
+                    icp.statsTypeOther = candidatePairStats.StatsTypeOther;
+                    icp.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    icp.TotalRoundTripTime = candidatePairStats.TotalRoundTripTime;
+                    icp.TransportId = candidatePairStats.TransportId;
 
-                    //allStatsObjectsList.Add(candidatePairStats);
+                    //statsObjects.Add(icp);
+                    if (!candidatePairsDict.ContainsKey(candidatePairStats.LocalCandidateId))
+                        candidatePairsDict.Add(candidatePairStats.LocalCandidateId, "local-candidate");
+
+                    if (!candidatePairsDict.ContainsKey(candidatePairStats.RemoteCandidateId))
+                        candidatePairsDict.Add(candidatePairStats.RemoteCandidateId, "remote-candidate");
+
+                    iceCandidatePairStatsList.Add(candidatePairStats);
                 }
 
                 if (statsType == RTCStatsType.Certificate)
@@ -978,8 +987,6 @@ namespace PeerConnectionClient.Signalling
                     certificateStats = RTCCertificateStats.Cast(rtcStats);
 
                     Debug.WriteLine($"certificate: {certificateStats}");
-
-                    //allStatsObjectsList.Add(certificateStats);
                 }
             }
         }
@@ -1088,11 +1095,6 @@ namespace PeerConnectionClient.Signalling
                     timer.Start();
 
                     await callStatsClient.SendFabricSetup();
-
-
-                    //await callStatsClient.InitializeCallStats();
-
-                    //setupClock.Stop();
 
                     await GetIceCandidatePairStats();
 
