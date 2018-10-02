@@ -964,18 +964,20 @@ namespace PeerConnectionClient.Signalling
                     icp.retransmissionsReceived = candidatePairStats.RetransmissionsReceived;
                     icp.retransmissionsSent = candidatePairStats.RetransmissionsSent;
                     icp.state = candidatePairStats.State.ToString().ToLower();
-                    icp.type = candidatePairStats.StatsType.ToString().ToLower();
+                    //icp.type = candidatePairStats.StatsType.ToString().ToLower();
+                    icp.type = "candidate-pair";
                     icp.statsTypeOther = candidatePairStats.StatsTypeOther;
                     icp.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-                    icp.TotalRoundTripTime = candidatePairStats.TotalRoundTripTime;
-                    icp.TransportId = candidatePairStats.TransportId;
+                    icp.totalRoundTripTime = candidatePairStats.TotalRoundTripTime;
+                    icp.transportId = candidatePairStats.TransportId;
 
-                    //statsObjects.Add(icp);
                     if (!candidatePairsDict.ContainsKey(candidatePairStats.LocalCandidateId))
                         candidatePairsDict.Add(candidatePairStats.LocalCandidateId, "local-candidate");
 
                     if (!candidatePairsDict.ContainsKey(candidatePairStats.RemoteCandidateId))
                         candidatePairsDict.Add(candidatePairStats.RemoteCandidateId, "remote-candidate");
+
+                    //statsObjects.Add(icp);
 
                     iceCandidatePairStatsList.Add(candidatePairStats);
                 }
@@ -987,6 +989,18 @@ namespace PeerConnectionClient.Signalling
                     certificateStats = RTCCertificateStats.Cast(rtcStats);
 
                     Debug.WriteLine($"certificate: {certificateStats}");
+
+                    CertificateStats cs = new CertificateStats();
+                    cs.base64Certificate = certificateStats.Base64Certificate;
+                    cs.fingerprint = certificateStats.Fingerprint;
+                    cs.fingerprintAlgorithm = certificateStats.FingerprintAlgorithm;
+                    cs.id = certificateStats.Id;
+                    cs.issuerCertificateId = certificateStats.IssuerCertificateId;
+                    cs.type = certificateStats.StatsType.ToString().ToLower();
+                    cs.statsTypeOther = certificateStats.StatsTypeOther;
+                    cs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+
+                    statsObjects.Add(cs);
                 }
             }
         }
