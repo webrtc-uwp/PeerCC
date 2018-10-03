@@ -1092,23 +1092,19 @@ namespace PeerConnectionClient.Signalling
                     
 
                     //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
-                    callStatsClient.FabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
-
-                    
+                    await callStatsClient.SendFabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
 
                     System.Timers.Timer timer = new System.Timers.Timer(10000);
                     timer.Elapsed += async (sender, e) =>
                     {
                         await GetAllStats();
 
-                        callStatsClient.ConferenceStats(statsObjects);
-
                         Debug.WriteLine("ConferenceStatsSubmission: ");
-                        await callStatsClient.ConferenceStatsSubmission();
+                        await callStatsClient.ConferenceStatsSubmission(statsObjects);
                     };
                     timer.Start();
 
-                    await callStatsClient.SendFabricSetup();
+                    
 
                     await GetIceCandidatePairStats();
 
