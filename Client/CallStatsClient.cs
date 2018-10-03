@@ -2,19 +2,15 @@
 using CallStatsLib.Request;
 using Jose;
 using Org.WebRtc;
-using PeerConnectionClient.Signalling;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Networking.Connectivity;
-using System.Timers;
-using System.Dynamic;
 
 namespace PeerConnectionClient
 {
@@ -91,15 +87,16 @@ namespace PeerConnectionClient
         private CallStats callstats;
         private FabricSetupData fabricSetupData = new FabricSetupData();
 
+        private List<IceCandidate> localIceCandidatesList = new List<IceCandidate>();
+        private List<IceCandidate> remoteIceCandidatesList = new List<IceCandidate>();
 
-        private enum FabricTransmissionDirection { sendrecv, sendonly, receiveonly }
-        private enum RemoteEndpointType { peer, server }
+        private List<IceCandidate> iceCandidateList = new List<IceCandidate>();
+        private List<IceCandidatePair> iceCandidatePairsList = new List<IceCandidatePair>();
 
         private SSRCMapData ssrcMapData = new SSRCMapData();
         private List<SSRCData> ssrcDataList = new List<SSRCData>();
 
         private ConferenceStatsSubmissionData conferenceStatsSubmissionData = new ConferenceStatsSubmissionData();
-        private List<object> confSubmissionStatsList = new List<object>();
 
         public async Task InitializeCallStats()
         {
@@ -198,8 +195,8 @@ namespace PeerConnectionClient
             fabricSetupData.delay = totalSetupDelay;
             fabricSetupData.iceGatheringDelay = gatheringDelayMiliseconds;
             fabricSetupData.iceConnectivityDelay = connectivityDelayMiliseconds;
-            fabricSetupData.fabricTransmissionDirection = FabricTransmissionDirection.sendrecv.ToString();
-            fabricSetupData.remoteEndpointType = RemoteEndpointType.peer.ToString();
+            fabricSetupData.fabricTransmissionDirection = "sendrecv";
+            fabricSetupData.remoteEndpointType = "peer";
             fabricSetupData.localIceCandidates = localIceCandidatesList;
             fabricSetupData.remoteIceCandidates = remoteIceCandidatesList;
             fabricSetupData.iceCandidatePairs = iceCandidatePairsList;
@@ -220,6 +217,7 @@ namespace PeerConnectionClient
             sdpEventData.localSDP = localSDP;
             sdpEventData.remoteSDP = remoteSDP;
 
+            Debug.WriteLine("SDPEvent: ");
             await callstats.SDPEvent(sdpEventData);
         }
 
@@ -391,12 +389,6 @@ namespace PeerConnectionClient
             return data;
         }
 
-        private List<IceCandidate> localIceCandidatesList = new List<IceCandidate>();
-        private List<IceCandidate> remoteIceCandidatesList = new List<IceCandidate>();
-
-        private List<IceCandidate> iceCandidateList = new List<IceCandidate>();
-        private List<IceCandidatePair> iceCandidatePairsList = new List<IceCandidatePair>();
-
         public void FabricSetupIceCandidate(List<RTCIceCandidateStats> iceCandidateStatsList)
         {
             for (int i = 0; i < iceCandidateStatsList.Count; i++)
@@ -483,8 +475,6 @@ namespace PeerConnectionClient
             await callstats.ConferenceStatsSubmission(conferenceStatsSubmissionData);
         }
 
-        
-
         private enum FabricSetupFailedReason
         {
             MediaConfigError, MediaPermissionError, MediaDeviceError, NegotiationFailure,
@@ -508,8 +498,8 @@ namespace PeerConnectionClient
             fabricSetupFailedData.originID = _originID;
             fabricSetupFailedData.deviceID = _deviceID;
             fabricSetupFailedData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            fabricSetupFailedData.fabricTransmissionDirection = FabricTransmissionDirection.sendrecv.ToString();
-            fabricSetupFailedData.remoteEndpointType = RemoteEndpointType.peer.ToString();
+            fabricSetupFailedData.fabricTransmissionDirection = "sendrecv";
+            fabricSetupFailedData.remoteEndpointType = "peer";
             fabricSetupFailedData.reason = FabricSetupFailedReason.SignalingError.ToString();
             fabricSetupFailedData.name = "name";
             fabricSetupFailedData.message = "message";

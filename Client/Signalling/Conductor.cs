@@ -1054,8 +1054,6 @@ namespace PeerConnectionClient.Signalling
                     gatheringClock.Stop();
 
                     _gatheringDelayMiliseconds = gatheringClock.Elapsed.Milliseconds;
-
-                    Debug.WriteLine("Ice gathering delay: " + _gatheringDelayMiliseconds);
                 }
 
                 Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString());
@@ -1065,12 +1063,10 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_peerConnection.IceConnectionState.ToString() == "New")
                 {
-                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Checking")
                 {
-                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Connected")
@@ -1080,16 +1076,10 @@ namespace PeerConnectionClient.Signalling
                     _connectivityDelayMiliseconds = connectivityClock.Elapsed.Milliseconds;
                     _totalSetupDelay = setupClock.Elapsed.Milliseconds;
 
-                    Debug.WriteLine("Ice connectivity delay: " + _connectivityDelayMiliseconds);
-                    Debug.WriteLine("Total setup delay: " + _totalSetupDelay);
-                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
-
                     await GetAllStats();
 
                     callStatsClient.FabricSetupIceCandidate(iceCandidateStatsList);
                     callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
-
-                    
 
                     //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
                     await callStatsClient.SendFabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
@@ -1103,8 +1093,6 @@ namespace PeerConnectionClient.Signalling
                         await callStatsClient.ConferenceStatsSubmission(statsObjects);
                     };
                     timer.Start();
-
-                    
 
                     await GetIceCandidatePairStats();
 
@@ -1144,20 +1132,15 @@ namespace PeerConnectionClient.Signalling
 
                 if (_peerConnection.IceConnectionState.ToString() == "Failed")
                 {
-                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
-
                     await callStatsClient.FabricFailed();
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Disconnected")
                 {
-                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Closed")
                 {
-                    Debug.WriteLine($"_peerConnection.IceConnectionState.ToString(): {_peerConnection.IceConnectionState.ToString()}");
-
                     await callStatsClient.FabricSetupTerminated();
                 }
 
