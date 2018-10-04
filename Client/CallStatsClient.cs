@@ -85,14 +85,18 @@ namespace PeerConnectionClient
         }
 
         private CallStats callstats;
+
+        private List<object> statsObjects = new List<object>();
+
         private FabricSetupData fabricSetupData = new FabricSetupData();
 
-        private List<IceCandidate> localIceCandidatesList = new List<IceCandidate>();
-        private List<IceCandidate> remoteIceCandidatesList = new List<IceCandidate>();
-
-        private List<IceCandidate> iceCandidateList = new List<IceCandidate>();
+        private List<IceCandidatePairStats> iceCandidatePairs = new List<IceCandidatePairStats>();
         private List<IceCandidatePair> iceCandidatePairsList = new List<IceCandidatePair>();
 
+        private List<IceCandidateStats> iceCandidateStatsList = new List<IceCandidateStats>();
+        private List<IceCandidate> localIceCandidates = new List<IceCandidate>();
+        private List<IceCandidate> remoteIceCandidates = new List<IceCandidate>();
+               
         private SSRCMapData ssrcMapData = new SSRCMapData();
         private List<SSRCData> ssrcDataList = new List<SSRCData>();
 
@@ -184,7 +188,8 @@ namespace PeerConnectionClient
 
         public async Task SendFabricSetup(int gatheringDelayMiliseconds, int connectivityDelayMiliseconds, int totalSetupDelay)
         {
-            SetLocalAndRemoteIceCandidateLists();
+            IceCandidateStatsData();
+            IceCandidatePairData();
 
             fabricSetupData.localID = _localID;
             fabricSetupData.originID = _originID;
@@ -197,8 +202,8 @@ namespace PeerConnectionClient
             fabricSetupData.iceConnectivityDelay = connectivityDelayMiliseconds;
             fabricSetupData.fabricTransmissionDirection = "sendrecv";
             fabricSetupData.remoteEndpointType = "peer";
-            fabricSetupData.localIceCandidates = localIceCandidatesList;
-            fabricSetupData.remoteIceCandidates = remoteIceCandidatesList;
+            fabricSetupData.localIceCandidates = localIceCandidates;
+            fabricSetupData.remoteIceCandidates = remoteIceCandidates;
             fabricSetupData.iceCandidatePairs = iceCandidatePairsList;
 
             Debug.WriteLine("FabricSetup: ");
@@ -388,66 +393,6 @@ namespace PeerConnectionClient
 
             return data;
         }
-
-        public void FabricSetupIceCandidate()
-        {
-            for (int i = 0; i < iceCandidateStatsList.Count; i++)
-            {
-                RTCIceCandidateStats iceCandidateStats = iceCandidateStatsList[i];
-
-                IceCandidate iceCandidate = new IceCandidate();
-
-                iceCandidate.id = iceCandidateStats.Id;
-                iceCandidate.type = "";
-                iceCandidate.ip = iceCandidateStats.Ip;
-                iceCandidate.port = (int)iceCandidateStats.Port;
-                iceCandidate.candidateType = iceCandidateStats.CandidateType.ToString().ToLower();
-                iceCandidate.transport = iceCandidateStats.Protocol.ToString().ToLower();
-
-                iceCandidateList.Add(iceCandidate);
-            }
-        }
-
-        public void FabricSetupCandidatePair()
-        {
-            for (int i = 0; i < iceCandidatePairStatsList.Count; i++)
-            {
-                RTCIceCandidatePairStats pairStats = iceCandidatePairStatsList[i];
-
-                IceCandidatePair pair = new IceCandidatePair();
-                pair.id = pairStats.Id;
-                pair.localCandidateId = pairStats.LocalCandidateId;
-                pair.remoteCandidateId = pairStats.RemoteCandidateId;
-                pair.state = pairStats.State.ToString().ToLower();
-                pair.priority = 1;
-                pair.nominated = pairStats.Nominated;
-
-                iceCandidatePairsList.Add(pair);
-            }
-        }
-
-        public void SetLocalAndRemoteIceCandidateLists()
-        {
-            for (int i = 0; i < iceCandidatePairsList.Count; i++)
-            {
-                var local = iceCandidatePairsList[i].localCandidateId;
-                var remote = iceCandidatePairsList[i].remoteCandidateId;
-
-                for (int c = 0; c < iceCandidateList.Count; c++)
-                {
-                    if (iceCandidateList[c].id == local)
-                    {
-                        iceCandidateList[c].type = "local-candidate";
-                        localIceCandidatesList.Add(iceCandidateList[c]);
-                    }
-                    if (iceCandidateList[c].id == remote)
-                    {
-                        iceCandidateList[c].type = "remote-candidate";
-                        remoteIceCandidatesList.Add(iceCandidateList[c]);
-                    }
-                }
-            }
-        }
         
         public async Task SSRCMap()
         {
@@ -508,15 +453,47 @@ namespace PeerConnectionClient
             return fabricSetupFailedData;
         }
 
-        private List<RTCIceCandidateStats> iceCandidateStatsList = new List<RTCIceCandidateStats>();
+        private void IceCandidatePairData()
+        {
+            for (int i = 0; i < iceCandidatePairs.Count; i++)
+            {
+                IceCandidatePairStats icps = iceCandidatePairs[i];
 
-        List<object> statsObjects = new List<object>();
+                IceCandidatePair iceCandidatePair = new IceCandidatePair();
 
-        private List<string> trackStatsList = new List<string>();
+                iceCandidatePair.id = icps.id;
+                iceCandidatePair.localCandidateId = icps.localCandidateId;
+                iceCandidatePair.remoteCandidateId = icps.remoteCandidateId;
+                iceCandidatePair.state = icps.state;
+                iceCandidatePair.priority = 1;
+                iceCandidatePair.nominated = icps.nominated;
 
-        private List<string> candidatePairsList = new List<string>();
+                iceCandidatePairsList.Add(iceCandidatePair);
+            }
+        }
 
-        private List<RTCIceCandidatePairStats> iceCandidatePairStatsList = new List<RTCIceCandidatePairStats>();
+        private void IceCandidateStatsData()
+        {
+            for (int i = 0; i < iceCandidateStatsList.Count; i++)
+            {
+                IceCandidateStats ics = iceCandidateStatsList[i];
+
+                IceCandidate iceCandidate = new IceCandidate();
+
+                iceCandidate.id = ics.id;
+                iceCandidate.type = ics.type;
+                iceCandidate.ip = ics.ip;
+                iceCandidate.port = ics.port;
+                iceCandidate.candidateType = ics.candidateType;
+                iceCandidate.transport = ics.protocol;
+
+                if (ics.type.Contains("local"))
+                    localIceCandidates.Add(iceCandidate);
+
+                if (ics.type.Contains("remote"))
+                    remoteIceCandidates.Add(iceCandidate);
+            }
+        }
 
         public static Dictionary<RTCStatsType, object> MakeDictionaryOfAllStats()
         {
@@ -548,16 +525,11 @@ namespace PeerConnectionClient
 
             for (int i = 0; i < statsReport.StatsIds.Count; i++)
             {
-                Debug.WriteLine($"statsReport: {statsReport.StatsIds[i]}");
-
                 IRTCStats rtcStats = statsReport.GetStats(statsReport.StatsIds[i]);
 
                 RTCStatsType? statsType = rtcStats.StatsType;
 
                 string statsTypeOther = rtcStats.StatsTypeOther;
-
-                Debug.WriteLine($"statsType: {statsType}");
-                Debug.WriteLine($"statsTypeOther: {statsTypeOther}");
 
                 if (statsType == null)
                 {
@@ -567,26 +539,23 @@ namespace PeerConnectionClient
 
                         iceCandidateStats = RTCIceCandidateStats.Cast(rtcStats);
 
-                        Debug.WriteLine($"ice-candidate: {iceCandidateStats}");
-
                         IceCandidateStats ics = new IceCandidateStats();
-                        ics.candidateType = iceCandidateStats.CandidateType.ToString();
+                        ics.candidateType = iceCandidateStats.CandidateType.ToString().ToLower();
                         ics.deleted = iceCandidateStats.Deleted;
                         ics.id = iceCandidateStats.Id;
                         ics.ip = iceCandidateStats.Ip;
                         ics.networkType = iceCandidateStats.NetworkType.ToString();
                         ics.port = iceCandidateStats.Port;
                         ics.priority = iceCandidateStats.Priority;
-                        ics.protocol = iceCandidateStats.Protocol;
+                        ics.protocol = iceCandidateStats.Protocol.ToLower();
                         ics.relayProtocol = iceCandidateStats.RelayProtocol;
-                        //ics.type = iceCandidateStats.StatsType.ToString().ToLower();
                         ics.type = candidatePairsDict[ics.id];
                         ics.statsTypeOther = iceCandidateStats.StatsTypeOther;
                         ics.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                         ics.transportId = iceCandidateStats.TransportId;
                         ics.url = iceCandidateStats.Url;
 
-                        iceCandidateStatsList.Add(iceCandidateStats);
+                        iceCandidateStatsList.Add(ics);
 
                         statsObjects.Add(ics);
                     }
@@ -869,8 +838,6 @@ namespace PeerConnectionClient
 
                 if (statsType == RTCStatsType.Track)
                 {
-                    trackStatsList.Add(rtcStats.Id);
-
                     if (rtcStats.Id == "RTCMediaStreamTrack_sender_1")
                     {
                         RTCSenderVideoTrackAttachmentStats videoTrackStats;
@@ -991,8 +958,6 @@ namespace PeerConnectionClient
 
                 if (statsType == RTCStatsType.CandidatePair)
                 {
-                    candidatePairsList.Add(rtcStats.Id);
-
                     RTCIceCandidatePairStats candidatePairStats;
 
                     candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
@@ -1041,7 +1006,7 @@ namespace PeerConnectionClient
 
                     //statsObjects.Add(icp);
 
-                    iceCandidatePairStatsList.Add(candidatePairStats);
+                    iceCandidatePairs.Add(icp);
                 }
 
                 if (statsType == RTCStatsType.Certificate)

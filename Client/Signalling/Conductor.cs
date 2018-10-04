@@ -503,9 +503,6 @@ namespace PeerConnectionClient.Signalling
 
                     await GetAllStats();
 
-                    callStatsClient.FabricSetupIceCandidate();
-                    callStatsClient.FabricSetupCandidatePair();
-
                     //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
                     await callStatsClient.SendFabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
 
