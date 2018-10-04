@@ -77,7 +77,7 @@ namespace PeerConnectionClient.Signalling
         private int _connectivityDelayMiliseconds;
         private int _totalSetupDelay;
 
-        private string localSDP;
+        private string _localSDP;
         
         private static readonly object InstanceLock = new object();
         private static Conductor _instance;
@@ -425,42 +425,13 @@ namespace PeerConnectionClient.Signalling
             _selectedVideoDevice = device;
         }
 
-        private static Dictionary<RTCStatsType, object> MakeDictionaryOfAllStats()
-        {
-            return new Dictionary<RTCStatsType, object>
-            {
-                { RTCStatsType.Codec, null },
-                { RTCStatsType.InboundRtp, null },
-                { RTCStatsType.OutboundRtp, null },
-                { RTCStatsType.RemoteInboundRtp, null },
-                { RTCStatsType.RemoteOutboundRtp, null },
-                { RTCStatsType.Csrc, null },
-                { RTCStatsType.PeerConnection, null },
-                { RTCStatsType.DataChannel, null },
-                { RTCStatsType.Stream, null },
-                { RTCStatsType.Track, null },
-                { RTCStatsType.Sender, null },
-                { RTCStatsType.Receiver, null },
-                { RTCStatsType.Transport, null },
-                { RTCStatsType.CandidatePair, null },
-                { RTCStatsType.LocalCandidate, null },
-                { RTCStatsType.RemoteCandidate, null },
-                { RTCStatsType.Certificate, null }
-            };
-        }
-
-        RTCStatsTypeSet statsType = new RTCStatsTypeSet(MakeDictionaryOfAllStats());
-
-        public async Task<IRTCStatsReport> GetStatsReport()
-        {
-            return await _peerConnection.GetStats(statsType);
-        }
+        RTCStatsTypeSet statsType = new RTCStatsTypeSet(CallStatsClient.MakeDictionaryOfAllStats());
 
         public async Task GetAllStats()
         {
-            IRTCStatsReport statsReport = await Task.Run(() => GetStatsReport());
+            IRTCStatsReport statsReport = await Task.Run(async() => await _peerConnection.GetStats(statsType));
 
-            callStatsClient.GetAllStatsData( statsReport);
+            callStatsClient.GetAllStatsData(statsReport);
         }
 
         /// <summary>
@@ -973,7 +944,7 @@ namespace PeerConnectionClient.Signalling
                     callStatsClient.SSRCMapDataSetup(sdp);
 
                     Debug.WriteLine("SDPEvent: ");
-                    await callStatsClient.SendSDP(localSDP, sdp);
+                    await callStatsClient.SendSDP(_localSDP, sdp);
 
                     Debug.WriteLine("Conductor: Received session description:\n" + message);
 #if ORTCLIB
@@ -1060,13 +1031,6 @@ namespace PeerConnectionClient.Signalling
 #else
                     await _peerConnection.AddIceCandidate(candidate);
 #endif
-                    //await GetAllStats();
-
-                    //callStatsClient.FabricSetupIceCandidate(iceCandidateStatsList);
-                    //callStatsClient.FabricSetupCandidatePair(iceCandidatePairStatsList);
-
-                    //callStatsClient.ConferenceStats(trackStatsList);
-
                     Debug.WriteLine("Conductor: Receiving ice candidate:\n" + message);
                 }
             }).Wait();
@@ -1147,7 +1111,7 @@ namespace PeerConnectionClient.Signalling
                 Debug.WriteLine("Conductor: Sending offer:\n" + modifiedOffer.Sdp);
                 SendSdp(modifiedOffer);
 
-                localSDP = offer.Sdp;
+                _localSDP = offer.Sdp;
 #if ORTCLIB
                 OrtcStatsManager.Instance.StartCallWatch(SessionId, true);
 #endif

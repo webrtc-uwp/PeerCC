@@ -518,6 +518,30 @@ namespace PeerConnectionClient
 
         private List<RTCIceCandidatePairStats> iceCandidatePairStatsList = new List<RTCIceCandidatePairStats>();
 
+        public static Dictionary<RTCStatsType, object> MakeDictionaryOfAllStats()
+        {
+            return new Dictionary<RTCStatsType, object>
+            {
+                { RTCStatsType.Codec, null },
+                { RTCStatsType.InboundRtp, null },
+                { RTCStatsType.OutboundRtp, null },
+                { RTCStatsType.RemoteInboundRtp, null },
+                { RTCStatsType.RemoteOutboundRtp, null },
+                { RTCStatsType.Csrc, null },
+                { RTCStatsType.PeerConnection, null },
+                { RTCStatsType.DataChannel, null },
+                { RTCStatsType.Stream, null },
+                { RTCStatsType.Track, null },
+                { RTCStatsType.Sender, null },
+                { RTCStatsType.Receiver, null },
+                { RTCStatsType.Transport, null },
+                { RTCStatsType.CandidatePair, null },
+                { RTCStatsType.LocalCandidate, null },
+                { RTCStatsType.RemoteCandidate, null },
+                { RTCStatsType.Certificate, null }
+            };
+        }
+
         public void GetAllStatsData(IRTCStatsReport statsReport)
         {
             Dictionary<string, string> candidatePairsDict = new Dictionary<string, string>();
