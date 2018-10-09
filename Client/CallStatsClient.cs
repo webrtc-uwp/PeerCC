@@ -431,12 +431,79 @@ namespace PeerConnectionClient
             await callstats.FabricTerminated(FabricTerminated());
         }
 
-        public async Task FabricFailed()
+        public async Task FabricSetupFailed()
         {
-            await callstats.FabricSetupFailed(FabricSetupFailed());
+            await callstats.FabricSetupFailed(FabricSetupFailedData());
         }
 
-        private FabricSetupFailedData FabricSetupFailed()
+        public async Task FabricDropped()
+        {
+            await callstats.FabricDropped(FabricDroppedData());
+        }
+
+        public async Task IceDisruptionStart()
+        {
+            await callstats.IceDisruptionStart(IceDisruptionStartData());
+        }
+
+        public async Task IceRestart()
+        {
+            await callstats.IceRestart(IceRestartData());
+        }
+
+        private IceRestartData IceRestartData()
+        {
+            IceRestartData ird = new IceRestartData();
+            ird.eventType = "iceRestarted";
+            ird.localID = _localID;
+            ird.originID = _originID;
+            ird.deviceID = _deviceID;
+            ird.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            ird.remoteID = _remoteID;
+            ird.connectionID = _connectionID;
+            ird.prevIceCandidatePair = null;
+            ird.currIceConnectionState = "new";
+            ird.prevIceConnectionState = "closed";
+
+            return ird;
+        }
+
+        private IceDisruptionStartData IceDisruptionStartData()
+        {
+            IceDisruptionStartData idd = new IceDisruptionStartData();
+            idd.eventType = "iceDisruptionStart";
+            idd.localID = _localID;
+            idd.originID = _originID;
+            idd.deviceID = _deviceID;
+            idd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            idd.remoteID = _remoteID;
+            idd.connectionID = _connectionID;
+            idd.currIceCandidatePair = null;
+            idd.currIceConnectionState = "disconnected";
+            idd.prevIceConnectionState = "connected";
+
+            return idd;
+        }
+
+        private FabricDroppedData FabricDroppedData()
+        {
+            FabricDroppedData fdd = new FabricDroppedData();
+
+            fdd.localID = _localID;
+            fdd.originID = _originID;
+            fdd.deviceID = _deviceID;
+            fdd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fdd.remoteID = _remoteID;
+            fdd.connectionID = _connectionID;
+            fdd.currIceCandidatePair = null;
+            fdd.currIceConnectionState = "failed";
+            fdd.prevIceConnectionState = "connected";
+            fdd.delay = 6;
+
+            return fdd;
+        }
+
+        private FabricSetupFailedData FabricSetupFailedData()
         {
             FabricSetupFailedData fabricSetupFailedData = new FabricSetupFailedData();
             fabricSetupFailedData.localID = _localID;

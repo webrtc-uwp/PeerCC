@@ -187,13 +187,13 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\..\optical\CSLib\CallStatsClient\CallStatsLib\CallStatsLib.csproj">
-      <Project>{a2f8892b-621e-44df-bbe4-0e819c7c41b1}</Project>
-      <Name>CallStatsLib</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
+    <ProjectReference Include="..\..\..\..\..\..\..\m66\webrtc-uwp-sdk\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
       <Project>{3dd8fdcd-b703-4b75-826a-2c7e844f903e}</Project>
       <Name>Org.WebRtc</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\..\..\optical\CSLib\CallStatsClient\CallStatsLib\CallStatsLib.csproj">
+      <Project>{8e82e1f8-671c-45be-aa7a-07bc6f7e6770}</Project>
+      <Name>CallStatsLib</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

@@ -488,6 +488,7 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_peerConnection.IceConnectionState.ToString() == "New")
                 {
+                    await callStatsClient.IceRestart();
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Checking")
@@ -523,11 +524,13 @@ namespace PeerConnectionClient.Signalling
 
                 if (_peerConnection.IceConnectionState.ToString() == "Failed")
                 {
-                    await callStatsClient.FabricFailed();
+                    await callStatsClient.FabricDropped();
+                    await callStatsClient.FabricSetupFailed();
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Disconnected")
                 {
+                    await callStatsClient.IceDisruptionStart();
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Closed")
@@ -659,7 +662,6 @@ namespace PeerConnectionClient.Signalling
                     _peerId = -1;
 
                     OnPeerConnectionClosed?.Invoke();
-
 #if !USE_CX_VERSION
                     (_peerConnection as IDisposable)?.Dispose();
 #endif
@@ -792,11 +794,11 @@ namespace PeerConnectionClient.Signalling
         /// Handler for Signaller's OnPeerHangup event.
         /// </summary>
         /// <param name="peerId">ID of the peer to hung up the call with.</param>
-        void Signaller_OnPeerHangup(int peerId)
+        private async void Signaller_OnPeerHangup(int peerId)
         {
-            if (peerId != _peerId) return;
+            await callStatsClient.SendUserLeft();
 
-            var task = callStatsClient.SendUserLeft();
+            if (peerId != _peerId) return;
 
             Debug.WriteLine("Conductor: Our peer hung up.");
             ClosePeerConnection();
