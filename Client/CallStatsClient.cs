@@ -417,20 +417,29 @@ namespace PeerConnectionClient
             await callstats.ConferenceStatsSubmission(conferenceStatsSubmissionData);
         }
 
-        private enum FabricSetupFailedReason
-        {
-            MediaConfigError, MediaPermissionError, MediaDeviceError, NegotiationFailure,
-            SDPGenerationError, TransportFailure, SignalingError, IceConnectionFailure
-        }
-
         public async Task FabricSetupTerminated()
         {
             await callstats.FabricTerminated(FabricTerminated());
         }
 
-        public async Task FabricSetupFailed()
+        public async Task FabricSetupFailed(string reason, string name, string message, string stack)
         {
-            await callstats.FabricSetupFailed(FabricSetupFailedData());
+            // MediaConfigError, MediaPermissionError, MediaDeviceError, NegotiationFailure,
+            // SDPGenerationError, TransportFailure, SignalingError, IceConnectionFailure
+
+            FabricSetupFailedData fabricSetupFailedData = new FabricSetupFailedData();
+            fabricSetupFailedData.localID = _localID;
+            fabricSetupFailedData.originID = _originID;
+            fabricSetupFailedData.deviceID = _deviceID;
+            fabricSetupFailedData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fabricSetupFailedData.fabricTransmissionDirection = "sendrecv";
+            fabricSetupFailedData.remoteEndpointType = "peer";
+            fabricSetupFailedData.reason = reason;
+            fabricSetupFailedData.name = name;
+            fabricSetupFailedData.message = message;
+            fabricSetupFailedData.stack = stack;
+
+            await callstats.FabricSetupFailed(fabricSetupFailedData);
         }
 
         public async Task FabricDropped()
@@ -498,23 +507,6 @@ namespace PeerConnectionClient
             fdd.delay = 6;
 
             return fdd;
-        }
-
-        private FabricSetupFailedData FabricSetupFailedData()
-        {
-            FabricSetupFailedData fabricSetupFailedData = new FabricSetupFailedData();
-            fabricSetupFailedData.localID = _localID;
-            fabricSetupFailedData.originID = _originID;
-            fabricSetupFailedData.deviceID = _deviceID;
-            fabricSetupFailedData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            fabricSetupFailedData.fabricTransmissionDirection = "sendrecv";
-            fabricSetupFailedData.remoteEndpointType = "peer";
-            fabricSetupFailedData.reason = FabricSetupFailedReason.SignalingError.ToString();
-            fabricSetupFailedData.name = "name";
-            fabricSetupFailedData.message = "message";
-            fabricSetupFailedData.stack = "stack";
-
-            return fabricSetupFailedData;
         }
 
         private void IceCandidatePairData()

@@ -525,7 +525,7 @@ namespace PeerConnectionClient.Signalling
                 if (_peerConnection.IceConnectionState.ToString() == "Failed")
                 {
                     await callStatsClient.FabricDropped();
-                    await callStatsClient.FabricSetupFailed();
+                    await callStatsClient.FabricSetupFailed("IceConnectionFailure", Empty, Empty, Empty);
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Disconnected")
