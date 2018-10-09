@@ -10,6 +10,7 @@ using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using CallStatsLib.Request;
 using System.Net;
+using Newtonsoft.Json.Linq;
 
 namespace CallStatsLib
 {
@@ -39,6 +40,27 @@ namespace CallStatsLib
         private string UrlBuilder(string host, string endpoint) => $"https://{host}.{_domain}{endpoint}";
 
         private T DeserializeJson<T>(string json) => JsonConvert.DeserializeObject<T>(json);
+        
+        public async Task StartCallStats(CreateConferenceData createConferenceData, UserAliveData userAliveData)
+        {
+            string authContent = await Authentication();
+            string accessToken = DeserializeJson<AuthenticationResponse>(authContent).access_token;
+
+            _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+            Debug.WriteLine("CreateConference: ");
+            var confContent = await CreateConference(createConferenceData);
+            _ucID = DeserializeJson<ConferenceResponse>(confContent.Item2).ucID;
+
+            Timer timer = new Timer(10000);
+            timer.Elapsed += async (sender, e) =>
+            {
+                Debug.WriteLine("UserAlive: ");
+                await UserAlive(userAliveData);
+            };
+            timer.Start();
+
+        }
 
         public async Task StepsToIntegrate(CreateConferenceData createConferenceData, UserAliveData userAliveData,
             FabricSetupData fabricSetupData, FabricSetupFailedData fabricSetupFailedData,
@@ -115,7 +137,7 @@ namespace CallStatsLib
                 $"/v1/apps/{_appID}/conferences/{_confID}"));
         }
 
-        private async Task UserAlive(UserAliveData userAliveData)
+        public async Task UserAlive(UserAliveData userAliveData)
         {
             await SendRequest(userAliveData, UrlBuilder(Host.events.ToString(),
                 $"/v1/apps/{_appID}/conferences/{_confID}/{_ucID}/events/user/alive"));
@@ -127,7 +149,7 @@ namespace CallStatsLib
                 $"/v1/apps/{_appID}/conferences/{_confID}/{_ucID}/events/userdetails"));
         }
 
-        private async Task UserLeft(UserLeftData userLeftData)
+        public async Task UserLeft(UserLeftData userLeftData)
         {
             await SendRequest(userLeftData, UrlBuilder(Host.events.ToString(),
                 $"/v1/apps/{_appID}/conferences/{_confID}/{_ucID}/events/user/left"));
@@ -137,19 +159,19 @@ namespace CallStatsLib
 
         #region Fabric Events 
 
-        private async Task<Tuple<HttpStatusCode, string>> FabricSetup(FabricSetupData fabricSetupData)
+        public async Task<Tuple<HttpStatusCode, string>> FabricSetup(FabricSetupData fabricSetupData)
         {
             return await SendRequest(fabricSetupData, UrlBuilder(Host.events.ToString(),
                 $"/v1/apps/{_appID}/conferences/{_confID}/{_ucID}/events/fabric/setup"));
         }
 
-        private async Task<Tuple<HttpStatusCode, string>> FabricSetupFailed(FabricSetupFailedData fabricSetupFailedData)
+        public async Task<Tuple<HttpStatusCode, string>> FabricSetupFailed(FabricSetupFailedData fabricSetupFailedData)
         {
             return await SendRequest(fabricSetupFailedData, UrlBuilder(Host.events.ToString(),
                 $"/v1/apps/{_appID}/conferences/{_confID}/{_ucID}/events/fabric/setupfailed"));
         }
 
-        private async Task FabricTerminated(FabricTerminatedData fabricTerminatedData)
+        public async Task FabricTerminated(FabricTerminatedData fabricTerminatedData)
         {
             await SendRequest(fabricTerminatedData, UrlBuilder(Host.events.ToString(),
                 $"/v1/apps/{_appID}/conferences/{_confID}/{_ucID}/events/fabric/terminated"));
@@ -183,7 +205,7 @@ namespace CallStatsLib
 
         #region Stats Submission
 
-        private async Task ConferenceStatsSubmission(ConferenceStatsSubmissionData conferenceStatsSubmissionData)
+        public async Task ConferenceStatsSubmission(ConferenceStatsSubmissionData conferenceStatsSubmissionData)
         {
             await SendRequest(conferenceStatsSubmissionData, UrlBuilder(Host.stats.ToString(),
                 $"/v1/apps/{_appID}/conferences/{_confID}/{_ucID}/stats"));
@@ -295,7 +317,7 @@ namespace CallStatsLib
                 $"/v1/apps/{_appID}/conferences/{_confID}/{_ucID}/events/dominantspeaker"));
         }
 
-        private async Task SSRCMap(SSRCMapData ssrcMapData)
+        public async Task SSRCMap(SSRCMapData ssrcMapData)
         {
             await SendRequest(ssrcMapData, UrlBuilder(Host.events.ToString(),
                 $"/v1/apps/{_appID}/conferences/{_confID}/{_ucID}/events/ssrcmap"));
@@ -329,6 +351,14 @@ namespace CallStatsLib
         {
             ByteArrayContent byteContent =
                 new ByteArrayContent(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data)));
+
+            string json = JsonConvert.SerializeObject(data);
+
+            string jsonFormatted = JValue.Parse(json).ToString(Formatting.Indented);
+
+            Debug.WriteLine($"!!!JSON : {jsonFormatted}");
+
+
 
             byteContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
