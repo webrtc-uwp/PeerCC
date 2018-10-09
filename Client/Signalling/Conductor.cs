@@ -738,11 +738,11 @@ namespace PeerConnectionClient.Signalling
         /// Invoked when the remote peer added a media stream to the peer connection.
         /// </summary>
         public event Action<UseMediaStreamTrack> OnAddRemoteTrack;
-        private void PeerConnection_OnTrack(UseRTCTrackEvent evt)
+        private async void PeerConnection_OnTrack(UseRTCTrackEvent evt)
         {
             OnAddRemoteTrack?.Invoke(evt.Track);
 
-            var task = callStatsClient.SSRCMap();
+            await callStatsClient.SSRCMap();
         }
 
         /// <summary>
@@ -940,7 +940,7 @@ namespace PeerConnectionClient.Signalling
                         return;
                     }
 
-                    callStatsClient.SSRCMapDataSetup(sdp);
+                    callStatsClient.SSRCMapDataSetup(sdp, "inbound", "remote");
 
                     Debug.WriteLine("SDPEvent: ");
                     await callStatsClient.SendSDP(_localSDP, sdp);
@@ -1111,6 +1111,8 @@ namespace PeerConnectionClient.Signalling
                 SendSdp(modifiedOffer);
 
                 _localSDP = offer.Sdp;
+
+                callStatsClient.SSRCMapDataSetup(offer.Sdp, "outbound", "local");
 #if ORTCLIB
                 OrtcStatsManager.Instance.StartCallWatch(SessionId, true);
 #endif

@@ -282,10 +282,7 @@ namespace PeerConnectionClient
             return fabricTerminatedData;
         }
 
-        private enum StreamType { inbound, outbound }
-        private enum ReportType { local, remote }
-
-        public void SSRCMapDataSetup(string sdp)
+        public void SSRCMapDataSetup(string sdp, string streamType, string reportType)
         {
             var dict = ParseSdp(sdp, "a=ssrc:");
 
@@ -310,8 +307,8 @@ namespace PeerConnectionClient
                     }
                 }
 
-                ssrcData.streamType = StreamType.inbound.ToString();
-                ssrcData.reportType = ReportType.local.ToString();
+                ssrcData.streamType = streamType;
+                ssrcData.reportType = reportType;
                 ssrcData.userID = _userID;
                 ssrcData.localStartTime = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
