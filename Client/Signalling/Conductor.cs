@@ -480,24 +480,20 @@ namespace PeerConnectionClient.Signalling
 
             _peerConnection.OnIceGatheringStateChange += async() =>
             {
-                if (_peerConnection.IceGatheringState.ToString() == "New")
-                {
-                    if (_newIceGatheringState != "new")
-                    {
-                        _prevIceGatheringState = "complete";
-                        _newIceGatheringState = "new";
-
-                        await callStatsClient.FabricStateChange(_prevIceGatheringState, _newIceGatheringState, "iceGatheringState");
-
-                    }
-                }
-
                 if (_peerConnection.IceGatheringState.ToString() == "Gathering")
                 {
                     if (_newIceGatheringState != "gathering")
                     {
-                        _prevIceGatheringState = "new";
-                        _newIceGatheringState = "gathering";
+                        if (_prevIceGatheringState == null || _newIceGatheringState == null)
+                        {
+                            _prevIceGatheringState = "complete";
+                            _newIceGatheringState = _peerConnection.IceGatheringState.ToString().ToLower();
+                        }
+                        else
+                        {
+                            _prevIceGatheringState = _newIceGatheringState;
+                            _newIceGatheringState = _peerConnection.IceGatheringState.ToString().ToLower();
+                        }
 
                         await callStatsClient.FabricStateChange(_prevIceGatheringState, _newIceGatheringState, "iceGatheringState");
                     }
@@ -511,8 +507,16 @@ namespace PeerConnectionClient.Signalling
 
                     if (_newIceGatheringState != "complete")
                     {
-                        _prevIceGatheringState = _newIceGatheringState;
-                        _newIceGatheringState = "complete";
+                        if (_prevIceGatheringState == null || _newIceGatheringState == null)
+                        {
+                            _prevIceGatheringState = "complete";
+                            _newIceGatheringState = _peerConnection.IceGatheringState.ToString().ToLower();
+                        }
+                        else
+                        {
+                            _prevIceGatheringState = _newIceGatheringState;
+                            _newIceGatheringState = _peerConnection.IceGatheringState.ToString().ToLower();
+                        }
 
                         await callStatsClient.FabricStateChange(_prevIceGatheringState, _newIceGatheringState, "iceGatheringState");
                     }
@@ -523,26 +527,21 @@ namespace PeerConnectionClient.Signalling
 
             _peerConnection.OnIceConnectionStateChange += async() => 
             {
-                if (_peerConnection.IceConnectionState.ToString() == "New")
-                {
-                    if (_newIceConnectionState != "new")
-                    { 
-                        _prevIceConnectionState = "closed";
-                        _newIceConnectionState = "new";
-
-                        await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
-                    }
-
-                    await callStatsClient.IceRestart();
-                }
-
                 if (_peerConnection.IceConnectionState.ToString() == "Checking")
                 {
                     if (_newIceConnectionState != "checking")
                     {
-                        _prevIceConnectionState = _newIceConnectionState;
-                        _newIceConnectionState = "checking";
-
+                        if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                        {
+                            _prevIceConnectionState = "closed";
+                            _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower();
+                        }
+                        else
+                        {
+                            _prevIceConnectionState = _newIceConnectionState;
+                            _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower(); 
+                        }
+                        
                         await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
 
                     }
@@ -557,8 +556,16 @@ namespace PeerConnectionClient.Signalling
 
                     if (_newIceConnectionState != "connected")
                     {
-                        _prevIceConnectionState = _newIceConnectionState;
-                        _newIceConnectionState = "connected";
+                        if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                        {
+                            _prevIceConnectionState = "closed";
+                            _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower();
+                        }
+                        else
+                        {
+                            _prevIceConnectionState = _newIceConnectionState;
+                            _newIceConnectionState = _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower(); ;
+                        }
 
                         await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
                     }
@@ -583,10 +590,20 @@ namespace PeerConnectionClient.Signalling
                 {
                     if (_newIceConnectionState != "completed")
                     {
-                        _prevIceConnectionState = "new";
-                        _newIceConnectionState = "completed";
+                        if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                        {
+                            _prevIceConnectionState = "closed";
+                            _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower();
+                        }
+                        else
+                        {
+                            _prevIceConnectionState = _newIceConnectionState;
+                            _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower();
+                        }
 
                         await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+
+                        await callStatsClient.IceRestart();
                     }
                 }
 
@@ -594,8 +611,16 @@ namespace PeerConnectionClient.Signalling
                 {
                     if (_newIceConnectionState != "failed")
                     {
-                        _prevIceConnectionState = _newIceConnectionState;
-                        _newIceConnectionState = "failed";
+                        if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                        {
+                            _prevIceConnectionState = "closed";
+                            _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower();
+                        }
+                        else
+                        {
+                            _prevIceConnectionState = _newIceConnectionState;
+                            _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower();
+                        }
 
                         await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
                     }
@@ -608,8 +633,17 @@ namespace PeerConnectionClient.Signalling
                 {
                     if (_newIceConnectionState != "disconnected")
                     {
-                        _prevIceConnectionState = _newIceConnectionState;
-                        _newIceConnectionState = "disconnected";
+                        if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                        {
+                            _prevIceConnectionState = "closed";
+                            _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower();
+                        }
+                            
+                        else
+                        {
+                            _prevIceConnectionState = _newIceConnectionState;
+                            _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower();
+                        }
 
                         await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
                     }
@@ -621,8 +655,16 @@ namespace PeerConnectionClient.Signalling
                 {
                     if (_newIceConnectionState != "closed")
                     {
-                        _prevIceConnectionState = _newIceConnectionState;
-                        _newIceConnectionState = "closed";
+                        if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                        {
+                            _prevIceConnectionState = "closed";
+                            _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower();
+                        }
+                        else
+                        {
+                            _prevIceConnectionState = _newIceConnectionState;
+                            _newIceConnectionState = _peerConnection.IceConnectionState.ToString().ToLower();
+                        }
 
                         await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
                     }
