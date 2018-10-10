@@ -189,7 +189,7 @@ namespace PeerConnectionClient
         public async Task SendFabricSetup(int gatheringDelayMiliseconds, int connectivityDelayMiliseconds, int totalSetupDelay)
         {
             IceCandidateStatsData();
-            IceCandidatePairData();
+            AddToIceCandidatePairsList();
 
             fabricSetupData.localID = _localID;
             fabricSetupData.originID = _originID;
@@ -455,9 +455,22 @@ namespace PeerConnectionClient
             await callstats.FabricSetupFailed(fabricSetupFailedData);
         }
 
-        public async Task FabricDropped()
+        public async Task SendFabricDropped(string currIceConnectionState, string prevIceConnectionState, int delay)
         {
-            await callstats.FabricDropped(FabricDroppedData());
+            FabricDroppedData fdd = new FabricDroppedData();
+
+            fdd.localID = _localID;
+            fdd.originID = _originID;
+            fdd.deviceID = _deviceID;
+            fdd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fdd.remoteID = _remoteID;
+            fdd.connectionID = _connectionID;
+            fdd.currIceCandidatePair = IceCandidatePairData();
+            fdd.currIceConnectionState = currIceConnectionState;
+            fdd.prevIceConnectionState = prevIceConnectionState;
+            fdd.delay = delay;
+
+            await callstats.FabricDropped(fdd);
         }
 
         public async Task IceDisruptionStart()
@@ -504,25 +517,7 @@ namespace PeerConnectionClient
             return idd;
         }
 
-        private FabricDroppedData FabricDroppedData()
-        {
-            FabricDroppedData fdd = new FabricDroppedData();
-
-            fdd.localID = _localID;
-            fdd.originID = _originID;
-            fdd.deviceID = _deviceID;
-            fdd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            fdd.remoteID = _remoteID;
-            fdd.connectionID = _connectionID;
-            fdd.currIceCandidatePair = null;
-            fdd.currIceConnectionState = "failed";
-            fdd.prevIceConnectionState = "connected";
-            fdd.delay = 6;
-
-            return fdd;
-        }
-
-        private void IceCandidatePairData()
+        private void AddToIceCandidatePairsList()
         {
             for (int i = 0; i < iceCandidatePairs.Count; i++)
             {
@@ -586,6 +581,21 @@ namespace PeerConnectionClient
                 { RTCStatsType.RemoteCandidate, null },
                 { RTCStatsType.Certificate, null }
             };
+        }
+
+        private RTCIceCandidatePairStats _currIceCandidatePair;
+
+        private IceCandidatePair IceCandidatePairData()
+        {
+            IceCandidatePair icp = new IceCandidatePair();
+            icp.id = _currIceCandidatePair.Id;
+            icp.localCandidateId = _currIceCandidatePair.LocalCandidateId;
+            icp.remoteCandidateId = _currIceCandidatePair.RemoteCandidateId;
+            icp.state = _currIceCandidatePair.State.ToString();
+            icp.priority = 1;
+            icp.nominated = _currIceCandidatePair.Nominated;
+
+            return icp;
         }
 
         public void GetAllStatsData(IRTCStatsReport statsReport)
@@ -1073,9 +1083,9 @@ namespace PeerConnectionClient
                     if (!candidatePairsDict.ContainsKey(candidatePairStats.RemoteCandidateId))
                         candidatePairsDict.Add(candidatePairStats.RemoteCandidateId, "remote-candidate");
 
-                    //statsObjects.Add(icp);
-
                     iceCandidatePairs.Add(icp);
+
+                    _currIceCandidatePair = candidatePairStats;
                 }
 
                 if (statsType == RTCStatsType.Certificate)

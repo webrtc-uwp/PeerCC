@@ -625,7 +625,10 @@ namespace PeerConnectionClient.Signalling
                         await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
                     }
 
-                    await callStatsClient.FabricDropped();
+                    await GetAllStats();
+
+                    await callStatsClient.SendFabricDropped(_newIceConnectionState, _prevIceConnectionState, 0);
+
                     await callStatsClient.FabricSetupFailed("IceConnectionFailure", Empty, Empty, Empty);
                 }
 
