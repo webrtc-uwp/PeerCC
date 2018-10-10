@@ -414,6 +414,7 @@ namespace PeerConnectionClient
             fabricTerminatedData.connectionID = _connectionID;
             fabricTerminatedData.remoteID = _remoteID;
 
+            Debug.WriteLine("FabricTerminated: ");
             await callstats.FabricTerminated(fabricTerminatedData);
         }
 
@@ -430,6 +431,7 @@ namespace PeerConnectionClient
             fabricStateChangeData.newState = newState;
             fabricStateChangeData.changedState = changedState;
 
+            Debug.WriteLine("FabricStateChange: ");
             await callstats.FabricStateChange(fabricStateChangeData);
         }
 

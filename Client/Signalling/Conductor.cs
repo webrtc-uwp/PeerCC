@@ -79,8 +79,11 @@ namespace PeerConnectionClient.Signalling
 
         private string _localSDP;
 
-        private string _prevState;
-        private string _newState;
+        private string _prevIceConnectionState;
+        private string _newIceConnectionState;
+
+        private string _prevIceGatheringState;
+        private string _newIceGatheringState;
 
         private static readonly object InstanceLock = new object();
         private static Conductor _instance;
@@ -475,13 +478,44 @@ namespace PeerConnectionClient.Signalling
 
             setupClock.Stop();
 
-            _peerConnection.OnIceGatheringStateChange += () =>
+            _peerConnection.OnIceGatheringStateChange += async() =>
             {
+                if (_peerConnection.IceGatheringState.ToString() == "New")
+                {
+                    if (_newIceGatheringState != "new")
+                    {
+                        _prevIceGatheringState = "complete";
+                        _newIceGatheringState = "new";
+
+                        await callStatsClient.FabricStateChange(_prevIceGatheringState, _newIceGatheringState, "iceGatheringState");
+
+                    }
+                }
+
+                if (_peerConnection.IceGatheringState.ToString() == "Gathering")
+                {
+                    if (_newIceGatheringState != "gathering")
+                    {
+                        _prevIceGatheringState = "new";
+                        _newIceGatheringState = "gathering";
+
+                        await callStatsClient.FabricStateChange(_prevIceGatheringState, _newIceGatheringState, "iceGatheringState");
+                    }
+                }
+
                 if (_peerConnection.IceGatheringState.ToString() == "Complete")
                 {
                     gatheringClock.Stop();
 
                     _gatheringDelayMiliseconds = gatheringClock.Elapsed.Milliseconds;
+
+                    if (_newIceGatheringState != "complete")
+                    {
+                        _prevIceGatheringState = _newIceGatheringState;
+                        _newIceGatheringState = "complete";
+
+                        await callStatsClient.FabricStateChange(_prevIceGatheringState, _newIceGatheringState, "iceGatheringState");
+                    }
                 }
 
                 Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString());
@@ -491,20 +525,27 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_peerConnection.IceConnectionState.ToString() == "New")
                 {
-                    _prevState = "closed";
-                    _newState = "new";
+                    if (_newIceConnectionState != "new")
+                    { 
+                        _prevIceConnectionState = "closed";
+                        _newIceConnectionState = "new";
 
-                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
+                        await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                    }
 
                     await callStatsClient.IceRestart();
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Checking")
                 {
-                    _prevState = _newState;
-                    _newState = "checking";
+                    if (_newIceConnectionState != "checking")
+                    {
+                        _prevIceConnectionState = _newIceConnectionState;
+                        _newIceConnectionState = "checking";
 
-                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
+                        await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+
+                    }
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Connected")
@@ -514,10 +555,13 @@ namespace PeerConnectionClient.Signalling
                     _connectivityDelayMiliseconds = connectivityClock.Elapsed.Milliseconds;
                     _totalSetupDelay = setupClock.Elapsed.Milliseconds;
 
-                    _prevState = _newState;
-                    _newState = "connected";
+                    if (_newIceConnectionState != "connected")
+                    {
+                        _prevIceConnectionState = _newIceConnectionState;
+                        _newIceConnectionState = "connected";
 
-                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
+                        await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                    }
 
                     await GetAllStats();
 
@@ -537,18 +581,24 @@ namespace PeerConnectionClient.Signalling
 
                 if (_peerConnection.IceConnectionState.ToString() == "Completed")
                 {
-                    _prevState = _newState;
-                    _newState = "completed";
+                    if (_newIceConnectionState != "completed")
+                    {
+                        _prevIceConnectionState = "new";
+                        _newIceConnectionState = "completed";
 
-                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
+                        await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                    }
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Failed")
                 {
-                    _prevState = _newState;
-                    _newState = "failed";
+                    if (_newIceConnectionState != "failed")
+                    {
+                        _prevIceConnectionState = _newIceConnectionState;
+                        _newIceConnectionState = "failed";
 
-                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
+                        await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                    }
 
                     await callStatsClient.FabricDropped();
                     await callStatsClient.FabricSetupFailed("IceConnectionFailure", Empty, Empty, Empty);
@@ -556,20 +606,26 @@ namespace PeerConnectionClient.Signalling
 
                 if (_peerConnection.IceConnectionState.ToString() == "Disconnected")
                 {
-                    _prevState = _newState;
-                    _newState = "disconnected";
+                    if (_newIceConnectionState != "disconnected")
+                    {
+                        _prevIceConnectionState = _newIceConnectionState;
+                        _newIceConnectionState = "disconnected";
 
-                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
+                        await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                    }
 
                     await callStatsClient.IceDisruptionStart();
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Closed")
                 {
-                    _prevState = _newState;
-                    _newState = "closed";
+                    if (_newIceConnectionState != "closed")
+                    {
+                        _prevIceConnectionState = _newIceConnectionState;
+                        _newIceConnectionState = "closed";
 
-                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
+                        await callStatsClient.FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                    }
 
                     await callStatsClient.FabricSetupTerminated();
                 }
