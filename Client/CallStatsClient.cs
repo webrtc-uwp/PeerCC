@@ -269,19 +269,6 @@ namespace PeerConnectionClient
             await callstats.UserLeft(userLeftData);
         }
 
-        private FabricTerminatedData FabricTerminated()
-        {
-            FabricTerminatedData fabricTerminatedData = new FabricTerminatedData();
-            fabricTerminatedData.localID = _localID;
-            fabricTerminatedData.originID = _originID;
-            fabricTerminatedData.deviceID = _deviceID;
-            fabricTerminatedData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            fabricTerminatedData.connectionID = _connectionID;
-            fabricTerminatedData.remoteID = _remoteID;
-
-            return fabricTerminatedData;
-        }
-
         public void SSRCMapDataSetup(string sdp, string streamType, string reportType)
         {
             var dict = ParseSdp(sdp, "a=ssrc:");
@@ -419,7 +406,31 @@ namespace PeerConnectionClient
 
         public async Task FabricSetupTerminated()
         {
-            await callstats.FabricTerminated(FabricTerminated());
+            FabricTerminatedData fabricTerminatedData = new FabricTerminatedData();
+            fabricTerminatedData.localID = _localID;
+            fabricTerminatedData.originID = _originID;
+            fabricTerminatedData.deviceID = _deviceID;
+            fabricTerminatedData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fabricTerminatedData.connectionID = _connectionID;
+            fabricTerminatedData.remoteID = _remoteID;
+
+            await callstats.FabricTerminated(fabricTerminatedData);
+        }
+
+        public async Task FabricStateChange(string prevState, string newState, string changedState)
+        {
+            FabricStateChangeData fabricStateChangeData = new FabricStateChangeData();
+            fabricStateChangeData.localID = _localID;
+            fabricStateChangeData.originID = _originID;
+            fabricStateChangeData.deviceID = _deviceID;
+            fabricStateChangeData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fabricStateChangeData.remoteID = _remoteID;
+            fabricStateChangeData.connectionID = _connectionID;
+            fabricStateChangeData.prevState = prevState;
+            fabricStateChangeData.newState = newState;
+            fabricStateChangeData.changedState = changedState;
+
+            await callstats.FabricStateChange(fabricStateChangeData);
         }
 
         public async Task FabricSetupFailed(string reason, string name, string message, string stack)

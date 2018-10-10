@@ -78,7 +78,10 @@ namespace PeerConnectionClient.Signalling
         private int _totalSetupDelay;
 
         private string _localSDP;
-        
+
+        private string _prevState;
+        private string _newState;
+
         private static readonly object InstanceLock = new object();
         private static Conductor _instance;
 #if ORTCLIB
@@ -488,11 +491,20 @@ namespace PeerConnectionClient.Signalling
             {
                 if (_peerConnection.IceConnectionState.ToString() == "New")
                 {
+                    _prevState = "closed";
+                    _newState = "new";
+
+                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
+
                     await callStatsClient.IceRestart();
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Checking")
                 {
+                    _prevState = _newState;
+                    _newState = "checking";
+
+                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Connected")
@@ -501,6 +513,11 @@ namespace PeerConnectionClient.Signalling
 
                     _connectivityDelayMiliseconds = connectivityClock.Elapsed.Milliseconds;
                     _totalSetupDelay = setupClock.Elapsed.Milliseconds;
+
+                    _prevState = _newState;
+                    _newState = "connected";
+
+                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
 
                     await GetAllStats();
 
@@ -520,21 +537,40 @@ namespace PeerConnectionClient.Signalling
 
                 if (_peerConnection.IceConnectionState.ToString() == "Completed")
                 {
+                    _prevState = _newState;
+                    _newState = "completed";
+
+                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Failed")
                 {
+                    _prevState = _newState;
+                    _newState = "failed";
+
+                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
+
                     await callStatsClient.FabricDropped();
                     await callStatsClient.FabricSetupFailed("IceConnectionFailure", Empty, Empty, Empty);
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Disconnected")
                 {
+                    _prevState = _newState;
+                    _newState = "disconnected";
+
+                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
+
                     await callStatsClient.IceDisruptionStart();
                 }
 
                 if (_peerConnection.IceConnectionState.ToString() == "Closed")
                 {
+                    _prevState = _newState;
+                    _newState = "closed";
+
+                    await callStatsClient.FabricStateChange(_prevState, _newState, "iceConnectionState");
+
                     await callStatsClient.FabricSetupTerminated();
                 }
 
