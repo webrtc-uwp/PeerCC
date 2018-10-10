@@ -102,17 +102,25 @@ namespace PeerConnectionClient
 
         private ConferenceStatsSubmissionData conferenceStatsSubmissionData = new ConferenceStatsSubmissionData();
 
+        Stopwatch _setupClock;
+        Stopwatch _gatheringClock;
+        Stopwatch _connectivityClock;
+
         public async Task InitializeCallStats()
         {
+            _setupClock = Stopwatch.StartNew();
+
             callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
 
             await callstats.StartCallStats(CreateConference(), UserAlive());
+            
+            _gatheringClock = Stopwatch.StartNew();
+            _connectivityClock = Stopwatch.StartNew();
+
+            _setupClock.Stop();
 
             Debug.WriteLine("UserDetails: ");
             await SendUserDetails();
-
-            //Debug.WriteLine("FabricStateChange: ");
-            //await callstats.FabricStateChange(FabricStateChange());
 
             //Debug.WriteLine("FabricTransportChange: ");
             //await callstats.FabricTransportChange(FabricTransportChange());
@@ -455,6 +463,219 @@ namespace PeerConnectionClient
             await callstats.FabricSetupFailed(fabricSetupFailedData);
         }
 
+        private string _prevIceConnectionState;
+        private string _newIceConnectionState;
+
+        private int _gatheringDelayMiliseconds;
+        private int _connectivityDelayMiliseconds;
+        private int _totalSetupDelay;
+
+        public async Task StatsOnIceConnectionStateChange(RTCPeerConnection pc)
+        {
+            if (pc.IceConnectionState.ToString() == "Checking")
+            {
+                if (_newIceConnectionState != "checking")
+                {
+                    if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                    {
+                        _prevIceConnectionState = "closed";
+                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                    }
+                    else
+                    {
+                        _prevIceConnectionState = _newIceConnectionState;
+                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                    }
+
+                    await FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+
+                }
+            }
+
+            if (pc.IceConnectionState.ToString() == "Connected")
+            {
+                _connectivityClock.Stop();
+
+                _connectivityDelayMiliseconds = _connectivityClock.Elapsed.Milliseconds;
+                _totalSetupDelay = _setupClock.Elapsed.Milliseconds;
+
+                if (_newIceConnectionState != "connected")
+                {
+                    if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                    {
+                        _prevIceConnectionState = "closed";
+                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                    }
+                    else
+                    {
+                        _prevIceConnectionState = _newIceConnectionState;
+                        _newIceConnectionState = _newIceConnectionState = pc.IceConnectionState.ToString().ToLower(); ;
+                    }
+
+                    await FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                }
+
+                await GetAllStats(pc);
+
+                //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
+                await SendFabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
+
+                System.Timers.Timer timer = new System.Timers.Timer(10000);
+                timer.Elapsed += async (sender, e) =>
+                {
+                    await GetAllStats(pc);
+
+                    Debug.WriteLine("ConferenceStatsSubmission: ");
+                    await ConferenceStatsSubmission();
+                };
+                timer.Start();
+            }
+
+            if (pc.IceConnectionState.ToString() == "Completed")
+            {
+                if (_newIceConnectionState != "completed")
+                {
+                    if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                    {
+                        _prevIceConnectionState = "closed";
+                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                    }
+                    else
+                    {
+                        _prevIceConnectionState = _newIceConnectionState;
+                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                    }
+
+                    await FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                }
+            }
+
+            if (pc.IceConnectionState.ToString() == "Failed")
+            {
+                if (_newIceConnectionState != "failed")
+                {
+                    if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                    {
+                        _prevIceConnectionState = "closed";
+                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                    }
+                    else
+                    {
+                        _prevIceConnectionState = _newIceConnectionState;
+                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                    }
+
+                    await FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                }
+
+                await GetAllStats(pc);
+
+                await SendFabricDropped(_newIceConnectionState, _prevIceConnectionState, 0);
+
+                await FabricSetupFailed("IceConnectionFailure", string.Empty, string.Empty, string.Empty);
+            }
+
+            if (pc.IceConnectionState.ToString() == "Disconnected")
+            {
+                if (_newIceConnectionState != "disconnected")
+                {
+                    if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                    {
+                        _prevIceConnectionState = "closed";
+                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                    }
+
+                    else
+                    {
+                        _prevIceConnectionState = _newIceConnectionState;
+                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                    }
+
+                    await FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                }
+
+                await IceDisruptionStart();
+            }
+
+            if (pc.IceConnectionState.ToString() == "Closed")
+            {
+                if (_newIceConnectionState != "closed")
+                {
+                    if (_prevIceConnectionState == null || _newIceConnectionState == null)
+                    {
+                        _prevIceConnectionState = "closed";
+                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                    }
+                    else
+                    {
+                        _prevIceConnectionState = _newIceConnectionState;
+                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                    }
+
+                    await FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                }
+
+                await FabricSetupTerminated();
+            }
+        }
+
+        RTCStatsTypeSet statsType = new RTCStatsTypeSet(CallStatsClient.MakeDictionaryOfAllStats());
+
+        public async Task GetAllStats(RTCPeerConnection pc)
+        {
+            IRTCStatsReport statsReport = await Task.Run(async () => await pc.GetStats(statsType));
+
+            GetAllStatsData(statsReport);
+        }
+
+        private string _prevIceGatheringState;
+        private string _newIceGatheringState;
+
+        public async Task StatsOnIceGatheringStateChange(RTCPeerConnection pc)
+        {
+            if (pc.IceGatheringState.ToString() == "Gathering")
+            {
+                if (_newIceGatheringState != "gathering")
+                {
+                    if (_prevIceGatheringState == null || _newIceGatheringState == null)
+                    {
+                        _prevIceGatheringState = "complete";
+                        _newIceGatheringState = pc.IceGatheringState.ToString().ToLower();
+                    }
+                    else
+                    {
+                        _prevIceGatheringState = _newIceGatheringState;
+                        _newIceGatheringState = pc.IceGatheringState.ToString().ToLower();
+                    }
+
+                    await FabricStateChange(_prevIceGatheringState, _newIceGatheringState, "iceGatheringState");
+                }
+            }
+
+            if (pc.IceGatheringState.ToString() == "Complete")
+            {
+                _gatheringClock.Stop();
+
+                _gatheringDelayMiliseconds = _gatheringClock.Elapsed.Milliseconds;
+
+                if (_newIceGatheringState != "complete")
+                {
+                    if (_prevIceGatheringState == null || _newIceGatheringState == null)
+                    {
+                        _prevIceGatheringState = "complete";
+                        _newIceGatheringState = pc.IceGatheringState.ToString().ToLower();
+                    }
+                    else
+                    {
+                        _prevIceGatheringState = _newIceGatheringState;
+                        _newIceGatheringState = pc.IceGatheringState.ToString().ToLower();
+                    }
+
+                    await FabricStateChange(_prevIceGatheringState, _newIceGatheringState, "iceGatheringState");
+                }
+            }
+        }
+
         public async Task SendFabricDropped(string currIceConnectionState, string prevIceConnectionState, int delay)
         {
             FabricDroppedData fdd = new FabricDroppedData();
@@ -470,6 +691,7 @@ namespace PeerConnectionClient
             fdd.prevIceConnectionState = prevIceConnectionState;
             fdd.delay = delay;
 
+            Debug.WriteLine("FabricDropped: ");
             await callstats.FabricDropped(fdd);
         }
 
