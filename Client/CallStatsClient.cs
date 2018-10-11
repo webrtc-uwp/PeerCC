@@ -234,23 +234,28 @@ namespace PeerConnectionClient
             await callstats.SDPEvent(sdpEventData);
         }
 
-        //TODO:
-        public async Task SendFabricTransportChange(IceCandidatePair currIceCandidatePairObj, IceCandidatePair prevIceCandidatePairObj)
+        private IceCandidatePair _currIceCandidatePairObj;
+        private IceCandidatePair _prevIceCandidatePairObj;
+
+        public async Task SendFabricTransportChange()
         {
             FabricTransportChangeData fabricTransportChangeData = new FabricTransportChangeData();
             fabricTransportChangeData.localID = _localID;
             fabricTransportChangeData.originID = _originID;
             fabricTransportChangeData.deviceID = _deviceID;
             fabricTransportChangeData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            fabricTransportChangeData.connectionID = _connectionID;
             fabricTransportChangeData.remoteID = _remoteID;
-            fabricTransportChangeData.currIceCandidatePair = currIceCandidatePairObj;
-            fabricTransportChangeData.prevIceCandidatePair = prevIceCandidatePairObj;
-            fabricTransportChangeData.currIceConnectionState = "connected";
-            fabricTransportChangeData.prevIceConnectionState = "completed";
+            fabricTransportChangeData.connectionID = _connectionID;
+            fabricTransportChangeData.localIceCandidates = null;
+            fabricTransportChangeData.remoteIceCandidates = null;
+            fabricTransportChangeData.currIceCandidatePair = _currIceCandidatePairObj;
+            fabricTransportChangeData.prevIceCandidatePair = _prevIceCandidatePairObj;
+            fabricTransportChangeData.currIceConnectionState = _prevIceConnectionState;
+            fabricTransportChangeData.prevIceConnectionState = _newIceConnectionState;
             fabricTransportChangeData.delay = 2;
-            fabricTransportChangeData.relayType = "turn/tcp";
+            fabricTransportChangeData.relayType = "";
 
+            Debug.WriteLine("FabricTransportChange: ");
             await callstats.FabricTransportChange(fabricTransportChangeData);
         }
 
@@ -520,6 +525,17 @@ namespace PeerConnectionClient
                 //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
                 await SendFabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
 
+                if (_prevIceConnectionState == "completed")
+                {
+                    await GetAllStats(pc);
+
+                    _currIceCandidatePairObj = IceCandidatePairData();
+                    
+                    await SendFabricTransportChange();
+
+                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
+                }
+                    
                 System.Timers.Timer timer = new System.Timers.Timer(10000);
                 timer.Elapsed += async (sender, e) =>
                 {
@@ -547,6 +563,17 @@ namespace PeerConnectionClient
                     }
 
                     await FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                }
+
+                if (_prevIceConnectionState == "connected")
+                {
+                    await GetAllStats(pc);
+
+                    _currIceCandidatePairObj = IceCandidatePairData();
+
+                    await SendFabricTransportChange();
+
+                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
                 }
             }
 
