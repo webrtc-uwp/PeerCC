@@ -495,6 +495,17 @@ namespace PeerConnectionClient
                     await FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
 
                 }
+
+                if (_prevIceConnectionState == "disconnected")
+                {
+                    await GetAllStats(pc);
+
+                    _currIceCandidatePairObj = IceCandidatePairData();
+
+                    await SendIceDisruptionEnd();
+
+                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
+                }
             }
 
             if (pc.IceConnectionState.ToString() == "Connected")
@@ -535,6 +546,17 @@ namespace PeerConnectionClient
 
                     _prevIceCandidatePairObj = _currIceCandidatePairObj;
                 }
+
+                if (_prevIceConnectionState == "disconnected")
+                {
+                    await GetAllStats(pc);
+
+                    _currIceCandidatePairObj = IceCandidatePairData();
+
+                    await SendIceDisruptionEnd();
+
+                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
+                }
                     
                 System.Timers.Timer timer = new System.Timers.Timer(10000);
                 timer.Elapsed += async (sender, e) =>
@@ -572,6 +594,17 @@ namespace PeerConnectionClient
                     _currIceCandidatePairObj = IceCandidatePairData();
 
                     await SendFabricTransportChange();
+
+                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
+                }
+
+                if (_prevIceConnectionState == "disconnected")
+                {
+                    await GetAllStats(pc);
+
+                    _currIceCandidatePairObj = IceCandidatePairData();
+
+                    await SendIceDisruptionEnd();
 
                     _prevIceCandidatePairObj = _currIceCandidatePairObj;
                 }
@@ -729,22 +762,41 @@ namespace PeerConnectionClient
             await callstats.FabricDropped(fdd);
         }
 
+        public async Task SendIceDisruptionEnd()
+        {
+            IceDisruptionEndData ide = new IceDisruptionEndData();
+            ide.eventType = "iceDisruptionEnd";
+            ide.localID = _localID;
+            ide.originID = _originID;
+            ide.deviceID = _deviceID;
+            ide.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds(); 
+            ide.remoteID = _remoteID;
+            ide.connectionID = _connectionID;
+            ide.currIceCandidatePair = _currIceCandidatePairObj;
+            ide.prevIceCandidatePair = _prevIceCandidatePairObj;
+            ide.currIceConnectionState = _newIceConnectionState;
+            ide.prevIceConnectionState = _prevIceConnectionState;
+
+            Debug.WriteLine("IceDisruptionEnd: ");
+            await callstats.IceDisruptionEnd(ide);
+        }
+
         public async Task IceDisruptionStart()
         {
-            IceDisruptionStartData idd = new IceDisruptionStartData();
-            idd.eventType = "iceDisruptionStart";
-            idd.localID = _localID;
-            idd.originID = _originID;
-            idd.deviceID = _deviceID;
-            idd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            idd.remoteID = _remoteID;
-            idd.connectionID = _connectionID;
-            idd.currIceCandidatePair = _currIceCandidatePairObj;
-            idd.currIceConnectionState = _newIceConnectionState;
-            idd.prevIceConnectionState = _prevIceConnectionState;
+            IceDisruptionStartData ids = new IceDisruptionStartData();
+            ids.eventType = "iceDisruptionStart";
+            ids.localID = _localID;
+            ids.originID = _originID;
+            ids.deviceID = _deviceID;
+            ids.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            ids.remoteID = _remoteID;
+            ids.connectionID = _connectionID;
+            ids.currIceCandidatePair = _currIceCandidatePairObj;
+            ids.currIceConnectionState = _newIceConnectionState;
+            ids.prevIceConnectionState = _prevIceConnectionState;
 
             Debug.WriteLine("IceDisruptionStart: ");
-            await callstats.IceDisruptionStart(idd);
+            await callstats.IceDisruptionStart(ids);
         }
 
         public async Task IceRestart()
