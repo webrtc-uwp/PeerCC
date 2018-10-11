@@ -621,7 +621,14 @@ namespace PeerConnectionClient
                     await FabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
                 }
 
-                await IceDisruptionStart();
+                if (_prevIceConnectionState == "connected" || _prevIceConnectionState == "completed")
+                {
+                    await GetAllStats(pc);
+
+                    _currIceCandidatePairObj = IceCandidatePairData();
+
+                    await IceDisruptionStart();
+                }
             }
 
             if (pc.IceConnectionState.ToString() == "Closed")
@@ -724,7 +731,20 @@ namespace PeerConnectionClient
 
         public async Task IceDisruptionStart()
         {
-            await callstats.IceDisruptionStart(IceDisruptionStartData());
+            IceDisruptionStartData idd = new IceDisruptionStartData();
+            idd.eventType = "iceDisruptionStart";
+            idd.localID = _localID;
+            idd.originID = _originID;
+            idd.deviceID = _deviceID;
+            idd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            idd.remoteID = _remoteID;
+            idd.connectionID = _connectionID;
+            idd.currIceCandidatePair = _currIceCandidatePairObj;
+            idd.currIceConnectionState = _newIceConnectionState;
+            idd.prevIceConnectionState = _prevIceConnectionState;
+
+            Debug.WriteLine("IceDisruptionStart: ");
+            await callstats.IceDisruptionStart(idd);
         }
 
         public async Task IceRestart()
@@ -747,23 +767,6 @@ namespace PeerConnectionClient
             ird.prevIceConnectionState = "closed";
 
             return ird;
-        }
-
-        private IceDisruptionStartData IceDisruptionStartData()
-        {
-            IceDisruptionStartData idd = new IceDisruptionStartData();
-            idd.eventType = "iceDisruptionStart";
-            idd.localID = _localID;
-            idd.originID = _originID;
-            idd.deviceID = _deviceID;
-            idd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            idd.remoteID = _remoteID;
-            idd.connectionID = _connectionID;
-            idd.currIceCandidatePair = null;
-            idd.currIceConnectionState = "disconnected";
-            idd.prevIceConnectionState = "connected";
-
-            return idd;
         }
 
         private void AddToIceCandidatePairsList()
