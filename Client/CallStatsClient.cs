@@ -683,6 +683,16 @@ namespace PeerConnectionClient
                 }
 
                 await FabricSetupTerminated();
+
+                if (_prevIceConnectionState == "connected" || _prevIceConnectionState == "completed" 
+                    || _prevIceConnectionState == "failed" || _prevIceConnectionState == "disconnected")
+                {
+                    await GetAllStats(pc);
+
+                    _currIceCandidatePairObj = IceCandidatePairData();
+
+                    await SendIceTerminated();
+                }
             }
         }
 
@@ -760,6 +770,24 @@ namespace PeerConnectionClient
 
             Debug.WriteLine("FabricDropped: ");
             await callstats.FabricDropped(fdd);
+        }
+
+        public async Task SendIceTerminated()
+        {
+            IceTerminatedData itd = new IceTerminatedData();
+            itd.eventType = "iceTerminated";
+            itd.localID = _localID;
+            itd.originID = _originID;
+            itd.deviceID = _deviceID;
+            itd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            itd.remoteID = _remoteID;
+            itd.connectionID = _connectionID;
+            itd.prevIceCandidatePair = _prevIceCandidatePairObj;
+            itd.currIceConnectionState = _newIceConnectionState;
+            itd.prevIceConnectionState = _prevIceConnectionState;
+
+            Debug.WriteLine("IceTerminated: ");
+            await callstats.IceTerminated(itd);
         }
 
         public async Task SendIceDisruptionEnd()
