@@ -505,6 +505,8 @@ namespace PeerConnectionClient
                     await SendIceDisruptionEnd();
 
                     _prevIceCandidatePairObj = _currIceCandidatePairObj;
+
+                    await SendIceConnectionDisruptionEnd();
                 }
             }
 
@@ -662,6 +664,11 @@ namespace PeerConnectionClient
 
                     await IceDisruptionStart();
                 }
+
+                if (_prevIceConnectionState == "checking")
+                {
+                    await SendIceConnectionDisruptionStart();
+                }
             }
 
             if (pc.IceConnectionState.ToString() == "Closed")
@@ -770,6 +777,41 @@ namespace PeerConnectionClient
 
             Debug.WriteLine("FabricDropped: ");
             await callstats.FabricDropped(fdd);
+        }
+
+        private async Task SendIceConnectionDisruptionEnd()
+        {
+            IceConnectionDisruptionEndData icde = new IceConnectionDisruptionEndData();
+            icde.eventType = "iceConnectionDisruptionEnd";
+            icde.localID = _localID;
+            icde.originID = _originID;
+            icde.deviceID = _deviceID;
+            icde.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            icde.remoteID = _remoteID;
+            icde.connectionID = _connectionID;
+            icde.currIceConnectionState = _newIceConnectionState;
+            icde.prevIceConnectionState = _prevIceConnectionState;
+            icde.delay = 2;
+
+            Debug.WriteLine("IceConnectionDisruptionEnd: ");
+            await callstats.IceConnectionDisruptionEnd(icde);
+        }
+
+        private async Task SendIceConnectionDisruptionStart()
+        {
+            IceConnectionDisruptionStartData icds = new IceConnectionDisruptionStartData();
+            icds.eventType = "iceConnectionDisruptionStart";
+            icds.localID = _localID;
+            icds.originID = _originID;
+            icds.deviceID = _deviceID;
+            icds.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            icds.remoteID = _remoteID;
+            icds.connectionID = _connectionID;
+            icds.currIceConnectionState = _newIceConnectionState;
+            icds.prevIceConnectionState = _prevIceConnectionState;
+
+            Debug.WriteLine("IceConnectionDisruptionStart: ");
+            await callstats.IceConnectionDisruptionStart(icds);
         }
 
         public async Task SendIceTerminated()
