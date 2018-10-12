@@ -451,7 +451,7 @@ namespace PeerConnectionClient.Signalling
             Debug.WriteLine("Conductor: Creating peer connection.");
             _peerConnection = new RTCPeerConnection(config);
 
-            await callStatsClient.InitializeCallStats();
+            await callStatsClient.SendStartCallStats();
 
             _peerConnection.OnIceGatheringStateChange += async() =>
             {
@@ -668,7 +668,7 @@ namespace PeerConnectionClient.Signalling
         {
             OnAddRemoteTrack?.Invoke(evt.Track);
 
-            await callStatsClient.SSRCMap();
+            await callStatsClient.SendSSRCMap();
         }
 
         /// <summary>

@@ -16,6 +16,7 @@ namespace PeerConnectionClient
 {
     public class CallStatsClient
     {
+        #region Properties
         private static string _userID = GetLocalPeerName();
         private static string _localID = GetLocalPeerName();
         private static string _appID = (string)Config.localSettings.Values["appID"];
@@ -35,6 +36,45 @@ namespace PeerConnectionClient
         private static string _connectionID = $"{GetLocalPeerName()}-{_jti}";
         private static string _remoteID = "RemotePeer";
 
+        private CallStats callstats;
+
+        private List<object> statsObjects = new List<object>();
+
+        private FabricSetupData fabricSetupData = new FabricSetupData();
+
+        private List<IceCandidatePairStats> iceCandidatePairs = new List<IceCandidatePairStats>();
+        private List<IceCandidatePair> iceCandidatePairsList = new List<IceCandidatePair>();
+
+        private List<IceCandidateStats> iceCandidateStatsList = new List<IceCandidateStats>();
+        private List<IceCandidate> localIceCandidates = new List<IceCandidate>();
+        private List<IceCandidate> remoteIceCandidates = new List<IceCandidate>();
+
+        private SSRCMapData ssrcMapData = new SSRCMapData();
+        private List<SSRCData> ssrcDataList = new List<SSRCData>();
+
+        private ConferenceStatsSubmissionData conferenceStatsSubmissionData = new ConferenceStatsSubmissionData();
+
+        Stopwatch _setupClock;
+        Stopwatch _gatheringClock;
+        Stopwatch _connectivityClock;
+
+        private IceCandidatePair _currIceCandidatePairObj;
+        private IceCandidatePair _prevIceCandidatePairObj;
+
+        private string _prevIceConnectionState;
+        private string _newIceConnectionState;
+
+        private int _gatheringDelayMiliseconds;
+        private int _connectivityDelayMiliseconds;
+        private int _totalSetupDelay;
+
+        private string _prevIceGatheringState;
+        private string _newIceGatheringState;
+
+        private RTCIceCandidatePairStats _currIceCandidatePair;
+        #endregion
+
+        #region Generate JWT
         private static string GenerateJWT()
         {
             var header = new Dictionary<string, object>()
@@ -83,30 +123,10 @@ namespace PeerConnectionClient
                 return string.Empty;
             }
         }
+        #endregion
 
-        private CallStats callstats;
-
-        private List<object> statsObjects = new List<object>();
-
-        private FabricSetupData fabricSetupData = new FabricSetupData();
-
-        private List<IceCandidatePairStats> iceCandidatePairs = new List<IceCandidatePairStats>();
-        private List<IceCandidatePair> iceCandidatePairsList = new List<IceCandidatePair>();
-
-        private List<IceCandidateStats> iceCandidateStatsList = new List<IceCandidateStats>();
-        private List<IceCandidate> localIceCandidates = new List<IceCandidate>();
-        private List<IceCandidate> remoteIceCandidates = new List<IceCandidate>();
-               
-        private SSRCMapData ssrcMapData = new SSRCMapData();
-        private List<SSRCData> ssrcDataList = new List<SSRCData>();
-
-        private ConferenceStatsSubmissionData conferenceStatsSubmissionData = new ConferenceStatsSubmissionData();
-
-        Stopwatch _setupClock;
-        Stopwatch _gatheringClock;
-        Stopwatch _connectivityClock;
-
-        public async Task InitializeCallStats()
+        #region Start CallStats
+        public async Task SendStartCallStats()
         {
             _setupClock = Stopwatch.StartNew();
 
@@ -121,78 +141,65 @@ namespace PeerConnectionClient
 
             Debug.WriteLine("UserDetails: ");
             await SendUserDetails();
-
-            //Debug.WriteLine("FabricTransportChange: ");
-            //await callstats.FabricTransportChange(FabricTransportChange());
-
-            //Debug.WriteLine("FabricDropped: ");
-            //await callstats.FabricDropped(FabricDropped());
-
-            //Debug.WriteLine("FabricAction: ");
-            //await callstats.FabricAction(FabricAction());
-
-            //Debug.WriteLine("SystemStatusStatsSubmission: ");
-            //await callstats.SystemStatusStatsSubmission(SystemStatusStatsSubmission());
-
-            //Debug.WriteLine("IceDisruptionStart: ");
-            //await callstats.IceDisruptionStart(IceDisruptionStart());
-
-            //Debug.WriteLine("IceDisruptionEnd: ");
-            //await callstats.IceDisruptionEnd(IceDisruptionEnd());
-
-            //Debug.WriteLine("IceRestart: ");
-            //await callstats.IceRestart(IceRestart());
-
-            //Debug.WriteLine("IceFailed: ");
-            //await callstats.IceFailed(IceFailed());
-
-            //Debug.WriteLine("IceAborted: ");
-            //await callstats.IceAborted(IceAborted());
-
-            //Debug.WriteLine("IceTerminated: ");
-            //await callstats.IceTerminated(IceTerminated());
-
-            //Debug.WriteLine("IceConnectionDisruptionStart: ");
-            //await callstats.IceConnectionDisruptionStart(IceConnectionDisruptionStart());
-
-            //Debug.WriteLine("IceConnectionDisruptionEnd: ");
-            //await callstats.IceConnectionDisruptionEnd(IceConnectionDisruptionEnd());
-
-            //Debug.WriteLine("MediaAction: ");
-            //await callstats.MediaAction(MediaAction());
-
-            //Debug.WriteLine("MediaPlayback: ");
-            //await callstats.MediaPlayback(MediaPlayback());
-
-            //Debug.WriteLine("ConnectedOrActiveDevices: ");
-            //await callstats.ConnectedOrActiveDevices(ConnectedOrActiveDevices());
-
-            //Debug.WriteLine("ApplicationErrorLogs: ");
-            //await callstats.ApplicationErrorLogs(ApplicationErrorLogs());
-
-            //Debug.WriteLine("ConferenceUserFeedback: ");
-            //await callstats.ConferenceUserFeedback(ConferenceUserFeedback());
-
-            //Debug.WriteLine("DominantSpeaker: ");
-            //await callstats.DominantSpeaker(DominantSpeaker());
-
-            //Debug.WriteLine("SDPEvent: ");
-            //await callstats.SDPEvent(SDPEvent());
-
-            //Debug.WriteLine("BridgeStatistics: ");
-            //await callstats.BridgeStatistics(BridgeStatistics());
-
-            //Debug.WriteLine("BridgeAlive: ");
-            //await callstats.BridgeAlive(BridgeAlive());
-
-            //System.Timers.Timer timer = new System.Timers.Timer(30000);
-            //timer.Elapsed += async (sender, e) =>
-            //{
-            //    Debug.WriteLine("BridgeAlive: ");
-            //    await callstats.BridgeAlive(BridgeAliveData());
-            //};
-            //timer.Start();
         }
+        #endregion
+
+        #region User Action Events
+        private CreateConferenceData CreateConference()
+        {
+            EndpointInfo endpointInfo = new EndpointInfo();
+            endpointInfo.type = "native";
+            endpointInfo.os = Environment.OSVersion.ToString();
+            endpointInfo.buildName = "UWP";
+            endpointInfo.buildVersion = "10.0";
+            endpointInfo.appVersion = "1.0";
+
+            CreateConferenceData data = new CreateConferenceData();
+            data.localID = _localID;
+            data.originID = _originID;
+            data.deviceID = GetLocalPeerName();
+            data.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            data.endpointInfo = endpointInfo;
+
+            return data;
+        }
+
+        private UserAliveData UserAlive()
+        {
+            UserAliveData data = new UserAliveData();
+            data.localID = _localID;
+            data.originID = _originID;
+            data.deviceID = _deviceID;
+            data.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+
+            return data;
+        }
+
+        private async Task SendUserDetails()
+        {
+            UserDetailsData userDetailsData = new UserDetailsData();
+            userDetailsData.localID = _localID;
+            userDetailsData.originID = _originID;
+            userDetailsData.deviceID = _deviceID;
+            userDetailsData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            userDetailsData.userName = _userID;
+
+            Debug.WriteLine("UserDetails: ");
+            await callstats.UserDetails(userDetailsData);
+        }
+
+        public async Task SendUserLeft()
+        {
+            UserLeftData userLeftData = new UserLeftData();
+            userLeftData.localID = _localID;
+            userLeftData.originID = _originID;
+            userLeftData.deviceID = GetLocalPeerName();
+            userLeftData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+
+            Debug.WriteLine("SendUserLeft: ");
+            await callstats.UserLeft(userLeftData);
+        }
+        #endregion
 
         #region Fabric Events
         private async Task SendFabricSetup(int gatheringDelayMiliseconds, int connectivityDelayMiliseconds, int totalSetupDelay)
@@ -325,6 +332,22 @@ namespace PeerConnectionClient
 
             Debug.WriteLine("SendFabricAction: ");
             await callstats.FabricAction(fad);
+        }
+        #endregion
+
+        #region Stats Submission
+        private async Task ConferenceStatsSubmission()
+        {
+            conferenceStatsSubmissionData.localID = _localID;
+            conferenceStatsSubmissionData.originID = _originID;
+            conferenceStatsSubmissionData.deviceID = _deviceID;
+            conferenceStatsSubmissionData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            conferenceStatsSubmissionData.connectionID = _connectionID;
+            conferenceStatsSubmissionData.remoteID = _remoteID;
+            conferenceStatsSubmissionData.stats = statsObjects;
+
+            Debug.WriteLine("ConferenceStatsSubmission: ");
+            await callstats.ConferenceStatsSubmission(conferenceStatsSubmissionData);
         }
         #endregion
 
@@ -480,48 +503,7 @@ namespace PeerConnectionClient
         }
         #endregion
 
-        public async Task SendSDP(string localSDP, string remoteSDP)
-        {
-            SDPEventData sdpEventData = new SDPEventData();
-            sdpEventData.localID = _localID;
-            sdpEventData.originID = _originID;
-            sdpEventData.deviceID = _deviceID;
-            sdpEventData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            sdpEventData.connectionID = _connectionID;
-            sdpEventData.remoteID = _remoteID;
-            sdpEventData.localSDP = localSDP;
-            sdpEventData.remoteSDP = remoteSDP;
-
-            Debug.WriteLine("SDPEvent: ");
-            await callstats.SDPEvent(sdpEventData);
-        }
-
-        private IceCandidatePair _currIceCandidatePairObj;
-        private IceCandidatePair _prevIceCandidatePairObj;
-
-        public async Task SendUserDetails()
-        {
-            UserDetailsData userDetailsData = new UserDetailsData();
-            userDetailsData.localID = _localID;
-            userDetailsData.originID = _originID;
-            userDetailsData.deviceID = _deviceID;
-            userDetailsData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            userDetailsData.userName = _userID;
-
-            await callstats.UserDetails(userDetailsData);
-        }
-
-        public async Task SendUserLeft()
-        {
-            UserLeftData userLeftData = new UserLeftData();
-            userLeftData.localID = _localID;
-            userLeftData.originID = _originID;
-            userLeftData.deviceID = GetLocalPeerName();
-            userLeftData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-
-            await callstats.UserLeft(userLeftData);
-        }
-
+        #region Special Events
         public void SSRCMapDataSetup(string sdp, string streamType, string reportType)
         {
             var dict = ParseSdp(sdp, "a=ssrc:");
@@ -535,7 +517,7 @@ namespace PeerConnectionClient
                 foreach (var k in d.Value)
                 {
                     if (k.Key == "cname") ssrcData.cname = k.Value.Replace("\r", "");
-                    if (k.Key == "msid") ssrcData.msid = k.Value.Replace("\r", ""); 
+                    if (k.Key == "msid") ssrcData.msid = k.Value.Replace("\r", "");
                     if (k.Key == "mslabel") ssrcData.mslabel = k.Value.Replace("\r", "");
                     if (k.Key == "label")
                     {
@@ -601,37 +583,7 @@ namespace PeerConnectionClient
             return dict;
         }
 
-        private CreateConferenceData CreateConference()
-        {
-            EndpointInfo endpointInfo = new EndpointInfo();
-            endpointInfo.type = "native";
-            endpointInfo.os = Environment.OSVersion.ToString();
-            endpointInfo.buildName = "UWP";
-            endpointInfo.buildVersion = "10.0";
-            endpointInfo.appVersion = "1.0";
-
-            CreateConferenceData data = new CreateConferenceData();
-            data.localID = _localID;
-            data.originID = _originID;
-            data.deviceID = GetLocalPeerName();
-            data.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            data.endpointInfo = endpointInfo;
-
-            return data;
-        }
-
-        private UserAliveData UserAlive()
-        {
-            UserAliveData data = new UserAliveData();
-            data.localID = _localID;
-            data.originID = _originID;
-            data.deviceID = _deviceID;
-            data.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-
-            return data;
-        }
-        
-        public async Task SSRCMap()
+        public async Task SendSSRCMap()
         {
             ssrcMapData.localID = _localID;
             ssrcMapData.originID = _originID;
@@ -641,29 +593,28 @@ namespace PeerConnectionClient
             ssrcMapData.remoteID = _remoteID;
             ssrcMapData.ssrcData = ssrcDataList;
 
+            Debug.WriteLine("SSRCMap: ");
             await callstats.SSRCMap(ssrcMapData);
         }
 
-        public async Task ConferenceStatsSubmission()
+        public async Task SendSDP(string localSDP, string remoteSDP)
         {
-            conferenceStatsSubmissionData.localID = _localID;
-            conferenceStatsSubmissionData.originID = _originID;
-            conferenceStatsSubmissionData.deviceID = _deviceID;
-            conferenceStatsSubmissionData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            conferenceStatsSubmissionData.connectionID = _connectionID;
-            conferenceStatsSubmissionData.remoteID = _remoteID;
-            conferenceStatsSubmissionData.stats = statsObjects;
+            SDPEventData sdpEventData = new SDPEventData();
+            sdpEventData.localID = _localID;
+            sdpEventData.originID = _originID;
+            sdpEventData.deviceID = _deviceID;
+            sdpEventData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            sdpEventData.connectionID = _connectionID;
+            sdpEventData.remoteID = _remoteID;
+            sdpEventData.localSDP = localSDP;
+            sdpEventData.remoteSDP = remoteSDP;
 
-            await callstats.ConferenceStatsSubmission(conferenceStatsSubmissionData);
+            Debug.WriteLine("SDPEvent: ");
+            await callstats.SDPEvent(sdpEventData);
         }
+        #endregion
 
-        private string _prevIceConnectionState;
-        private string _newIceConnectionState;
-
-        private int _gatheringDelayMiliseconds;
-        private int _connectivityDelayMiliseconds;
-        private int _totalSetupDelay;
-
+        #region Stats OnIceConnectionStateChange
         public async Task StatsOnIceConnectionStateChange(RTCPeerConnection pc)
         {
             if (pc.IceConnectionState.ToString() == "New")
@@ -918,19 +869,9 @@ namespace PeerConnectionClient
                 }
             }
         }
+        #endregion
 
-        RTCStatsTypeSet statsType = new RTCStatsTypeSet(CallStatsClient.MakeDictionaryOfAllStats());
-
-        public async Task GetAllStats(RTCPeerConnection pc)
-        {
-            IRTCStatsReport statsReport = await Task.Run(async () => await pc.GetStats(statsType));
-
-            GetAllStatsData(statsReport);
-        }
-
-        private string _prevIceGatheringState;
-        private string _newIceGatheringState;
-
+        #region Stats OnIceGatheringStateChange
         public async Task StatsOnIceGatheringStateChange(RTCPeerConnection pc)
         {
             if (pc.IceGatheringState.ToString() == "Gathering")
@@ -975,49 +916,9 @@ namespace PeerConnectionClient
                 }
             }
         }
+        #endregion
 
-        private void AddToIceCandidatePairsList()
-        {
-            for (int i = 0; i < iceCandidatePairs.Count; i++)
-            {
-                IceCandidatePairStats icps = iceCandidatePairs[i];
-
-                IceCandidatePair iceCandidatePair = new IceCandidatePair();
-
-                iceCandidatePair.id = icps.id;
-                iceCandidatePair.localCandidateId = icps.localCandidateId;
-                iceCandidatePair.remoteCandidateId = icps.remoteCandidateId;
-                iceCandidatePair.state = icps.state;
-                iceCandidatePair.priority = 1;
-                iceCandidatePair.nominated = icps.nominated;
-
-                iceCandidatePairsList.Add(iceCandidatePair);
-            }
-        }
-
-        private void IceCandidateStatsData()
-        {
-            for (int i = 0; i < iceCandidateStatsList.Count; i++)
-            {
-                IceCandidateStats ics = iceCandidateStatsList[i];
-
-                IceCandidate iceCandidate = new IceCandidate();
-
-                iceCandidate.id = ics.id;
-                iceCandidate.type = ics.type;
-                iceCandidate.ip = ics.ip;
-                iceCandidate.port = ics.port;
-                iceCandidate.candidateType = ics.candidateType;
-                iceCandidate.transport = ics.protocol;
-
-                if (ics.type.Contains("local"))
-                    localIceCandidates.Add(iceCandidate);
-
-                if (ics.type.Contains("remote"))
-                    remoteIceCandidates.Add(iceCandidate);
-            }
-        }
-
+        #region WebRtc Stats
         public static Dictionary<RTCStatsType, object> MakeDictionaryOfAllStats()
         {
             return new Dictionary<RTCStatsType, object>
@@ -1042,19 +943,13 @@ namespace PeerConnectionClient
             };
         }
 
-        private RTCIceCandidatePairStats _currIceCandidatePair;
+        RTCStatsTypeSet statsType = new RTCStatsTypeSet(MakeDictionaryOfAllStats());
 
-        private IceCandidatePair IceCandidatePairData()
+        public async Task GetAllStats(RTCPeerConnection pc)
         {
-            IceCandidatePair icp = new IceCandidatePair();
-            icp.id = _currIceCandidatePair.Id;
-            icp.localCandidateId = _currIceCandidatePair.LocalCandidateId;
-            icp.remoteCandidateId = _currIceCandidatePair.RemoteCandidateId;
-            icp.state = _currIceCandidatePair.State.ToString();
-            icp.priority = 1;
-            icp.nominated = _currIceCandidatePair.Nominated;
+            IRTCStatsReport statsReport = await Task.Run(async () => await pc.GetStats(statsType));
 
-            return icp;
+            GetAllStatsData(statsReport);
         }
 
         public void GetAllStatsData(IRTCStatsReport statsReport)
@@ -1569,11 +1464,65 @@ namespace PeerConnectionClient
                 }
             }
         }
+        #endregion
 
-        /// <summary>
-        /// Constructs and returns the local peer name.
-        /// </summary>
-        /// <returns>The local peer name.</returns>
+        #region Ice Candidates Data
+        private void AddToIceCandidatePairsList()
+        {
+            for (int i = 0; i < iceCandidatePairs.Count; i++)
+            {
+                IceCandidatePairStats icps = iceCandidatePairs[i];
+
+                IceCandidatePair iceCandidatePair = new IceCandidatePair();
+
+                iceCandidatePair.id = icps.id;
+                iceCandidatePair.localCandidateId = icps.localCandidateId;
+                iceCandidatePair.remoteCandidateId = icps.remoteCandidateId;
+                iceCandidatePair.state = icps.state;
+                iceCandidatePair.priority = 1;
+                iceCandidatePair.nominated = icps.nominated;
+
+                iceCandidatePairsList.Add(iceCandidatePair);
+            }
+        }
+
+        private void IceCandidateStatsData()
+        {
+            for (int i = 0; i < iceCandidateStatsList.Count; i++)
+            {
+                IceCandidateStats ics = iceCandidateStatsList[i];
+
+                IceCandidate iceCandidate = new IceCandidate();
+
+                iceCandidate.id = ics.id;
+                iceCandidate.type = ics.type;
+                iceCandidate.ip = ics.ip;
+                iceCandidate.port = ics.port;
+                iceCandidate.candidateType = ics.candidateType;
+                iceCandidate.transport = ics.protocol;
+
+                if (ics.type.Contains("local"))
+                    localIceCandidates.Add(iceCandidate);
+
+                if (ics.type.Contains("remote"))
+                    remoteIceCandidates.Add(iceCandidate);
+            }
+        }
+
+        private IceCandidatePair IceCandidatePairData()
+        {
+            IceCandidatePair icp = new IceCandidatePair();
+            icp.id = _currIceCandidatePair.Id;
+            icp.localCandidateId = _currIceCandidatePair.LocalCandidateId;
+            icp.remoteCandidateId = _currIceCandidatePair.RemoteCandidateId;
+            icp.state = _currIceCandidatePair.State.ToString();
+            icp.priority = 1;
+            icp.nominated = _currIceCandidatePair.Nominated;
+
+            return icp;
+        }
+        #endregion
+
         private static string GetLocalPeerName()
         {
             var hostname = NetworkInformation.GetHostNames().FirstOrDefault(h => h.Type == HostNameType.DomainName);
