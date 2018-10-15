@@ -43,11 +43,11 @@ namespace PeerConnectionClient
         private FabricSetupData fabricSetupData = new FabricSetupData();
 
         private List<IceCandidatePairStats> iceCandidatePairs = new List<IceCandidatePairStats>();
-        private List<IceCandidatePair> iceCandidatePairsList = new List<IceCandidatePair>();
+        private List<IceCandidatePair> _iceCandidatePairsList = new List<IceCandidatePair>();
 
         private List<IceCandidateStats> iceCandidateStatsList = new List<IceCandidateStats>();
-        private List<IceCandidate> localIceCandidates = new List<IceCandidate>();
-        private List<IceCandidate> remoteIceCandidates = new List<IceCandidate>();
+        private List<IceCandidate> _localIceCandidates = new List<IceCandidate>();
+        private List<IceCandidate> _remoteIceCandidates = new List<IceCandidate>();
 
         private SSRCMapData ssrcMapData = new SSRCMapData();
         private List<SSRCData> ssrcDataList = new List<SSRCData>();
@@ -218,9 +218,9 @@ namespace PeerConnectionClient
             fabricSetupData.iceConnectivityDelay = connectivityDelayMiliseconds;
             fabricSetupData.fabricTransmissionDirection = "sendrecv";
             fabricSetupData.remoteEndpointType = "peer";
-            fabricSetupData.localIceCandidates = localIceCandidates;
-            fabricSetupData.remoteIceCandidates = remoteIceCandidates;
-            fabricSetupData.iceCandidatePairs = iceCandidatePairsList;
+            fabricSetupData.localIceCandidates = _localIceCandidates;
+            fabricSetupData.remoteIceCandidates = _remoteIceCandidates;
+            fabricSetupData.iceCandidatePairs = _iceCandidatePairsList;
 
             Debug.WriteLine("FabricSetup: ");
             await callstats.FabricSetup(fabricSetupData);
@@ -310,7 +310,7 @@ namespace PeerConnectionClient
             fdd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             fdd.remoteID = _remoteID;
             fdd.connectionID = _connectionID;
-            fdd.currIceCandidatePair = IceCandidatePairData();
+            fdd.currIceCandidatePair = GetIceCandidatePairData();
             fdd.currIceConnectionState = currIceConnectionState;
             fdd.prevIceConnectionState = prevIceConnectionState;
             fdd.delay = delay;
@@ -352,7 +352,7 @@ namespace PeerConnectionClient
         #endregion
 
         #region Ice Events
-        private async Task IceDisruptionStart()
+        private async Task SendIceDisruptionStart()
         {
             IceDisruptionStartData ids = new IceDisruptionStartData();
             ids.eventType = "iceDisruptionStart";
@@ -417,9 +417,9 @@ namespace PeerConnectionClient
             ifd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             ifd.remoteID = _remoteID;
             ifd.connectionID = _connectionID;
-            ifd.localIceCandidates = null;
-            ifd.remoteIceCandidates = null;
-            ifd.iceCandidatePairs = null;
+            ifd.localIceCandidates = _localIceCandidates;
+            ifd.remoteIceCandidates = _remoteIceCandidates;
+            ifd.iceCandidatePairs = _iceCandidatePairsList;
             ifd.currIceConnectionState = _newIceConnectionState;
             ifd.prevIceConnectionState = _prevIceConnectionState;
             ifd.delay = 9;
@@ -438,9 +438,9 @@ namespace PeerConnectionClient
             iad.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             iad.remoteID = _remoteID;
             iad.connectionID = _connectionID;
-            iad.localIceCandidates = null;
-            iad.remoteIceCandidates = null;
-            iad.iceCandidatePairs = null;
+            iad.localIceCandidates = _localIceCandidates;
+            iad.remoteIceCandidates = _remoteIceCandidates;
+            iad.iceCandidatePairs = _iceCandidatePairsList;
             iad.currIceConnectionState = _newIceConnectionState;
             iad.prevIceConnectionState = _prevIceConnectionState;
             iad.delay = 3;
@@ -636,9 +636,9 @@ namespace PeerConnectionClient
 
                 }
 
-                if (_prevIceConnectionState == "checking" || _prevIceConnectionState == "completed" 
-                    || _prevIceConnectionState == "failed" || _prevIceConnectionState == "disconnected" 
-                    || _prevIceConnectionState == "closed")
+                if (_prevIceConnectionState == "checking" || _prevIceConnectionState == "connected" 
+                    || _prevIceConnectionState == "completed" || _prevIceConnectionState == "failed" 
+                    || _prevIceConnectionState == "disconnected" || _prevIceConnectionState == "closed")
                 {
                     await SendIceRestart();
                 }
@@ -665,13 +665,13 @@ namespace PeerConnectionClient
 
                 if (_prevIceConnectionState == "disconnected")
                 {
+                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
+
                     await GetAllStats(pc);
 
-                    _currIceCandidatePairObj = IceCandidatePairData();
+                    _currIceCandidatePairObj = GetIceCandidatePairData();
 
                     await SendIceDisruptionEnd();
-
-                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
 
                     await SendIceConnectionDisruptionEnd();
                 }
@@ -709,7 +709,7 @@ namespace PeerConnectionClient
                 {
                     await GetAllStats(pc);
 
-                    _currIceCandidatePairObj = IceCandidatePairData();
+                    _currIceCandidatePairObj = GetIceCandidatePairData();
                     
                     await SendFabricTransportChange();
 
@@ -718,13 +718,13 @@ namespace PeerConnectionClient
 
                 if (_prevIceConnectionState == "disconnected")
                 {
+                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
+
                     await GetAllStats(pc);
 
-                    _currIceCandidatePairObj = IceCandidatePairData();
+                    _currIceCandidatePairObj = GetIceCandidatePairData();
 
                     await SendIceDisruptionEnd();
-
-                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
                 }
                     
                 System.Timers.Timer timer = new System.Timers.Timer(10000);
@@ -760,7 +760,7 @@ namespace PeerConnectionClient
                 {
                     await GetAllStats(pc);
 
-                    _currIceCandidatePairObj = IceCandidatePairData();
+                    _currIceCandidatePairObj = GetIceCandidatePairData();
 
                     await SendFabricTransportChange();
 
@@ -769,13 +769,13 @@ namespace PeerConnectionClient
 
                 if (_prevIceConnectionState == "disconnected")
                 {
+                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
+
                     await GetAllStats(pc);
 
-                    _currIceCandidatePairObj = IceCandidatePairData();
+                    _currIceCandidatePairObj = GetIceCandidatePairData();
 
                     await SendIceDisruptionEnd();
-
-                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
                 }
             }
 
@@ -795,6 +795,11 @@ namespace PeerConnectionClient
                     }
 
                     await SendFabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                }
+
+                if (_prevIceConnectionState == "checking" || _prevIceConnectionState == "disconnected")
+                {
+                    await SendIceFailed();
                 }
 
                 await GetAllStats(pc);
@@ -827,9 +832,9 @@ namespace PeerConnectionClient
                 {
                     await GetAllStats(pc);
 
-                    _currIceCandidatePairObj = IceCandidatePairData();
+                    _currIceCandidatePairObj = GetIceCandidatePairData();
 
-                    await IceDisruptionStart();
+                    await SendIceDisruptionStart();
                 }
 
                 if (_prevIceConnectionState == "checking")
@@ -853,6 +858,11 @@ namespace PeerConnectionClient
                         _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
                     }
 
+                    if (_prevIceConnectionState == "checking" || _prevIceConnectionState == "new")
+                    {
+                        await SendIceAborted();
+                    }
+
                     await SendFabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
                 }
 
@@ -861,10 +871,6 @@ namespace PeerConnectionClient
                 if (_prevIceConnectionState == "connected" || _prevIceConnectionState == "completed" 
                     || _prevIceConnectionState == "failed" || _prevIceConnectionState == "disconnected")
                 {
-                    await GetAllStats(pc);
-
-                    _currIceCandidatePairObj = IceCandidatePairData();
-
                     await SendIceTerminated();
                 }
             }
@@ -1482,7 +1488,7 @@ namespace PeerConnectionClient
                 iceCandidatePair.priority = 1;
                 iceCandidatePair.nominated = icps.nominated;
 
-                iceCandidatePairsList.Add(iceCandidatePair);
+                _iceCandidatePairsList.Add(iceCandidatePair);
             }
         }
 
@@ -1502,14 +1508,14 @@ namespace PeerConnectionClient
                 iceCandidate.transport = ics.protocol;
 
                 if (ics.type.Contains("local"))
-                    localIceCandidates.Add(iceCandidate);
+                    _localIceCandidates.Add(iceCandidate);
 
                 if (ics.type.Contains("remote"))
-                    remoteIceCandidates.Add(iceCandidate);
+                    _remoteIceCandidates.Add(iceCandidate);
             }
         }
 
-        private IceCandidatePair IceCandidatePairData()
+        private IceCandidatePair GetIceCandidatePairData()
         {
             IceCandidatePair icp = new IceCandidatePair();
             icp.id = _currIceCandidatePair.Id;
