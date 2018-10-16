@@ -400,7 +400,7 @@ namespace PeerConnectionClient
             ird.remoteID = _remoteID;
             ird.connectionID = _connectionID;
             ird.prevIceCandidatePair = _prevIceCandidatePairObj;
-            ird.currIceConnectionState = _newIceConnectionState;
+            ird.currIceConnectionState = "new";
             ird.prevIceConnectionState = _prevIceConnectionState;
 
             Debug.WriteLine("IceRestart: ");
@@ -617,40 +617,13 @@ namespace PeerConnectionClient
         #region Stats OnIceConnectionStateChange
         public async Task StatsOnIceConnectionStateChange(RTCPeerConnection pc)
         {
-            if (pc.IceConnectionState.ToString() == "New")
-            {
-                if (_newIceConnectionState != "checking")
-                {
-                    if (_prevIceConnectionState == null || _newIceConnectionState == null)
-                    {
-                        _prevIceConnectionState = "closed";
-                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
-                    }
-                    else
-                    {
-                        _prevIceConnectionState = _newIceConnectionState;
-                        _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
-                    }
-
-                    await SendFabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
-
-                }
-
-                if (_prevIceConnectionState == "checking" || _prevIceConnectionState == "connected" 
-                    || _prevIceConnectionState == "completed" || _prevIceConnectionState == "failed" 
-                    || _prevIceConnectionState == "disconnected" || _prevIceConnectionState == "closed")
-                {
-                    await SendIceRestart();
-                }
-            }
-
             if (pc.IceConnectionState.ToString() == "Checking")
             {
                 if (_newIceConnectionState != "checking")
                 {
                     if (_prevIceConnectionState == null || _newIceConnectionState == null)
                     {
-                        _prevIceConnectionState = "closed";
+                        _prevIceConnectionState = "new";
                         _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
                     }
                     else
@@ -660,7 +633,13 @@ namespace PeerConnectionClient
                     }
 
                     await SendFabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
+                }
 
+                if (_prevIceConnectionState == "connected" || _prevIceConnectionState == "completed"
+                    || _prevIceConnectionState == "failed" || _prevIceConnectionState == "disconnected"
+                    || _prevIceConnectionState == "closed")
+                {
+                    await SendIceRestart();
                 }
 
                 if (_prevIceConnectionState == "disconnected")
@@ -688,7 +667,7 @@ namespace PeerConnectionClient
                 {
                     if (_prevIceConnectionState == null || _newIceConnectionState == null)
                     {
-                        _prevIceConnectionState = "closed";
+                        _prevIceConnectionState = "new";
                         _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
                     }
                     else
@@ -744,7 +723,7 @@ namespace PeerConnectionClient
                 {
                     if (_prevIceConnectionState == null || _newIceConnectionState == null)
                     {
-                        _prevIceConnectionState = "closed";
+                        _prevIceConnectionState = "new";
                         _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
                     }
                     else
@@ -785,7 +764,7 @@ namespace PeerConnectionClient
                 {
                     if (_prevIceConnectionState == null || _newIceConnectionState == null)
                     {
-                        _prevIceConnectionState = "closed";
+                        _prevIceConnectionState = "new";
                         _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
                     }
                     else
@@ -815,7 +794,7 @@ namespace PeerConnectionClient
                 {
                     if (_prevIceConnectionState == null || _newIceConnectionState == null)
                     {
-                        _prevIceConnectionState = "closed";
+                        _prevIceConnectionState = "new";
                         _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
                     }
 
@@ -849,7 +828,7 @@ namespace PeerConnectionClient
                 {
                     if (_prevIceConnectionState == null || _newIceConnectionState == null)
                     {
-                        _prevIceConnectionState = "closed";
+                        _prevIceConnectionState = "new";
                         _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
                     }
                     else
