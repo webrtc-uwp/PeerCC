@@ -617,21 +617,29 @@ namespace PeerConnectionClient
         #region Stats OnIceConnectionStateChange
         public async Task StatsOnIceConnectionStateChange(RTCPeerConnection pc)
         {
+            string newConnection = RTCIceConnectionState.New.ToString().ToLower();
+            string checking = RTCIceConnectionState.Checking.ToString().ToLower();
+            string connected = RTCIceConnectionState.Connected.ToString().ToLower();
+            string completed = RTCIceConnectionState.Completed.ToString().ToLower();
+            string failed = RTCIceConnectionState.Failed.ToString().ToLower();
+            string disconnected = RTCIceConnectionState.Disconnected.ToString().ToLower();
+            string closed = RTCIceConnectionState.Closed.ToString().ToLower();
+
             if (pc.IceConnectionState == RTCIceConnectionState.Checking)
             {
-                if (_newIceConnectionState != "checking")
+                if (_newIceConnectionState != checking)
                 {
-                    await SetIceConnectionStates(pc);
+                    await SetIceConnectionStates(pc, checking);
                 }
 
-                if (_prevIceConnectionState == "connected" || _prevIceConnectionState == "completed"
-                    || _prevIceConnectionState == "failed" || _prevIceConnectionState == "disconnected"
-                    || _prevIceConnectionState == "closed")
+                if (_prevIceConnectionState == connected || _prevIceConnectionState == completed
+                    || _prevIceConnectionState == failed || _prevIceConnectionState == disconnected
+                    || _prevIceConnectionState == closed)
                 {
                     await SendIceRestart();
                 }
 
-                if (_prevIceConnectionState == "disconnected")
+                if (_prevIceConnectionState == disconnected)
                 {
                     _prevIceCandidatePairObj = _currIceCandidatePairObj;
 
@@ -652,9 +660,9 @@ namespace PeerConnectionClient
                 _connectivityDelayMiliseconds = _connectivityClock.Elapsed.Milliseconds;
                 _totalSetupDelay = _setupClock.Elapsed.Milliseconds;
 
-                if (_newIceConnectionState != "connected")
+                if (_newIceConnectionState != connected)
                 {
-                    await SetIceConnectionStates(pc);
+                    await SetIceConnectionStates(pc, connected);
                 }
 
                 await GetAllStats(pc);
@@ -662,7 +670,7 @@ namespace PeerConnectionClient
                 //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
                 await SendFabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
 
-                if (_prevIceConnectionState == "completed")
+                if (_prevIceConnectionState == completed)
                 {
                     await GetAllStats(pc);
 
@@ -673,7 +681,7 @@ namespace PeerConnectionClient
                     _prevIceCandidatePairObj = _currIceCandidatePairObj;
                 }
 
-                if (_prevIceConnectionState == "disconnected")
+                if (_prevIceConnectionState == disconnected)
                 {
                     _prevIceCandidatePairObj = _currIceCandidatePairObj;
 
@@ -697,12 +705,12 @@ namespace PeerConnectionClient
 
             if (pc.IceConnectionState == RTCIceConnectionState.Completed)
             {
-                if (_newIceConnectionState != "completed")
+                if (_newIceConnectionState != completed)
                 {
-                    await SetIceConnectionStates(pc);
+                    await SetIceConnectionStates(pc, completed);
                 }
 
-                if (_prevIceConnectionState == "connected")
+                if (_prevIceConnectionState == connected)
                 {
                     await GetAllStats(pc);
 
@@ -713,7 +721,7 @@ namespace PeerConnectionClient
                     _prevIceCandidatePairObj = _currIceCandidatePairObj;
                 }
 
-                if (_prevIceConnectionState == "disconnected")
+                if (_prevIceConnectionState == disconnected)
                 {
                     _prevIceCandidatePairObj = _currIceCandidatePairObj;
 
@@ -727,12 +735,12 @@ namespace PeerConnectionClient
 
             if (pc.IceConnectionState == RTCIceConnectionState.Failed)
             {
-                if (_newIceConnectionState != "failed")
+                if (_newIceConnectionState != failed)
                 {
-                    await SetIceConnectionStates(pc);
+                    await SetIceConnectionStates(pc, failed);
                 }
 
-                if (_prevIceConnectionState == "checking" || _prevIceConnectionState == "disconnected")
+                if (_prevIceConnectionState == checking || _prevIceConnectionState == disconnected)
                 {
                     await SendIceFailed();
                 }
@@ -746,12 +754,12 @@ namespace PeerConnectionClient
 
             if (pc.IceConnectionState == RTCIceConnectionState.Disconnected)
             {
-                if (_newIceConnectionState != "disconnected")
+                if (_newIceConnectionState != disconnected)
                 {
-                    await SetIceConnectionStates(pc);
+                    await SetIceConnectionStates(pc, disconnected);
                 }
 
-                if (_prevIceConnectionState == "connected" || _prevIceConnectionState == "completed")
+                if (_prevIceConnectionState == connected || _prevIceConnectionState == completed)
                 {
                     await GetAllStats(pc);
 
@@ -760,7 +768,7 @@ namespace PeerConnectionClient
                     await SendIceDisruptionStart();
                 }
 
-                if (_prevIceConnectionState == "checking")
+                if (_prevIceConnectionState == checking)
                 {
                     await SendIceConnectionDisruptionStart();
                 }
@@ -768,37 +776,37 @@ namespace PeerConnectionClient
 
             if (pc.IceConnectionState == RTCIceConnectionState.Closed)
             {
-                if (_newIceConnectionState != "closed")
+                if (_newIceConnectionState != closed)
                 {
-                    await SetIceConnectionStates(pc);
+                    await SetIceConnectionStates(pc, closed);
                 }
 
                 await SendFabricSetupTerminated();
 
-                if (_prevIceConnectionState == "checking" || _prevIceConnectionState == "new")
+                if (_prevIceConnectionState == checking || _prevIceConnectionState == newConnection)
                 {
                     await SendIceAborted();
                 }
 
-                if (_prevIceConnectionState == "connected" || _prevIceConnectionState == "completed" 
-                    || _prevIceConnectionState == "failed" || _prevIceConnectionState == "disconnected")
+                if (_prevIceConnectionState == connected || _prevIceConnectionState == completed 
+                    || _prevIceConnectionState == failed || _prevIceConnectionState == disconnected)
                 {
                     await SendIceTerminated();
                 }
             }
         }
 
-        private async Task SetIceConnectionStates(RTCPeerConnection pc)
+        private async Task SetIceConnectionStates(RTCPeerConnection pc, string newState)
         {
             if (_prevIceConnectionState == null || _newIceConnectionState == null)
             {
                 _prevIceConnectionState = RTCIceConnectionState.New.ToString().ToLower();
-                _newIceConnectionState = pc.IceConnectionState.ToString().ToLower();
+                _newIceConnectionState = newState;
             }
             else
             {
                 _prevIceConnectionState = _newIceConnectionState;
-                _newIceConnectionState = pc.IceConnectionState.ToString().ToLower(); 
+                _newIceConnectionState = newState; 
             }
 
             await SendFabricStateChange(_prevIceConnectionState, _newIceConnectionState, "iceConnectionState");
@@ -808,47 +816,44 @@ namespace PeerConnectionClient
         #region Stats OnIceGatheringStateChange
         public async Task StatsOnIceGatheringStateChange(RTCPeerConnection pc)
         {
-            if (pc.IceGatheringState.ToString() == "Gathering")
-            {
-                if (_newIceGatheringState != "gathering")
-                {
-                    if (_prevIceGatheringState == null || _newIceGatheringState == null)
-                    {
-                        _prevIceGatheringState = "complete";
-                        _newIceGatheringState = pc.IceGatheringState.ToString().ToLower();
-                    }
-                    else
-                    {
-                        _prevIceGatheringState = _newIceGatheringState;
-                        _newIceGatheringState = pc.IceGatheringState.ToString().ToLower();
-                    }
+            string gathering = RTCIceGatheringState.Gathering.ToString().ToLower();
+            string complete = RTCIceGatheringState.Complete.ToString().ToLower();
 
-                    await SendFabricStateChange(_prevIceGatheringState, _newIceGatheringState, "iceGatheringState");
+            if (pc.IceGatheringState == RTCIceGatheringState.Gathering)
+            {
+                if (_newIceGatheringState != gathering)
+                {
+                    await SetIceGatheringStates(pc, gathering);
                 }
             }
 
-            if (pc.IceGatheringState.ToString() == "Complete")
+            if (pc.IceGatheringState == RTCIceGatheringState.Complete)
             {
                 _gatheringClock.Stop();
 
                 _gatheringDelayMiliseconds = _gatheringClock.Elapsed.Milliseconds;
 
-                if (_newIceGatheringState != "complete")
+                if (_newIceGatheringState != complete)
                 {
-                    if (_prevIceGatheringState == null || _newIceGatheringState == null)
-                    {
-                        _prevIceGatheringState = "complete";
-                        _newIceGatheringState = pc.IceGatheringState.ToString().ToLower();
-                    }
-                    else
-                    {
-                        _prevIceGatheringState = _newIceGatheringState;
-                        _newIceGatheringState = pc.IceGatheringState.ToString().ToLower();
-                    }
-
-                    await SendFabricStateChange(_prevIceGatheringState, _newIceGatheringState, "iceGatheringState");
+                    await SetIceGatheringStates(pc, complete);
                 }
             }
+        }
+
+        private async Task SetIceGatheringStates(RTCPeerConnection pc, string newState)
+        {
+            if (_prevIceGatheringState == null || _newIceGatheringState == null)
+            {
+                _prevIceGatheringState = RTCIceGatheringState.New.ToString().ToLower();
+                _newIceGatheringState = newState;
+            }
+            else
+            {
+                _prevIceGatheringState = _newIceGatheringState;
+                _newIceGatheringState = newState;
+            }
+
+            await SendFabricStateChange(_prevIceGatheringState, _newIceGatheringState, "iceGatheringState");
         }
         #endregion
 

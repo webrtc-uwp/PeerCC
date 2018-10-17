@@ -868,7 +868,6 @@ namespace PeerConnectionClient.Signalling
 
                     callStatsClient.SSRCMapDataSetup(sdp, "inbound", "remote");
 
-                    Debug.WriteLine("SDPEvent: ");
                     await callStatsClient.SendSDP(_localSDP, sdp);
 
                     Debug.WriteLine("Conductor: Received session description:\n" + message);
