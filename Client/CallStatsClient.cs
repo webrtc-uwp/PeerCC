@@ -17,6 +17,8 @@ namespace PeerConnectionClient
     public class CallStatsClient
     {
         #region Properties
+        private CallStats callstats;
+
         private static string _userID = GetLocalPeerName();
         private static string _localID = GetLocalPeerName();
         private static string _appID = (string)Config.localSettings.Values["appID"];
@@ -36,21 +38,16 @@ namespace PeerConnectionClient
         private static string _connectionID = $"{GetLocalPeerName()}-{_jti}";
         private static string _remoteID = "RemotePeer";
 
-        private CallStats callstats;
+        private List<object> _statsObjects = new List<object>();
 
-        private List<object> statsObjects = new List<object>();
-
-        private FabricSetupData fabricSetupData = new FabricSetupData();
-
-        private List<IceCandidatePairStats> iceCandidatePairs = new List<IceCandidatePairStats>();
-        private List<IceCandidatePair> _iceCandidatePairsList = new List<IceCandidatePair>();
+        private List<IceCandidatePairStats> _iceCandidatePairStatsList = new List<IceCandidatePairStats>();
+        private List<IceCandidatePair> _iceCandidatePairList = new List<IceCandidatePair>();
 
         private List<IceCandidateStats> iceCandidateStatsList = new List<IceCandidateStats>();
         private List<IceCandidate> _localIceCandidates = new List<IceCandidate>();
         private List<IceCandidate> _remoteIceCandidates = new List<IceCandidate>();
 
-        private SSRCMapData ssrcMapData = new SSRCMapData();
-        private List<SSRCData> ssrcDataList = new List<SSRCData>();
+        private List<SSRCData> _ssrcDataList = new List<SSRCData>();
 
         Stopwatch _setupClock;
         Stopwatch _gatheringClock;
@@ -205,6 +202,7 @@ namespace PeerConnectionClient
             IceCandidateStatsData();
             AddToIceCandidatePairsList();
 
+            FabricSetupData fabricSetupData = new FabricSetupData();
             fabricSetupData.localID = _localID;
             fabricSetupData.originID = _originID;
             fabricSetupData.deviceID = _deviceID;
@@ -218,7 +216,7 @@ namespace PeerConnectionClient
             fabricSetupData.remoteEndpointType = "peer";
             fabricSetupData.localIceCandidates = _localIceCandidates;
             fabricSetupData.remoteIceCandidates = _remoteIceCandidates;
-            fabricSetupData.iceCandidatePairs = _iceCandidatePairsList;
+            fabricSetupData.iceCandidatePairs = _iceCandidatePairList;
 
             Debug.WriteLine("FabricSetup: ");
             await callstats.FabricSetup(fabricSetupData);
@@ -343,7 +341,7 @@ namespace PeerConnectionClient
             cssd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             cssd.connectionID = _connectionID;
             cssd.remoteID = _remoteID;
-            cssd.stats = statsObjects;
+            cssd.stats = _statsObjects;
 
             Debug.WriteLine("ConferenceStatsSubmission: ");
             await callstats.ConferenceStatsSubmission(cssd);
@@ -436,7 +434,7 @@ namespace PeerConnectionClient
             ifd.connectionID = _connectionID;
             ifd.localIceCandidates = _localIceCandidates;
             ifd.remoteIceCandidates = _remoteIceCandidates;
-            ifd.iceCandidatePairs = _iceCandidatePairsList;
+            ifd.iceCandidatePairs = _iceCandidatePairList;
             ifd.currIceConnectionState = _newIceConnectionState;
             ifd.prevIceConnectionState = _prevIceConnectionState;
             ifd.delay = 9;
@@ -457,7 +455,7 @@ namespace PeerConnectionClient
             iad.connectionID = _connectionID;
             iad.localIceCandidates = _localIceCandidates;
             iad.remoteIceCandidates = _remoteIceCandidates;
-            iad.iceCandidatePairs = _iceCandidatePairsList;
+            iad.iceCandidatePairs = _iceCandidatePairList;
             iad.currIceConnectionState = _newIceConnectionState;
             iad.prevIceConnectionState = _prevIceConnectionState;
             iad.delay = 3;
@@ -617,7 +615,7 @@ namespace PeerConnectionClient
                 ssrcData.userID = _userID;
                 ssrcData.localStartTime = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
-                ssrcDataList.Add(ssrcData);
+                _ssrcDataList.Add(ssrcData);
             }
         }
 
@@ -668,13 +666,14 @@ namespace PeerConnectionClient
 
         public async Task SendSSRCMap()
         {
+            SSRCMapData ssrcMapData = new SSRCMapData();
             ssrcMapData.localID = _localID;
             ssrcMapData.originID = _originID;
             ssrcMapData.deviceID = _deviceID;
             ssrcMapData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             ssrcMapData.connectionID = _connectionID;
             ssrcMapData.remoteID = _remoteID;
-            ssrcMapData.ssrcData = ssrcDataList;
+            ssrcMapData.ssrcData = _ssrcDataList;
 
             Debug.WriteLine("SSRCMap: ");
             await callstats.SSRCMap(ssrcMapData);
@@ -1013,7 +1012,7 @@ namespace PeerConnectionClient
 
                         iceCandidateStatsList.Add(ics);
 
-                        statsObjects.Add(ics);
+                        _statsObjects.Add(ics);
                     }
                 }
 
@@ -1039,7 +1038,7 @@ namespace PeerConnectionClient
                     cs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     cs.transportId = codecStats.TransportId;
 
-                    statsObjects.Add(cs);
+                    _statsObjects.Add(cs);
                 }
 
                 if (statsType == RTCStatsType.InboundRtp)
@@ -1089,7 +1088,7 @@ namespace PeerConnectionClient
                     irss.trackId = inboundRtpStats.TrackId;
                     irss.transportId = inboundRtpStats.TransportId;
 
-                    statsObjects.Add(irss);
+                    _statsObjects.Add(irss);
                 }
 
                 if (statsType == RTCStatsType.OutboundRtp)
@@ -1128,7 +1127,7 @@ namespace PeerConnectionClient
                     orss.trackId = outboundRtpStats.TrackId;
                     orss.transportId = outboundRtpStats.TransportId;
 
-                    statsObjects.Add(orss);
+                    _statsObjects.Add(orss);
                 }
 
                 if (statsType == RTCStatsType.RemoteInboundRtp)
@@ -1170,7 +1169,7 @@ namespace PeerConnectionClient
                     rirss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     rirss.transportId = remoteInboundRtpStats.TransportId;
 
-                    statsObjects.Add(rirss);
+                    _statsObjects.Add(rirss);
                 }
 
                 if (statsType == RTCStatsType.RemoteOutboundRtp)
@@ -1202,7 +1201,7 @@ namespace PeerConnectionClient
                     rorss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     rorss.TransportId = remoteOutboundRtpStats.TransportId;
 
-                    statsObjects.Add(rorss);
+                    _statsObjects.Add(rorss);
                 }
 
                 if (statsType == RTCStatsType.Csrc)
@@ -1223,7 +1222,7 @@ namespace PeerConnectionClient
                     rcss.statsTypeOther = csrcStats.StatsTypeOther;
                     rcss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
-                    statsObjects.Add(rcss);
+                    _statsObjects.Add(rcss);
                 }
 
                 if (statsType == RTCStatsType.PeerConnection)
@@ -1244,7 +1243,7 @@ namespace PeerConnectionClient
                     pcs.statsTypeOther = peerConnectionStats.StatsTypeOther;
                     pcs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
-                    statsObjects.Add(pcs);
+                    _statsObjects.Add(pcs);
                 }
 
                 if (statsType == RTCStatsType.DataChannel)
@@ -1270,7 +1269,7 @@ namespace PeerConnectionClient
                     dc.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     dc.transportId = dataChannelStats.TransportId;
 
-                    statsObjects.Add(dc);
+                    _statsObjects.Add(dc);
                 }
 
                 if (statsType == RTCStatsType.Stream)
@@ -1289,7 +1288,7 @@ namespace PeerConnectionClient
                     mss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     mss.trackIds = mediaStreamStats.TrackIds.ToList();
 
-                    statsObjects.Add(mss);
+                    _statsObjects.Add(mss);
                 }
 
                 if (statsType == RTCStatsType.Track)
@@ -1320,7 +1319,7 @@ namespace PeerConnectionClient
                         svtas.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                         svtas.trackIdentifier = videoTrackStats.TrackIdentifier;
 
-                        statsObjects.Add(svtas);
+                        _statsObjects.Add(svtas);
                     }
 
                     if (rtcStats.Id == "RTCMediaStreamTrack_sender_2")
@@ -1349,7 +1348,7 @@ namespace PeerConnectionClient
                         satas.trackIdentifier = audioTrackStats.TrackIdentifier;
                         satas.voiceActivityFlag = audioTrackStats.VoiceActivityFlag;
 
-                        statsObjects.Add(satas);
+                        _statsObjects.Add(satas);
                     }
                 }
                 //TODO: if?
@@ -1409,7 +1408,7 @@ namespace PeerConnectionClient
                     ts.statsTypeOther = transportStats.StatsTypeOther;
                     ts.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
-                    statsObjects.Add(ts);
+                    _statsObjects.Add(ts);
                 }
 
                 if (statsType == RTCStatsType.CandidatePair)
@@ -1460,7 +1459,7 @@ namespace PeerConnectionClient
                     if (!candidatePairsDict.ContainsKey(candidatePairStats.RemoteCandidateId))
                         candidatePairsDict.Add(candidatePairStats.RemoteCandidateId, "remote-candidate");
 
-                    iceCandidatePairs.Add(icp);
+                    _iceCandidatePairStatsList.Add(icp);
 
                     _currIceCandidatePair = candidatePairStats;
                 }
@@ -1483,7 +1482,7 @@ namespace PeerConnectionClient
                     cs.statsTypeOther = certificateStats.StatsTypeOther;
                     cs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
-                    statsObjects.Add(cs);
+                    _statsObjects.Add(cs);
                 }
             }
         }
@@ -1492,9 +1491,9 @@ namespace PeerConnectionClient
         #region Ice Candidates Data
         private void AddToIceCandidatePairsList()
         {
-            for (int i = 0; i < iceCandidatePairs.Count; i++)
+            for (int i = 0; i < _iceCandidatePairStatsList.Count; i++)
             {
-                IceCandidatePairStats icps = iceCandidatePairs[i];
+                IceCandidatePairStats icps = _iceCandidatePairStatsList[i];
 
                 IceCandidatePair iceCandidatePair = new IceCandidatePair();
 
@@ -1505,7 +1504,7 @@ namespace PeerConnectionClient
                 iceCandidatePair.priority = 1;
                 iceCandidatePair.nominated = icps.nominated;
 
-                _iceCandidatePairsList.Add(iceCandidatePair);
+                _iceCandidatePairList.Add(iceCandidatePair);
             }
         }
 
