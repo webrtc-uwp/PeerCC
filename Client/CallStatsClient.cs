@@ -52,8 +52,6 @@ namespace PeerConnectionClient
         private SSRCMapData ssrcMapData = new SSRCMapData();
         private List<SSRCData> ssrcDataList = new List<SSRCData>();
 
-        private ConferenceStatsSubmissionData conferenceStatsSubmissionData = new ConferenceStatsSubmissionData();
-
         Stopwatch _setupClock;
         Stopwatch _gatheringClock;
         Stopwatch _connectivityClock;
@@ -336,18 +334,37 @@ namespace PeerConnectionClient
         #endregion
 
         #region Stats Submission
-        private async Task ConferenceStatsSubmission()
+        private async Task SendConferenceStatsSubmission()
         {
-            conferenceStatsSubmissionData.localID = _localID;
-            conferenceStatsSubmissionData.originID = _originID;
-            conferenceStatsSubmissionData.deviceID = _deviceID;
-            conferenceStatsSubmissionData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            conferenceStatsSubmissionData.connectionID = _connectionID;
-            conferenceStatsSubmissionData.remoteID = _remoteID;
-            conferenceStatsSubmissionData.stats = statsObjects;
+            ConferenceStatsSubmissionData cssd = new ConferenceStatsSubmissionData();
+            cssd.localID = _localID;
+            cssd.originID = _originID;
+            cssd.deviceID = _deviceID;
+            cssd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            cssd.connectionID = _connectionID;
+            cssd.remoteID = _remoteID;
+            cssd.stats = statsObjects;
 
             Debug.WriteLine("ConferenceStatsSubmission: ");
-            await callstats.ConferenceStatsSubmission(conferenceStatsSubmissionData);
+            await callstats.ConferenceStatsSubmission(cssd);
+        }
+
+        // TODO: add values
+        private async Task SendSystemStatusStatsSubmission()
+        {
+            SystemStatusStatsSubmissionData sssd = new SystemStatusStatsSubmissionData();
+            sssd.localID = _localID;
+            sssd.originID = _originID;
+            sssd.deviceID = _deviceID;
+            sssd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            sssd.cpuLevel = 0;
+            sssd.batteryLevel = 0;
+            sssd.memoryUsage = 0;
+            sssd.memoryAvailable = 0;
+            sssd.threadCount = 0;
+
+            Debug.WriteLine("SystemStatusStatsSubmission: ");
+            await callstats.SystemStatusStatsSubmission(sssd);
         }
         #endregion
 
@@ -503,7 +520,73 @@ namespace PeerConnectionClient
         }
         #endregion
 
+        #region Device Events
+        // TODO: call SendConnectedOrActiveDevices
+        private async Task SendConnectedOrActiveDevices()
+        {
+            List<MediaDevice> mediaDeviceList = new List<MediaDevice>();
+            MediaDevice mediaDeviceObj = new MediaDevice();
+            mediaDeviceObj.mediaDeviceID = "mediaDeviceID";
+            mediaDeviceObj.kind = "videoinput";
+            mediaDeviceObj.label = "external USB Webcam";
+            mediaDeviceObj.groupID = "groupID";
+            mediaDeviceList.Add(mediaDeviceObj);
+
+            ConnectedOrActiveDevicesData cadd = new ConnectedOrActiveDevicesData();
+            cadd.localID = _localID;
+            cadd.originID = _originID;
+            cadd.deviceID = _deviceID;
+            cadd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            cadd.mediaDeviceList = mediaDeviceList;
+            cadd.eventType = "connectedDeviceList";
+
+            Debug.WriteLine("ConnectedOrActiveDevices: ");
+            await callstats.ConnectedOrActiveDevices(cadd);
+        }
+        #endregion
+
         #region Special Events
+        private enum ErrorLogsLevel { debug, info, warn, error, fatal }
+        private enum ErrorLogsMessageType { text, json, domError }
+
+        // TODO: call SendApplicationErrorLogs
+        private async Task SendApplicationErrorLogs()
+        {
+            ApplicationErrorLogsData aeld = new ApplicationErrorLogsData();
+            aeld.localID = _localID;
+            aeld.originID = _originID;
+            aeld.deviceID = _deviceID;
+            aeld.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            aeld.connectionID = _connectionID;
+            aeld.level = ErrorLogsLevel.debug.ToString();
+            aeld.message = "Application error message";
+            aeld.messageType = ErrorLogsMessageType.json.ToString();
+
+            Debug.WriteLine("ApplicationErrorLogs: ");
+            await callstats.ApplicationErrorLogs(aeld);
+        }
+
+        // TODO: call SendConferenceUserFeedback
+        private async Task SendConferenceUserFeedback()
+        {
+            Feedback feedbackObj = new Feedback();
+            feedbackObj.overallRating = 4;
+            feedbackObj.videoQualityRating = 3;
+            feedbackObj.audioQualityRating = 5;
+            feedbackObj.comments = "";
+
+            ConferenceUserFeedbackData cufd = new ConferenceUserFeedbackData();
+            cufd.localID = _localID;
+            cufd.originID = _originID;
+            cufd.deviceID = _deviceID;
+            cufd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            cufd.remoteID = _remoteID;
+            cufd.feedback = feedbackObj;
+
+            Debug.WriteLine("ConferenceUserFeedback: ");
+            await callstats.ConferenceUserFeedback(cufd);
+        }
+
         public void SSRCMapDataSetup(string sdp, string streamType, string reportType)
         {
             var dict = ParseSdp(sdp, "a=ssrc:");
@@ -697,8 +780,9 @@ namespace PeerConnectionClient
                 {
                     await GetAllStats(pc);
 
-                    Debug.WriteLine("ConferenceStatsSubmission: ");
-                    await ConferenceStatsSubmission();
+                    await SendConferenceStatsSubmission();
+
+                    await SendSystemStatusStatsSubmission();
                 };
                 timer.Start();
             }
