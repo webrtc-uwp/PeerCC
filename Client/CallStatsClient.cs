@@ -43,7 +43,7 @@ namespace PeerConnectionClient
         private List<IceCandidatePairStats> _iceCandidatePairStatsList = new List<IceCandidatePairStats>();
         private List<IceCandidatePair> _iceCandidatePairList = new List<IceCandidatePair>();
 
-        private List<IceCandidateStats> iceCandidateStatsList = new List<IceCandidateStats>();
+        private List<IceCandidateStats> _iceCandidateStatsList = new List<IceCandidateStats>();
         private List<IceCandidate> _localIceCandidates = new List<IceCandidate>();
         private List<IceCandidate> _remoteIceCandidates = new List<IceCandidate>();
 
@@ -276,6 +276,9 @@ namespace PeerConnectionClient
 
         private async Task SendFabricTransportChange()
         {
+            IceCandidateStatsData();
+            AddToIceCandidatePairsList();
+
             FabricTransportChangeData fabricTransportChangeData = new FabricTransportChangeData();
             fabricTransportChangeData.localID = _localID;
             fabricTransportChangeData.originID = _originID;
@@ -283,12 +286,12 @@ namespace PeerConnectionClient
             fabricTransportChangeData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             fabricTransportChangeData.remoteID = _remoteID;
             fabricTransportChangeData.connectionID = _connectionID;
-            fabricTransportChangeData.localIceCandidates = null;
-            fabricTransportChangeData.remoteIceCandidates = null;
+            fabricTransportChangeData.localIceCandidates = _localIceCandidates;
+            fabricTransportChangeData.remoteIceCandidates = _remoteIceCandidates;
             fabricTransportChangeData.currIceCandidatePair = _currIceCandidatePairObj;
             fabricTransportChangeData.prevIceCandidatePair = _prevIceCandidatePairObj;
-            fabricTransportChangeData.currIceConnectionState = _prevIceConnectionState;
-            fabricTransportChangeData.prevIceConnectionState = _newIceConnectionState;
+            fabricTransportChangeData.currIceConnectionState = _newIceConnectionState;
+            fabricTransportChangeData.prevIceConnectionState = _prevIceConnectionState;
             fabricTransportChangeData.delay = 2;
             fabricTransportChangeData.relayType = "";
 
@@ -710,6 +713,9 @@ namespace PeerConnectionClient
                     await SetIceConnectionStates(pc, checking);
                 }
 
+                _currIceCandidatePairObj = GetIceCandidatePairData();
+                _prevIceCandidatePairObj = _currIceCandidatePairObj;
+
                 if (_prevIceConnectionState == connected || _prevIceConnectionState == completed
                     || _prevIceConnectionState == failed || _prevIceConnectionState == disconnected
                     || _prevIceConnectionState == closed)
@@ -752,11 +758,19 @@ namespace PeerConnectionClient
                 {
                     await GetAllStats(pc);
 
-                    _currIceCandidatePairObj = GetIceCandidatePairData();
-                    
-                    await SendFabricTransportChange();
+                    if (_prevIceCandidatePairObj != null)
+                    {
+                        _currIceCandidatePairObj = GetIceCandidatePairData();
 
-                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
+                        await SendFabricTransportChange();
+
+                        _prevIceCandidatePairObj = _currIceCandidatePairObj;
+                    }
+                    else
+                    {
+                        _currIceCandidatePairObj = GetIceCandidatePairData();
+                        _prevIceCandidatePairObj = _currIceCandidatePairObj;
+                    }
                 }
 
                 if (_prevIceConnectionState == disconnected)
@@ -793,11 +807,19 @@ namespace PeerConnectionClient
                 {
                     await GetAllStats(pc);
 
-                    _currIceCandidatePairObj = GetIceCandidatePairData();
+                    if (_prevIceCandidatePairObj != null)
+                    {
+                        _currIceCandidatePairObj = GetIceCandidatePairData();
 
-                    await SendFabricTransportChange();
+                        await SendFabricTransportChange();
 
-                    _prevIceCandidatePairObj = _currIceCandidatePairObj;
+                        _prevIceCandidatePairObj = _currIceCandidatePairObj;
+                    }
+                    else
+                    {
+                        _currIceCandidatePairObj = GetIceCandidatePairData();
+                        _prevIceCandidatePairObj = _currIceCandidatePairObj;
+                    }
                 }
 
                 if (_prevIceConnectionState == disconnected)
@@ -1006,7 +1028,7 @@ namespace PeerConnectionClient
                         ics.transportId = iceCandidateStats.TransportId;
                         ics.url = iceCandidateStats.Url;
 
-                        iceCandidateStatsList.Add(ics);
+                        _iceCandidateStatsList.Add(ics);
 
                         _statsObjects.Add(ics);
                     }
@@ -1506,9 +1528,9 @@ namespace PeerConnectionClient
 
         private void IceCandidateStatsData()
         {
-            for (int i = 0; i < iceCandidateStatsList.Count; i++)
+            for (int i = 0; i < _iceCandidateStatsList.Count; i++)
             {
-                IceCandidateStats ics = iceCandidateStatsList[i];
+                IceCandidateStats ics = _iceCandidateStatsList[i];
 
                 IceCandidate iceCandidate = new IceCandidate();
 
@@ -1533,7 +1555,7 @@ namespace PeerConnectionClient
             icp.id = _currIceCandidatePair.Id;
             icp.localCandidateId = _currIceCandidatePair.LocalCandidateId;
             icp.remoteCandidateId = _currIceCandidatePair.RemoteCandidateId;
-            icp.state = _currIceCandidatePair.State.ToString();
+            icp.state = _currIceCandidatePair.State.ToString().ToLower();
             icp.priority = 1;
             icp.nominated = _currIceCandidatePair.Nominated;
 
