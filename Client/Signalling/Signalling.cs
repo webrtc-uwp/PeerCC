@@ -35,6 +35,8 @@ namespace PeerConnectionClient.Signalling
     /// </summary>
     class Signaller
     {
+        CallStatsClient callStatsClient = new CallStatsClient();
+
         // Connection events
         public event SignedInDelegate OnSignedIn;
         public event DisconnectedDelegate OnDisconnected;
@@ -127,6 +129,8 @@ namespace PeerConnectionClient.Signalling
             catch (Exception ex)
             {
                 Debug.WriteLine("[Error] Signaling: Failed to connect to server: " + ex.Message);
+
+                await callStatsClient.SendApplicationErrorLogs("error", $"Failed to connect to server: {ex.Message}", "text");
             }
         }
 
@@ -374,6 +378,9 @@ namespace PeerConnectionClient.Signalling
                 {
                     // This could be a connection failure like a timeout
                     Debug.WriteLine("[Error] Signaling: Failed to connect to " + _server + ":" + _port + " : " + e.Message);
+
+                    await callStatsClient.SendApplicationErrorLogs("error", $"Failed to connect to {_server}: {_port}: {e.Message}", "text");
+
                     return false;
                 }
                 // Send the request
@@ -521,6 +528,8 @@ namespace PeerConnectionClient.Signalling
                     catch (Exception e)
                     {
                         Debug.WriteLine("[Error] Signaling: Long-polling exception: {0}", e.Message);
+
+                        await callStatsClient.SendApplicationErrorLogs("error", $"Long-polling exception: {e.Message}", "text");
                     }
                 }
             }

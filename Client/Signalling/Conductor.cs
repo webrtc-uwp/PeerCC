@@ -44,8 +44,6 @@ using UseRTCSessionDescription = Org.Ortc.Adapter.IRTCSessionDescription;
 #else
 using Org.WebRtc;
 using PeerConnectionClient.Utilities;
-using CallStatsLib;
-using CallStatsLib.Request;
 using System.Dynamic;
 #if USE_CX_VERSION
 using UseMediaStreamTrack = Org.WebRtc.MediaStreamTrack;
