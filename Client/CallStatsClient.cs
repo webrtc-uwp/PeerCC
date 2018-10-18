@@ -355,11 +355,11 @@ namespace PeerConnectionClient
             sssd.originID = _originID;
             sssd.deviceID = _deviceID;
             sssd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            sssd.cpuLevel = 0;
-            sssd.batteryLevel = 0;
-            sssd.memoryUsage = 0;
-            sssd.memoryAvailable = 0;
-            sssd.threadCount = 0;
+            sssd.cpuLevel = 1;
+            sssd.batteryLevel = 1;
+            sssd.memoryUsage = 1;
+            sssd.memoryAvailable = 1;
+            sssd.threadCount = 1;
 
             Debug.WriteLine("SystemStatusStatsSubmission: ");
             await callstats.SystemStatusStatsSubmission(sssd);
@@ -544,11 +544,7 @@ namespace PeerConnectionClient
         #endregion
 
         #region Special Events
-        private enum ErrorLogsLevel { debug, info, warn, error, fatal }
-        private enum ErrorLogsMessageType { text, json, domError }
-
-        // TODO: call SendApplicationErrorLogs
-        private async Task SendApplicationErrorLogs()
+        public async Task SendApplicationErrorLogs(string level, string message, string messageType)
         {
             ApplicationErrorLogsData aeld = new ApplicationErrorLogsData();
             aeld.localID = _localID;
@@ -556,9 +552,9 @@ namespace PeerConnectionClient
             aeld.deviceID = _deviceID;
             aeld.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             aeld.connectionID = _connectionID;
-            aeld.level = ErrorLogsLevel.debug.ToString();
-            aeld.message = "Application error message";
-            aeld.messageType = ErrorLogsMessageType.json.ToString();
+            aeld.level = level;
+            aeld.message = message;
+            aeld.messageType = messageType;
 
             Debug.WriteLine("ApplicationErrorLogs: ");
             await callstats.ApplicationErrorLogs(aeld);

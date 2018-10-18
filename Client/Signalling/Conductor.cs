@@ -743,6 +743,8 @@ namespace PeerConnectionClient.Signalling
         private void Signaller_OnServerConnectionFailure()
         {
             Debug.WriteLine("[Error]: Connection to server failed!");
+
+            var task = callStatsClient.SendApplicationErrorLogs("error", "Connection to server failed!", "text");
         }
 
         /// <summary>
@@ -782,6 +784,9 @@ namespace PeerConnectionClient.Signalling
                 if (_peerId != peerId && _peerId != -1)
                 {
                     Debug.WriteLine("[Error] Conductor: Received a message from unknown peer while already in a conversation with a different peer.");
+
+                    var taskUnknownPeer = callStatsClient.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer", "text");
+
                     return;
                 }
 
@@ -789,6 +794,9 @@ namespace PeerConnectionClient.Signalling
                 if (!JsonObject.TryParse(message, out jMessage))
                 {
                     Debug.WriteLine("[Error] Conductor: Received unknown message." + message);
+
+                    var taskUnknownMessage = callStatsClient.SendApplicationErrorLogs("error", "Received unknown message.", "text");
+
                     return;
                 }
 
@@ -822,12 +830,17 @@ namespace PeerConnectionClient.Signalling
                             if (!connectResult)
                             {
                                 Debug.WriteLine("[Error] Conductor: Failed to initialize our PeerConnection instance");
+
+                                await callStatsClient.SendApplicationErrorLogs("error", "Failed to initialize our PeerConnection instance.", "text");
+
                                 await Signaller.SignOut();
                                 return;
                             }
                             else if (_peerId != peerId)
                             {
                                 Debug.WriteLine("[Error] Conductor: Received a message from unknown peer while already in a conversation with a different peer.");
+
+                                await callStatsClient.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer.", "text");
                                 return;
                             }
                         }
@@ -835,6 +848,9 @@ namespace PeerConnectionClient.Signalling
                     else
                     {
                         Debug.WriteLine("[Warn] Conductor: Received an untyped message after closing peer connection.");
+
+                        await callStatsClient.SendApplicationErrorLogs("warn", "Received an untyped message after closing peer connection.", "text");
+
                         return;
                     }
                 }
@@ -863,6 +879,9 @@ namespace PeerConnectionClient.Signalling
                     if (IsNullOrEmpty(sdp))
                     {
                         Debug.WriteLine("[Error] Conductor: Can't parse received session description message.");
+
+                        await callStatsClient.SendApplicationErrorLogs("error", "Can't parse received session description message.", "text");
+
                         return;
                     }
 
@@ -934,6 +953,9 @@ namespace PeerConnectionClient.Signalling
                         if (IsNullOrEmpty(sdpMid) || sdpMlineIndex == -1 || IsNullOrEmpty(sdp))
                         {
                             Debug.WriteLine("[Error] Conductor: Can't parse received message.\n" + message);
+
+                            await callStatsClient.SendApplicationErrorLogs("error", $"Can't parse received message.\n {message}", "text");
+
                             return;
                         }
 #if ORTCLIB
@@ -1005,6 +1027,9 @@ namespace PeerConnectionClient.Signalling
             if (_peerConnection != null)
             {
                 Debug.WriteLine("[Error] Conductor: We only support connecting to one peer at a time");
+
+                await callStatsClient.SendApplicationErrorLogs("error", "We only support connecting to one peer at a time", "text");
+
                 return;
             }
 #if ORTCLIB
