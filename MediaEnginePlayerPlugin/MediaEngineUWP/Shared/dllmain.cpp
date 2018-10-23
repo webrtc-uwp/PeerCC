@@ -158,8 +158,9 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetRemotePrimaryTextu
 		s_remotePlayer->GetPrimaryTexture(width, height, playbackSRV);
 }
 
-extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API LoadLocalMediaStreamSource(Windows::Media::Core::IMediaStreamSource^ mediaSourceHandle)
+extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API LoadLocalMediaStreamSource(_In_ PVOID mediaSourcePtr)
 {
+  Windows::Media::Core::IMediaStreamSource^ mediaSourceHandle = reinterpret_cast<Windows::Media::Core::IMediaStreamSource^>(mediaSourcePtr);
 	if (mediaSourceHandle != nullptr && s_localPlayer != nullptr)
 	{
 		s_localPlayer->SetMediaStreamSource(mediaSourceHandle);

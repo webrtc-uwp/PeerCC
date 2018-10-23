@@ -739,12 +739,12 @@ namespace PeerConnectionClient.Signalling
             }
         }
 
-        public IMediaSource CreateLocalMediaStreamSource(String type)
+        public IntPtr CreateLocalMediaStreamSource(String type)
         {
             return Media.CreateMedia().CreateMediaStreamSource(_selfVideoTrack, type, "SELF");
         }
 
-        public IMediaSource CreateRemoteMediaStreamSource(String type)
+        public IntPtr CreateRemoteMediaStreamSource(String type)
         {
             return Media.CreateMedia().CreateMediaStreamSource(_peerVideoTrack, type, "PEER");
         }

@@ -83,7 +83,7 @@ public class ControlScript : MonoBehaviour
         Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
         Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
 #endif
-        ServerAddressInputField.text = "peercc-server.ortclib.org";
+        ServerAddressInputField.text = "127.0.0.1";
     }
 
     private void OnEnable()
@@ -589,21 +589,21 @@ public class ControlScript : MonoBehaviour
             {
                 if (status == Status.InCall)
                 {
-                    IMediaSource source;
+                    IntPtr source;
                     if (Conductor.Instance.VideoCodec.Name == "H264")
                         source = Conductor.Instance.CreateRemoteMediaStreamSource("H264");
                     else
                         source = Conductor.Instance.CreateRemoteMediaStreamSource("I420");
-                    Plugin.LoadRemoteMediaStreamSource((MediaStreamSource)source);
+                    Plugin.LoadRemoteMediaStreamSource(source);
                 }
                 else if (status == Status.Connected)
                 {
-                    IMediaSource source;
+                    IntPtr source;
                     if (Conductor.Instance.VideoCodec.Name == "H264")
                         source = Conductor.Instance.CreateRemoteMediaStreamSource("H264");
                     else
                         source = Conductor.Instance.CreateRemoteMediaStreamSource("I420");
-                    Plugin.LoadRemoteMediaStreamSource((MediaStreamSource)source);
+                    Plugin.LoadRemoteMediaStreamSource(source);
                 }
                 else
                 {
@@ -646,7 +646,7 @@ public class ControlScript : MonoBehaviour
                 if (status == Status.InCall)
                 {
                     var source = Conductor.Instance.CreateLocalMediaStreamSource("I420");
-                    Plugin.LoadLocalMediaStreamSource((MediaStreamSource)source);
+                    Plugin.LoadLocalMediaStreamSource(source);
 
                     Conductor.Instance.EnableLocalVideoStream();
                     Conductor.Instance.UnmuteMicrophone();
@@ -654,7 +654,7 @@ public class ControlScript : MonoBehaviour
                 else if (status == Status.Connected)
                 {
                     var source = Conductor.Instance.CreateLocalMediaStreamSource("I420");
-                    Plugin.LoadLocalMediaStreamSource((MediaStreamSource)source);
+                    Plugin.LoadLocalMediaStreamSource(source);
 
                     Conductor.Instance.EnableLocalVideoStream();
                     Conductor.Instance.UnmuteMicrophone();
@@ -690,13 +690,13 @@ public class ControlScript : MonoBehaviour
 
 #if !UNITY_EDITOR
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LoadLocalMediaStreamSource")]
-        internal static extern void LoadLocalMediaStreamSource(MediaStreamSource IMediaSourceHandler);
+        internal static extern void LoadLocalMediaStreamSource(IntPtr mediaSourcePtr);
 
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "UnloadLocalMediaStreamSource")]
         internal static extern void UnloadLocalMediaStreamSource();
 
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LoadRemoteMediaStreamSource")]
-        internal static extern void LoadRemoteMediaStreamSource(MediaStreamSource IMediaSourceHandler);
+        internal static extern void LoadRemoteMediaStreamSource(IntPtr mediaSourcePtr);
 
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "UnloadRemoteMediaStreamSource")]
         internal static extern void UnloadRemoteMediaStreamSource();

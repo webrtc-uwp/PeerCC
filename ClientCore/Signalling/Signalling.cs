@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 using Windows.Networking;
@@ -156,7 +157,7 @@ namespace PeerConnectionClient.Signalling
                     throw new KeyNotFoundException();
                 }
                 index += header.Length;
-                value = buffer.Substring(index).ParseLeadingInt();
+                value = ParseLeadingInt(buffer.Substring(index));
                 return true;
             }
             catch
@@ -264,12 +265,12 @@ namespace PeerConnectionClient.Signalling
             int separator = entry.IndexOf(',');
             if (separator != -1)
             {
-                id = entry.Substring(separator + 1).ParseLeadingInt();
+                id = ParseLeadingInt(entry.Substring(separator + 1));
                 name = entry.Substring(0, separator);
                 separator = entry.IndexOf(',', separator + 1);
                 if (separator != -1)
                 {
-                    connected = entry.Substring(separator + 1).ParseLeadingInt() > 0 ? true : false;
+                    connected = ParseLeadingInt(entry.Substring(separator + 1)) > 0 ? true : false;
                 }
             }
             return name.Length > 0;
@@ -290,8 +291,13 @@ namespace PeerConnectionClient.Signalling
                 // Set the DataReader to only wait for available data
                 reader.InputStreamOptions = InputStreamOptions.Partial;
 
+                ManualResetEvent loadTaskEvent = new ManualResetEvent(false);
                 loadTask = reader.LoadAsync(0xffff);
-                bool succeeded = loadTask.AsTask().Wait(20000);
+                loadTask.Completed = new Windows.Foundation.AsyncOperationCompletedHandler<uint>((operation, asyncStatus) =>
+                {
+                    loadTaskEvent.Set();
+                });
+                bool succeeded = loadTaskEvent.WaitOne(20000);
                 if (!succeeded)
                 {
                     throw new TimeoutException("Timed out long polling, re-trying.");
@@ -377,7 +383,7 @@ namespace PeerConnectionClient.Signalling
                     return false;
                 }
                 // Send the request
-                socket.WriteStringAsync(sendBuffer);
+                WriteStringAsync(socket, sendBuffer);
 
                 // Read the response
                 var readResult = await ReadIntoBufferAsync(socket);
@@ -462,7 +468,7 @@ namespace PeerConnectionClient.Signalling
                             return;
                         }
                         // Send the request
-                        _hangingGetSocket.WriteStringAsync(String.Format("GET /wait?peer_id={0} HTTP/1.0\r\n\r\n", _myId));
+                        WriteStringAsync(_hangingGetSocket, String.Format("GET /wait?peer_id={0} HTTP/1.0\r\n\r\n", _myId));
 
                         // Read the response.
                         var readResult = await ReadIntoBufferAsync(_hangingGetSocket);
@@ -612,8 +618,28 @@ namespace PeerConnectionClient.Signalling
             string message = json.Stringify();
             return await SendToPeer(peerId, message);
         }
+
+        public static async void WriteStringAsync(StreamSocket socket, string str)
+        {
+            try
+            {
+                var writer = new DataWriter(socket.OutputStream);
+                writer.WriteString(str);
+                await writer.StoreAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("[Error] Singnaling: Couldn't write to socket : " + ex.Message);
+            }
+        }
+
+        public static int ParseLeadingInt(string str)
+        {
+            return int.Parse(Regex.Match(str, "\\d+").Value);
+        }
     }
 
+#if false
     /// <summary>
     /// Class providing helper functions for parsing responses and messages.
     /// </summary>
@@ -638,4 +664,5 @@ namespace PeerConnectionClient.Signalling
             return int.Parse(Regex.Match(str, "\\d+").Value);
         }
     }
+#endif
 }
