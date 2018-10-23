@@ -6,3 +6,5 @@ packages/
 project.lock.json
 *.sdf
 *.bak
+Client/Config.cs
+Client/ecc-key.p12
