@@ -305,7 +305,7 @@ namespace PeerConnectionClient
             ftcd.currIceConnectionState = _newIceConnectionState;
             ftcd.prevIceConnectionState = _prevIceConnectionState;
             ftcd.delay = 0;
-            ftcd.relayType = "";
+            ftcd.relayType = $"turn/{_currProtocol}";
 
             Debug.WriteLine("FabricTransportChange: ");
             await callstats.FabricTransportChange(ftcd);
@@ -994,7 +994,7 @@ namespace PeerConnectionClient
                         {
                             if (_prevProtocol != null && _prevProtocol != _currProtocol)
                             {
-                                //var task = SendFabricTransportChange();
+                                var task = SendFabricTransportChange();
                                 Debug.WriteLine($"prevProtocol: {_prevProtocol}, currProtocol: {_currProtocol}");
                             }
                         } 
