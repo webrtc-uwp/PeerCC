@@ -715,7 +715,7 @@ namespace PeerConnectionClient
             {
                 if (_newIceConnectionState != checking)
                 {
-                    await SetIceConnectionStates(pc, checking);
+                    await SetIceConnectionStates(checking);
                 }
 
                 await GetAllStats(pc);
@@ -744,7 +744,7 @@ namespace PeerConnectionClient
 
                 if (_newIceConnectionState != connected)
                 {
-                    await SetIceConnectionStates(pc, connected);
+                    await SetIceConnectionStates(connected);
                 }
 
                 await GetAllStats(pc);
@@ -773,7 +773,7 @@ namespace PeerConnectionClient
             {
                 if (_newIceConnectionState != completed)
                 {
-                    await SetIceConnectionStates(pc, completed);
+                    await SetIceConnectionStates(completed);
                 }
 
                 await GetAllStats(pc);
@@ -788,7 +788,7 @@ namespace PeerConnectionClient
             {
                 if (_newIceConnectionState != failed)
                 {
-                    await SetIceConnectionStates(pc, failed);
+                    await SetIceConnectionStates(failed);
                 }
 
                 await GetAllStats(pc);
@@ -810,7 +810,7 @@ namespace PeerConnectionClient
             {
                 if (_newIceConnectionState != disconnected)
                 {
-                    await SetIceConnectionStates(pc, disconnected);
+                    await SetIceConnectionStates(disconnected);
                 }
 
                 await GetAllStats(pc);
@@ -830,7 +830,7 @@ namespace PeerConnectionClient
             {
                 if (_newIceConnectionState != closed)
                 {
-                    await SetIceConnectionStates(pc, closed);
+                    await SetIceConnectionStates(closed);
                 }
 
                 await GetAllStats(pc);
@@ -850,7 +850,7 @@ namespace PeerConnectionClient
             }
         }
 
-        private async Task SetIceConnectionStates(RTCPeerConnection pc, string newState)
+        private async Task SetIceConnectionStates(string newState)
         {
             if (_prevIceConnectionState == null || _newIceConnectionState == null)
             {
@@ -874,7 +874,7 @@ namespace PeerConnectionClient
             {
                 if (_newIceGatheringState != gathering)
                 {
-                    await SetIceGatheringStates(pc, gathering);
+                    await SetIceGatheringStates(gathering);
                 }
             }
 
@@ -886,12 +886,12 @@ namespace PeerConnectionClient
 
                 if (_newIceGatheringState != complete)
                 {
-                    await SetIceGatheringStates(pc, complete);
+                    await SetIceGatheringStates(complete);
                 }
             }
         }
 
-        private async Task SetIceGatheringStates(RTCPeerConnection pc, string newState)
+        private async Task SetIceGatheringStates(string newState)
         {
             if (_prevIceGatheringState == null || _newIceGatheringState == null)
             {
