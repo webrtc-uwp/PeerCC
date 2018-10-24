@@ -459,7 +459,13 @@ namespace PeerConnectionClient.Signalling
 
             _peerConnection.OnIceConnectionStateChange += async () =>
             {
-                await callStatsClient.StatsOnIceConnectionStateChange(_peerConnection);
+                if (_peerConnection != null)
+                    await callStatsClient.StatsOnIceConnectionStateChange(_peerConnection);
+                else
+                {
+                    await callStatsClient.PeerConnectionClosedStateChange();
+                    ClosePeerConnection();
+                }
 
                 Debug.WriteLine("Conductor: Ice connection state change, state=" + (null != _peerConnection ? _peerConnection.IceConnectionState.ToString() : "closed"));
             };
@@ -1071,7 +1077,8 @@ namespace PeerConnectionClient.Signalling
         public async Task DisconnectFromPeer()
         {
             await SendHangupMessage();
-            ClosePeerConnection();
+            _peerConnection = null;
+            //ClosePeerConnection();
         }
 
         /// <summary>

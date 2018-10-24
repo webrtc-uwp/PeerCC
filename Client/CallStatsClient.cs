@@ -31,6 +31,8 @@ namespace PeerConnectionClient
         private string gathering = RTCIceGatheringState.Gathering.ToString().ToLower();
         private string complete = RTCIceGatheringState.Complete.ToString().ToLower();
 
+        System.Timers.Timer _getAllStatsTimer = new System.Timers.Timer(10000);
+
         private static string _userID = GetLocalPeerName();
         private static string _localID = GetLocalPeerName();
         private static string _appID = (string)Config.localSettings.Values["appID"];
@@ -756,9 +758,8 @@ namespace PeerConnectionClient
                 {
                     await SendIceDisruptionEnd();
                 }
-
-                System.Timers.Timer timer = new System.Timers.Timer(10000);
-                timer.Elapsed += async (sender, e) =>
+                
+                _getAllStatsTimer.Elapsed += async (sender, e) =>
                 {
                     await GetAllStats(pc);
 
@@ -766,7 +767,7 @@ namespace PeerConnectionClient
 
                     await SendSystemStatusStatsSubmission();
                 };
-                timer.Start();
+                _getAllStatsTimer.Start();
             }
 
             if (pc.IceConnectionState == RTCIceConnectionState.Completed)
@@ -847,6 +848,29 @@ namespace PeerConnectionClient
                 {
                     await SendIceTerminated();
                 }
+            }
+        }
+
+        public async Task PeerConnectionClosedStateChange()
+        {
+            _getAllStatsTimer.Stop();
+
+            if (_newIceConnectionState != closed)
+            {
+                await SetIceConnectionStates(closed);
+            }
+
+            await SendFabricSetupTerminated();
+
+            if (_prevIceConnectionState == checking || _prevIceConnectionState == newConnection)
+            {
+                await SendIceAborted();
+            }
+
+            if (_prevIceConnectionState == connected || _prevIceConnectionState == completed
+                || _prevIceConnectionState == failed || _prevIceConnectionState == disconnected)
+            {
+                await SendIceTerminated();
             }
         }
 
