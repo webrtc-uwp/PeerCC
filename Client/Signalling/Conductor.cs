@@ -454,7 +454,7 @@ namespace PeerConnectionClient.Signalling
             {
                 await callStatsClient.StatsOnIceGatheringStateChange(_peerConnection);
 
-                Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString());
+                Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString().ToLower());
             };
 
             _peerConnection.OnIceConnectionStateChange += async () =>
@@ -467,7 +467,7 @@ namespace PeerConnectionClient.Signalling
                     ClosePeerConnection();
                 }
 
-                Debug.WriteLine("Conductor: Ice connection state change, state=" + (null != _peerConnection ? _peerConnection.IceConnectionState.ToString() : "closed"));
+                Debug.WriteLine("Conductor: Ice connection state change, state=" + (null != _peerConnection ? _peerConnection.IceConnectionState.ToString().ToLower() : "closed"));
             };
 
             if (_peerConnection == null)

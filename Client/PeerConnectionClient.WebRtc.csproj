@@ -185,13 +185,13 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.1.5</Version>
     </PackageReference>
-    <ProjectReference Include="..\..\..\..\..\..\..\optical\CSLib\CallStatsClient\CallStatsLib\CallStatsLib.csproj">
-      <Project>{274698f0-9b2b-4f82-8fad-ecd8bfb207c4}</Project>
-      <Name>CallStatsLib</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
       <Project>{3dd8fdcd-b703-4b75-826a-2c7e844f903e}</Project>
       <Name>Org.WebRtc</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CallStatsLib\CallStatsLib.csproj">
+      <Project>{f1882413-ec60-4e12-9725-86b27246b1cc}</Project>
+      <Name>CallStatsLib</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
