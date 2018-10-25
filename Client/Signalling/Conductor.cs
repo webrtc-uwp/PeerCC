@@ -450,9 +450,9 @@ namespace PeerConnectionClient.Signalling
 
             await callStatsClient.SendStartCallStats();
 
-            _peerConnection.OnIceGatheringStateChange += async () =>
+            _peerConnection.OnIceGatheringStateChange += () =>
             {
-                await callStatsClient.StatsOnIceGatheringStateChange(_peerConnection);
+                callStatsClient.StatsOnIceGatheringStateChange(_peerConnection);
 
                 Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString().ToLower());
             };
@@ -468,7 +468,7 @@ namespace PeerConnectionClient.Signalling
                 }
 
                 // TODO: Add to GUI
-                await callStatsClient.SendConferenceUserFeedback(4, 3, 5, Empty);
+                //await callStatsClient.SendConferenceUserFeedback(4, 3, 5, Empty);
 
                 Debug.WriteLine("Conductor: Ice connection state change, state=" + (null != _peerConnection ? _peerConnection.IceConnectionState.ToString().ToLower() : "closed"));
             };
@@ -669,11 +669,11 @@ namespace PeerConnectionClient.Signalling
         /// Invoked when the remote peer added a media stream to the peer connection.
         /// </summary>
         public event Action<UseMediaStreamTrack> OnAddRemoteTrack;
-        private async void PeerConnection_OnTrack(UseRTCTrackEvent evt)
+        private void PeerConnection_OnTrack(UseRTCTrackEvent evt)
         {
             OnAddRemoteTrack?.Invoke(evt.Track);
 
-            await callStatsClient.SendSSRCMap();
+            callStatsClient.SendSSRCMap();
         }
 
         /// <summary>
@@ -724,9 +724,9 @@ namespace PeerConnectionClient.Signalling
         /// Handler for Signaller's OnPeerHangup event.
         /// </summary>
         /// <param name="peerId">ID of the peer to hung up the call with.</param>
-        private async void Signaller_OnPeerHangup(int peerId)
+        private void Signaller_OnPeerHangup(int peerId)
         {
-            await callStatsClient.SendUserLeft();
+            callStatsClient.SendUserLeft();
 
             if (peerId != _peerId) return;
 
@@ -750,7 +750,7 @@ namespace PeerConnectionClient.Signalling
         {
             Debug.WriteLine("[Error]: Connection to server failed!");
 
-            var task = callStatsClient.SendApplicationErrorLogs("error", "Connection to server failed!", "text");
+            callStatsClient.SendApplicationErrorLogs("error", "Connection to server failed!", "text");
         }
 
         /// <summary>
@@ -791,7 +791,7 @@ namespace PeerConnectionClient.Signalling
                 {
                     Debug.WriteLine("[Error] Conductor: Received a message from unknown peer while already in a conversation with a different peer.");
 
-                    var taskUnknownPeer = callStatsClient.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer", "text");
+                    callStatsClient.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer", "text");
 
                     return;
                 }
@@ -801,7 +801,7 @@ namespace PeerConnectionClient.Signalling
                 {
                     Debug.WriteLine("[Error] Conductor: Received unknown message." + message);
 
-                    var taskUnknownMessage = callStatsClient.SendApplicationErrorLogs("error", "Received unknown message.", "text");
+                    callStatsClient.SendApplicationErrorLogs("error", "Received unknown message.", "text");
 
                     return;
                 }
@@ -837,7 +837,7 @@ namespace PeerConnectionClient.Signalling
                             {
                                 Debug.WriteLine("[Error] Conductor: Failed to initialize our PeerConnection instance");
 
-                                await callStatsClient.SendApplicationErrorLogs("error", "Failed to initialize our PeerConnection instance.", "text");
+                                callStatsClient.SendApplicationErrorLogs("error", "Failed to initialize our PeerConnection instance.", "text");
 
                                 await Signaller.SignOut();
                                 return;
@@ -846,7 +846,7 @@ namespace PeerConnectionClient.Signalling
                             {
                                 Debug.WriteLine("[Error] Conductor: Received a message from unknown peer while already in a conversation with a different peer.");
 
-                                await callStatsClient.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer.", "text");
+                                callStatsClient.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer.", "text");
 
                                 return;
                             }
@@ -884,14 +884,14 @@ namespace PeerConnectionClient.Signalling
                     {
                         Debug.WriteLine("[Error] Conductor: Can't parse received session description message.");
 
-                        await callStatsClient.SendApplicationErrorLogs("error", "Can't parse received session description message.", "text");
+                        callStatsClient.SendApplicationErrorLogs("error", "Can't parse received session description message.", "text");
 
                         return;
                     }
 
                     callStatsClient.SSRCMapDataSetup(sdp, "inbound", "remote");
 
-                    await callStatsClient.SendSDP(_localSDPForCallStats, sdp);
+                    callStatsClient.SendSDP(_localSDPForCallStats, sdp);
 
                     Debug.WriteLine("Conductor: Received session description:\n" + message);
 #if ORTCLIB
@@ -959,7 +959,7 @@ namespace PeerConnectionClient.Signalling
                         {
                             Debug.WriteLine("[Error] Conductor: Can't parse received message.\n" + message);
 
-                            await callStatsClient.SendApplicationErrorLogs("error", $"Can't parse received message.\n {message}", "text");
+                            callStatsClient.SendApplicationErrorLogs("error", $"Can't parse received message.\n {message}", "text");
 
                             return;
                         }
@@ -1035,7 +1035,7 @@ namespace PeerConnectionClient.Signalling
             {
                 Debug.WriteLine("[Error] Conductor: We only support connecting to one peer at a time");
 
-                await callStatsClient.SendApplicationErrorLogs("error", "We only support connecting to one peer at a time", "text");
+                callStatsClient.SendApplicationErrorLogs("error", "We only support connecting to one peer at a time", "text");
 
                 return;
             }
