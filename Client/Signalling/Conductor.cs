@@ -727,8 +727,10 @@ namespace PeerConnectionClient.Signalling
 
             if (peerId != _peerId) return;
 
+            _peerConnection = null;
+
             Debug.WriteLine("Conductor: Our peer hung up.");
-            ClosePeerConnection();
+            //ClosePeerConnection();
         }
 
         /// <summary>
