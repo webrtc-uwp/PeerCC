@@ -19,17 +19,17 @@ namespace PeerConnectionClient
         #region Properties
         private CallStats callstats;
 
-        private string newConnection = RTCIceConnectionState.New.ToString().ToLower();
-        private string checking = RTCIceConnectionState.Checking.ToString().ToLower();
-        private string connected = RTCIceConnectionState.Connected.ToString().ToLower();
-        private string completed = RTCIceConnectionState.Completed.ToString().ToLower();
-        private string failed = RTCIceConnectionState.Failed.ToString().ToLower();
-        private string disconnected = RTCIceConnectionState.Disconnected.ToString().ToLower();
-        private string closed = RTCIceConnectionState.Closed.ToString().ToLower();
+        private static readonly string newConnection = RTCIceConnectionState.New.ToString().ToLower();
+        private static readonly string checking = RTCIceConnectionState.Checking.ToString().ToLower();
+        private static readonly string connected = RTCIceConnectionState.Connected.ToString().ToLower();
+        private static readonly string completed = RTCIceConnectionState.Completed.ToString().ToLower();
+        private static readonly string failed = RTCIceConnectionState.Failed.ToString().ToLower();
+        private static readonly string disconnected = RTCIceConnectionState.Disconnected.ToString().ToLower();
+        private static readonly string closed = RTCIceConnectionState.Closed.ToString().ToLower();
 
-        private string newGathering = RTCIceGatheringState.New.ToString().ToLower();
-        private string gathering = RTCIceGatheringState.Gathering.ToString().ToLower();
-        private string complete = RTCIceGatheringState.Complete.ToString().ToLower();
+        private static readonly string newGathering = RTCIceGatheringState.New.ToString().ToLower();
+        private static readonly string gathering = RTCIceGatheringState.Gathering.ToString().ToLower();
+        private static readonly string complete = RTCIceGatheringState.Complete.ToString().ToLower();
 
         System.Timers.Timer _getAllStatsTimer = new System.Timers.Timer(10000);
 
