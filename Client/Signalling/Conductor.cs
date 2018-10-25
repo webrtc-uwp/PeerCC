@@ -68,7 +68,7 @@ namespace PeerConnectionClient.Signalling
     /// </summary>
     internal class Conductor
     {
-        CallStatsClient callStatsClient = new CallStatsClient();
+        public CallStatsClient callStatsClient = new CallStatsClient();
 
         private string _localSDPForCallStats;
 
@@ -466,6 +466,9 @@ namespace PeerConnectionClient.Signalling
                     await callStatsClient.PeerConnectionClosedStateChange();
                     ClosePeerConnection();
                 }
+
+                // TODO: Add to GUI
+                await callStatsClient.SendConferenceUserFeedback(4, 3, 5, Empty);
 
                 Debug.WriteLine("Conductor: Ice connection state change, state=" + (null != _peerConnection ? _peerConnection.IceConnectionState.ToString().ToLower() : "closed"));
             };

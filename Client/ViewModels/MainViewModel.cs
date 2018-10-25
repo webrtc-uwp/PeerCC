@@ -1213,6 +1213,7 @@ namespace PeerConnectionClient.ViewModels
         }
 
         private bool _microphoneIsOn = true;
+        private bool _mute = false;
 
         /// <summary>
         /// Microphone on/off toggle button.
@@ -1226,6 +1227,18 @@ namespace PeerConnectionClient.ViewModels
                 if (!SetProperty(ref _microphoneIsOn, value))
                 {
                     return;
+                }
+
+                if (_microphoneIsOn == false && _mute == false)
+                {
+                    Conductor.Instance.callStatsClient.SendMediaAction("audioMute");
+                    _mute = true;
+                }
+
+                if (_microphoneIsOn == true && _mute == true)
+                {
+                    Conductor.Instance.callStatsClient.SendMediaAction("audioUnmute");
+                    _mute = false;
                 }
 
                 if (IsConnectedToPeer && _selfAudioTrack != null)

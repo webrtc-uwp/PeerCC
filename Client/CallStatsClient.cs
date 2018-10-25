@@ -384,6 +384,34 @@ namespace PeerConnectionClient
         }
         #endregion
 
+        #region Media Events
+        public void SendMediaAction(string eventType)
+        {
+            List<string> remoteIDList = new List<string>();
+
+            for (int i = 0; i < _remoteIceCandidates.Count; i++)
+                remoteIDList.Add(_remoteIceCandidates[i].id);
+
+            MediaActionData mad = new MediaActionData();
+            mad.eventType = eventType;
+            mad.localID = _localID;
+            mad.originID = _originID;
+            mad.deviceID = _deviceID;
+            mad.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            mad.connectionID = _connectionID;
+            mad.remoteID = _remoteID;
+            mad.ssrc = "";
+            mad.mediaDeviceID = _deviceID;
+            mad.remoteIDList = remoteIDList;
+
+            if (callstats != null)
+            {
+                Debug.WriteLine("MediaAction: ");
+                var task = callstats.MediaAction(mad);
+            }
+        }
+        #endregion
+
         #region Ice Events
         private async Task SendIceDisruptionStart()
         {
@@ -578,14 +606,13 @@ namespace PeerConnectionClient
             await callstats.ApplicationErrorLogs(aeld);
         }
 
-        // TODO: call SendConferenceUserFeedback
-        private async Task SendConferenceUserFeedback()
+        public async Task SendConferenceUserFeedback(int overallRating, int videoQualityRating, int audioQualityRating, string comments)
         {
             Feedback feedbackObj = new Feedback();
-            feedbackObj.overallRating = 4;
-            feedbackObj.videoQualityRating = 3;
-            feedbackObj.audioQualityRating = 5;
-            feedbackObj.comments = "";
+            feedbackObj.overallRating = overallRating;
+            feedbackObj.videoQualityRating = videoQualityRating;
+            feedbackObj.audioQualityRating = audioQualityRating;
+            feedbackObj.comments = comments;
 
             ConferenceUserFeedbackData cufd = new ConferenceUserFeedbackData();
             cufd.localID = _localID;
