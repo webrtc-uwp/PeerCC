@@ -989,6 +989,8 @@ namespace PeerConnectionClient.Signalling
             {
                 _peerId = peer.Id;
                 var offerOptions = new RTCOfferOptions();
+                offerOptions.OfferToReceiveAudio = true;
+                offerOptions.OfferToReceiveVideo = true;
                 var offer = await _peerConnection.CreateOffer(offerOptions);
 #if ORTCLIB
                 var modifiedOffer = offer;
