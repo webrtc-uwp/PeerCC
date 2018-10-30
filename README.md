@@ -4,10 +4,10 @@
 
 * Rename PeerCC/Client/RenameToConfig.cs class and file to Config.cs
 
-* Set `App ID`: copy from your application settings to CallStatsClient/Config.cs 
+* Set `App ID`: copy from your application settings to Config.cs 
 `localSettings.Values["appID"]`
 
-* Set `secret string` in CallStatsClient/Config.cs 
+* Set `secret string` in Config.cs 
 `localSettings.Values["secret"]`
 
 * Open Command Prompt: 
@@ -21,7 +21,7 @@
 
 * Copy public key to your application settings.
 
-* Set `key id`: copy from your application settings to CallStatsClient/Config.cs 
+* Set `key id`: copy from your application settings to Config.cs 
 `localSettings.Values["keyID"]` 
 
 * Create certificate: 
