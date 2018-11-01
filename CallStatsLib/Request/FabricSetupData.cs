@@ -9,10 +9,10 @@ namespace CallStatsLib.Request
         public string deviceID { get; set; }
         public long timestamp { get; set; }
         public string remoteID { get; set; }
-        public int delay { get; set; }
+        public long delay { get; set; }
         public string connectionID { get; set; }
-        public int iceGatheringDelay { get; set; }
-        public int iceConnectivityDelay { get; set; }
+        public long iceGatheringDelay { get; set; }
+        public long iceConnectivityDelay { get; set; }
         public string fabricTransmissionDirection { get; set; }
         public string remoteEndpointType { get; set; }
         public List<IceCandidate> localIceCandidates { get; set; }

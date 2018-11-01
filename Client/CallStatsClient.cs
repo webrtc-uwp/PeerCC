@@ -63,9 +63,14 @@ namespace PeerConnectionClient
 
         private List<SSRCData> _ssrcDataList = new List<SSRCData>();
 
-        Stopwatch _setupClock;
-        Stopwatch _gatheringClock;
-        Stopwatch _connectivityClock;
+        long _gateheringTimeStart;
+        long _gateheringTimeStop;
+
+        long _connectingTimeStart;
+        long _connectingTimeStop;
+
+        long _totalSetupTimeStart;
+        long _totalSetupTimeStop;
 
         private IceCandidatePair _currIceCandidatePairObj;
         private IceCandidatePair _prevIceCandidatePairObj;
@@ -137,18 +142,13 @@ namespace PeerConnectionClient
         #region Start CallStats
         public async Task SendStartCallStats()
         {
-            _setupClock = Stopwatch.StartNew();
-
             callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
 
             await callstats.StartCallStats(CreateConference(), UserAlive());
 
-            _gatheringClock = Stopwatch.StartNew();
-            _connectivityClock = Stopwatch.StartNew();
-
-            _setupClock.Stop();
-
             SendUserDetails();
+
+            _totalSetupTimeStart = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
         }
         #endregion
 
@@ -210,7 +210,7 @@ namespace PeerConnectionClient
         #endregion
 
         #region Fabric Events
-        private void SendFabricSetup(int gatheringDelayMiliseconds, int connectivityDelayMiliseconds, int totalSetupDelay)
+        private void SendFabricSetup(long gatheringDelayMiliseconds, long connectivityDelayMiliseconds, long totalSetupDelay)
         {
             IceCandidateStatsData();
             AddToIceCandidatePairsList();
@@ -741,6 +741,8 @@ namespace PeerConnectionClient
         {
             if (pc.IceConnectionState == RTCIceConnectionState.Checking)
             {
+                _connectingTimeStart = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+
                 if (_newIceConnectionState != checking)
                 {
                     SetIceConnectionStates(checking);
@@ -765,10 +767,8 @@ namespace PeerConnectionClient
 
             if (pc.IceConnectionState == RTCIceConnectionState.Connected)
             {
-                _connectivityClock.Stop();
-
-                _connectivityDelayMiliseconds = _connectivityClock.Elapsed.Milliseconds;
-                _totalSetupDelay = _setupClock.Elapsed.Milliseconds;
+                _connectingTimeStop = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                _totalSetupTimeStop = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
                 if (_newIceConnectionState != connected)
                 {
@@ -777,8 +777,21 @@ namespace PeerConnectionClient
 
                 await GetAllStats(pc);
 
+                long gatheringDelayMiliseconds;
+                long connectivityDelayMiliseconds;
+                long totalSetupDelay;
+
+                gatheringDelayMiliseconds = _gateheringTimeStop - _gateheringTimeStart;
+
+                if (_connectingTimeStart != 0)
+                    connectivityDelayMiliseconds = _connectingTimeStop - _connectingTimeStart;
+                else
+                    connectivityDelayMiliseconds = 0;
+
+                totalSetupDelay = _totalSetupTimeStop - _totalSetupTimeStart;
+
                 //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
-                SendFabricSetup(_gatheringDelayMiliseconds, _connectivityDelayMiliseconds, _totalSetupDelay);
+                SendFabricSetup(gatheringDelayMiliseconds, connectivityDelayMiliseconds, totalSetupDelay);
 
                 if (_prevIceConnectionState == disconnected)
                 {
@@ -922,6 +935,8 @@ namespace PeerConnectionClient
         {
             if (pc.IceGatheringState == RTCIceGatheringState.Gathering)
             {
+                _gateheringTimeStart = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+
                 if (_newIceGatheringState != gathering)
                 {
                     SetIceGatheringStates(gathering);
@@ -930,9 +945,7 @@ namespace PeerConnectionClient
 
             if (pc.IceGatheringState == RTCIceGatheringState.Complete)
             {
-                _gatheringClock.Stop();
-
-                _gatheringDelayMiliseconds = _gatheringClock.Elapsed.Milliseconds;
+                _gateheringTimeStop = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
                 if (_newIceGatheringState != complete)
                 {
