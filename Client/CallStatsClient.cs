@@ -78,10 +78,6 @@ namespace PeerConnectionClient
         private string _prevIceConnectionState;
         private string _newIceConnectionState;
 
-        private int _gatheringDelayMiliseconds;
-        private int _connectivityDelayMiliseconds;
-        private int _totalSetupDelay;
-
         private string _prevIceGatheringState;
         private string _newIceGatheringState;
 
