@@ -1053,7 +1053,7 @@ namespace PeerConnectionClient
                         {
                             if (_prevProtocol != null && _prevProtocol != _currProtocol)
                             {
-                                SendFabricTransportChange();
+                                //SendFabricTransportChange();
                                 Debug.WriteLine($"prevProtocol: {_prevProtocol}, currProtocol: {_currProtocol}");
                             }
                         }
@@ -1498,6 +1498,8 @@ namespace PeerConnectionClient
                     icp.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     icp.totalRoundTripTime = candidatePairStats.TotalRoundTripTime;
                     icp.transportId = candidatePairStats.TransportId;
+
+                    _statsObjects.Add(icp);
 
                     if (!candidatePairsDict.ContainsKey(candidatePairStats.LocalCandidateId))
                         candidatePairsDict.Add(candidatePairStats.LocalCandidateId, "local-candidate");
