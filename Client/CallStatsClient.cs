@@ -796,6 +796,8 @@ namespace PeerConnectionClient
                 
                 _getAllStatsTimer.Elapsed += async (sender, e) =>
                 {
+                    _statsObjects.Clear();
+
                     await GetAllStats(pc);
 
                     SendConferenceStatsSubmission();

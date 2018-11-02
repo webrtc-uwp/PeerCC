@@ -702,6 +702,7 @@ namespace PeerConnectionClient.Signalling
         /// </summary>
         private Conductor()
         {
+            Config.AppSettings();
 #if ORTCLIB
             _signalingMode = RTCPeerConnectionSignalingMode.Json;
 //#else
