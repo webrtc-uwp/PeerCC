@@ -157,7 +157,7 @@ namespace PeerConnectionClient.ViewModels
         {
 #if !ORTCLIB
             var queue = Org.WebRtc.EventQueueMaker.Bind(uiDispatcher);
-            Org.WebRtc.WebRtcLib.Setup(queue);
+            Org.WebRtc.WebRtcLib.Setup(queue, true, true);
 #endif
             var settings = ApplicationData.Current.LocalSettings;
 
