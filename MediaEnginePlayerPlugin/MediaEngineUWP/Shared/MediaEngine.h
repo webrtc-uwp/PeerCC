@@ -70,7 +70,7 @@ typedef enum Log_Level
 
 #ifndef LOG_LEVEL
 #if _DEBUG
-#define LOG_LEVEL Log_Level_Warning
+#define LOG_LEVEL Log_Level_Info
 #else
 #define LOG_LEVEL Log_Level_Error
 #endif

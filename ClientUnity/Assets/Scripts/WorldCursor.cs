@@ -16,7 +16,7 @@ public class WorldCursor : MonoBehaviour
 
     void Start()
     {
-        meshRenderer = this.gameObject.GetComponentInChildren<MeshRenderer>();
+        meshRenderer = this.gameObject.GetComponent<MeshRenderer>();
     }
 
     void Update()
@@ -28,7 +28,7 @@ public class WorldCursor : MonoBehaviour
        
         if (Physics.Raycast(headPosition, gazeDirection, out hitInfo, 20.0f, Physics.DefaultRaycastLayers))
         {
-            this.transform.position = new Vector3(hitInfo.point.x, hitInfo.point.y, -0.05f);
+            this.transform.position = new Vector3(hitInfo.point.x, hitInfo.point.y, 1.95f);
             this.transform.rotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal);
             meshRenderer.enabled = true;
 

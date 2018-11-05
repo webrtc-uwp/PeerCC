@@ -79,9 +79,21 @@ public class ControlScript : MonoBehaviour
         Instance = this;
 
 #if !UNITY_EDITOR
-        Conductor.Instance.Initialized += Conductor_Initialized;
-        Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
-        Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
+        if(!UnityEngine.WSA.Application.RunningOnUIThread())
+        {
+            UnityEngine.WSA.Application.InvokeOnUIThread(() =>
+            {
+                Conductor.Instance.Initialized += Conductor_Initialized;
+                Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
+                Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
+            }, false);
+        }
+        else
+        {
+            Conductor.Instance.Initialized += Conductor_Initialized;
+            Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
+            Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
+        }
 #endif
         ServerAddressInputField.text = "127.0.0.1";
     }

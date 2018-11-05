@@ -6,5 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/VideoSurfaceScene.unity
-    guid: e1eda6aaf0ed45e469c248c14975f87a
+    path: Assets/Scenes/PeerCCScene.unity
+    guid: c67180c4f8cc47f41b01822fcebd5980
+  m_configObjects: {}
