@@ -450,9 +450,9 @@ namespace PeerConnectionClient.Signalling
 
             await callStatsClient.SendStartCallStats();
 
-            _peerConnection.OnIceGatheringStateChange += () =>
+            _peerConnection.OnIceGatheringStateChange += async() =>
             {
-                callStatsClient.StatsOnIceGatheringStateChange(_peerConnection);
+                await callStatsClient.StatsOnIceGatheringStateChange(_peerConnection);
 
                 Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString().ToLower());
             };
@@ -669,11 +669,11 @@ namespace PeerConnectionClient.Signalling
         /// Invoked when the remote peer added a media stream to the peer connection.
         /// </summary>
         public event Action<UseMediaStreamTrack> OnAddRemoteTrack;
-        private void PeerConnection_OnTrack(UseRTCTrackEvent evt)
+        private async void PeerConnection_OnTrack(UseRTCTrackEvent evt)
         {
             OnAddRemoteTrack?.Invoke(evt.Track);
 
-            callStatsClient.SendSSRCMap();
+            await callStatsClient.SendSSRCMap();
         }
 
         /// <summary>
@@ -884,6 +884,8 @@ namespace PeerConnectionClient.Signalling
                     if (IsNullOrEmpty(sdp))
                     {
                         Debug.WriteLine("[Error] Conductor: Can't parse received session description message.");
+
+                        callStatsClient.SendFabricSetupFailed("NegotiationFailure", Empty, Empty, Empty);
 
                         callStatsClient.SendApplicationErrorLogs("error", "Can't parse received session description message.", "text");
 
