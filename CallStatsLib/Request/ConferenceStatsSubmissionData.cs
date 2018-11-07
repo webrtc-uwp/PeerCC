@@ -282,7 +282,7 @@ namespace CallStatsLib.Request
         public ulong circuitBreakerTriggerCount { get; set; }
         public DateTimeOffset consentExpiredTimestamp { get; set; }
         public ulong consentRequestsSent { get; set; }
-        public TimeSpan currentRoundTripTime { get; set; }
+        public double currentRoundTripTime { get; set; }
         public DateTimeOffset firstRequestTimestamp { get; set; }
         public string id { get; set; }
         public DateTimeOffset lastPacketReceivedTimestamp { get; set; }
@@ -304,7 +304,7 @@ namespace CallStatsLib.Request
         public string type { get; set; }
         public string statsTypeOther { get; set; }
         public long timestamp { get; set; }
-        public TimeSpan totalRoundTripTime { get; set; }
+        public double totalRoundTripTime { get; set; }
         public string transportId { get; set; }
     }
 

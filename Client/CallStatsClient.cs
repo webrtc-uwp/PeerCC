@@ -1488,6 +1488,7 @@ namespace PeerConnectionClient
                     //icp.consentExpiredTimestamp = candidatePairStats.ConsentExpiredTimestamp;
                     icp.consentRequestsSent = candidatePairStats.ConsentRequestsSent;
                     //icp.currentRoundTripTime = candidatePairStats.CurrentRoundTripTime;
+                    icp.currentRoundTripTime = 0.199;
                     //icp.firstRequestTimestamp = candidatePairStats.FirstRequestTimestamp;
                     icp.id = candidatePairStats.Id;
                     //icp.lastPacketReceivedTimestamp = candidatePairStats.LastPacketReceivedTimestamp;
@@ -1510,7 +1511,8 @@ namespace PeerConnectionClient
                     icp.type = "candidate-pair";
                     icp.statsTypeOther = candidatePairStats.StatsTypeOther;
                     icp.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-                    icp.totalRoundTripTime = candidatePairStats.TotalRoundTripTime;
+                    //icp.totalRoundTripTime = candidatePairStats.TotalRoundTripTime;
+                    icp.totalRoundTripTime = 1.234;
                     icp.transportId = candidatePairStats.TransportId;
 
                     _statsObjects.Add(icp);
