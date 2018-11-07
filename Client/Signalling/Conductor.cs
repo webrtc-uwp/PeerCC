@@ -885,7 +885,7 @@ namespace PeerConnectionClient.Signalling
                     {
                         Debug.WriteLine("[Error] Conductor: Can't parse received session description message.");
 
-                        callStatsClient.SendFabricSetupFailed("NegotiationFailure", Empty, Empty, Empty);
+                        callStatsClient.SendFabricSetupFailed("NegotiationFailure", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
 
                         callStatsClient.SendApplicationErrorLogs("error", "Can't parse received session description message.", "text");
 
@@ -1055,6 +1055,11 @@ namespace PeerConnectionClient.Signalling
                 _peerId = peer.Id;
                 var offerOptions = new RTCOfferOptions();
                 var offer = await _peerConnection.CreateOffer(offerOptions);
+
+                if (IsNullOrEmpty(offer.Sdp))
+                {
+                    callStatsClient.SendFabricSetupFailed("SDPGenerationError", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
+                }
 #if ORTCLIB
                 var modifiedOffer = offer;
 #else

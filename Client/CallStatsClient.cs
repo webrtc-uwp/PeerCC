@@ -17,8 +17,6 @@ namespace PeerConnectionClient
     public class CallStatsClient
     {
         #region Properties
-        private CallStats callstats;
-
         private static readonly string newConnection = RTCIceConnectionState.New.ToString().ToLower();
         private static readonly string checking = RTCIceConnectionState.Checking.ToString().ToLower();
         private static readonly string connected = RTCIceConnectionState.Connected.ToString().ToLower();
@@ -82,6 +80,8 @@ namespace PeerConnectionClient
         private string _newIceGatheringState;
 
         private RTCIceCandidatePairStats _currIceCandidatePair;
+
+        private CallStats callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
         #endregion
 
         #region Generate JWT
@@ -138,7 +138,7 @@ namespace PeerConnectionClient
         #region Start CallStats
         public async Task SendStartCallStats()
         {
-            callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
+            //callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
 
             await callstats.StartCallStats(CreateConference(), UserAlive());
 
@@ -283,8 +283,7 @@ namespace PeerConnectionClient
             await callstats.FabricStateChange(fscd);
         }
 
-        // TODO: call SendFabricTransportChange method
-        private void SendFabricTransportChange()
+        private async Task SendFabricTransportChange()
         {
             IceCandidateStatsData();
 
@@ -305,7 +304,7 @@ namespace PeerConnectionClient
             ftcd.relayType = $"";
 
             Debug.WriteLine("FabricTransportChange: ");
-            var task = callstats.FabricTransportChange(ftcd);
+            await callstats.FabricTransportChange(ftcd);
         }
 
         private void SendFabricDropped()
@@ -744,6 +743,8 @@ namespace PeerConnectionClient
                     await SetIceConnectionStates(checking);
                 }
 
+                _statsObjects.Clear();
+
                 await GetAllStats(pc);
 
                 if (_prevIceConnectionState == connected || _prevIceConnectionState == completed
@@ -770,6 +771,8 @@ namespace PeerConnectionClient
                 {
                     await SetIceConnectionStates(connected);
                 }
+
+                _statsObjects.Clear();
 
                 await GetAllStats(pc);
 
@@ -814,6 +817,8 @@ namespace PeerConnectionClient
                     await SetIceConnectionStates(completed);
                 }
 
+                _statsObjects.Clear();
+
                 await GetAllStats(pc);
 
                 if (_prevIceConnectionState == disconnected)
@@ -828,6 +833,8 @@ namespace PeerConnectionClient
                 {
                     await SetIceConnectionStates(failed);
                 }
+
+                _statsObjects.Clear();
 
                 await GetAllStats(pc);
 
@@ -851,6 +858,8 @@ namespace PeerConnectionClient
                     await SetIceConnectionStates(disconnected);
                 }
 
+                _statsObjects.Clear();
+
                 await GetAllStats(pc);
 
                 if (_prevIceConnectionState == connected || _prevIceConnectionState == completed)
@@ -870,6 +879,8 @@ namespace PeerConnectionClient
                 {
                     await SetIceConnectionStates(closed);
                 }
+
+                _statsObjects.Clear();
 
                 await GetAllStats(pc);
 
@@ -1000,13 +1011,13 @@ namespace PeerConnectionClient
         {
             IRTCStatsReport statsReport = await Task.Run(async () => await pc.GetStats(statsType));
 
-            GetAllStatsData(statsReport);
+            await GetAllStatsData(statsReport);
         }
 
         private string _prevSelectedCandidateId;
         private string _currSelectedCandidateId;
 
-        public void GetAllStatsData(IRTCStatsReport statsReport)
+        public async Task GetAllStatsData(IRTCStatsReport statsReport)
         {
             Dictionary<string, string> candidatePairsDict = new Dictionary<string, string>();
 
@@ -1445,13 +1456,15 @@ namespace PeerConnectionClient
                     _statsObjects.Add(ts);
 
                     _currSelectedCandidateId = transportStats.SelectedCandidatePairId;
-
-                    if ((_prevIceConnectionState == connected || _prevIceConnectionState == completed)
-                            && (_newIceConnectionState == connected || _newIceConnectionState == completed))
+                    if (_currIceCandidatePairObj != null && _prevIceCandidatePairObj != null)
                     {
-                        if (_prevSelectedCandidateId != null && _prevSelectedCandidateId != _currSelectedCandidateId)
+                        if ((_prevIceConnectionState == connected || _prevIceConnectionState == completed)
+                            && (_newIceConnectionState == connected || _newIceConnectionState == completed))
                         {
-                            SendFabricTransportChange();
+                            if (_prevSelectedCandidateId != null && _prevSelectedCandidateId != _currSelectedCandidateId)
+                            {
+                                await SendFabricTransportChange();
+                            }
                         }
                     }
                 }
