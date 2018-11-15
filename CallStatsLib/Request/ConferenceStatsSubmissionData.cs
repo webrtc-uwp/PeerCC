@@ -149,6 +149,7 @@ namespace CallStatsLib.Request
         public long timestamp { get; set; }
         public string trackId { get; set; }
         public string transportId { get; set; }
+        public double csioIntBRKbps { get; set; }
     }
 
     public class OutboundRtpStreamStat
@@ -182,6 +183,7 @@ namespace CallStatsLib.Request
         //public TimeSpan TotalEncodeTime { get; set; }
         public string trackId { get; set; }
         public string transportId { get; set; }
+        public double csioIntBRKbps { get; set; }
     }
 
     public class RemoteInboundRtpStreamStats

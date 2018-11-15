@@ -1027,6 +1027,10 @@ namespace PeerConnectionClient
             GetAllStatsData(statsReport);
         }
 
+        private double _prevBytesReceived = 0.0;
+        private double _prevBytesSent = 0.0;
+        private int _sec = 1;
+
         public void GetAllStatsData(IRTCStatsReport statsReport)
         {
             Dictionary<string, string> candidatePairsDict = new Dictionary<string, string>();
@@ -1140,6 +1144,10 @@ namespace PeerConnectionClient
                     irss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     irss.trackId = inboundRtpStats.TrackId;
                     irss.transportId = inboundRtpStats.TransportId;
+                    irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceived) / _sec;
+
+                    _prevBytesReceived = irss.bytesReceived;
+                    _sec = 10;
 
                     _statsObjects.Add(irss);
                 }
@@ -1179,6 +1187,10 @@ namespace PeerConnectionClient
                     orss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     orss.trackId = outboundRtpStats.TrackId;
                     orss.transportId = outboundRtpStats.TransportId;
+                    orss.csioIntBRKbps = (orss.bytesSent - _prevBytesSent) / _sec;
+
+                    _prevBytesSent = orss.bytesSent;
+                    _sec = 10;
 
                     _statsObjects.Add(orss);
                 }
