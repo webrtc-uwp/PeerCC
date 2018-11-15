@@ -1358,11 +1358,36 @@ namespace PeerConnectionClient
 
                 if (statsType == RTCStatsType.Track)
                 {
-                    if (rtcStats.Id == "RTCMediaStreamTrack_sender_1")
-                    {
-                        RTCSenderVideoTrackAttachmentStats videoTrackStats;
+                    RTCMediaHandlerStats mediaHandlerStats = RTCMediaHandlerStats.Cast(rtcStats);
 
-                        videoTrackStats = RTCSenderVideoTrackAttachmentStats.Cast(rtcStats);
+                    if (mediaHandlerStats.Kind == "audio")
+                    {
+                        var audioTrackStats = RTCSenderAudioTrackAttachmentStats.Cast(rtcStats);
+
+                        SenderAudioTrackAttachmentStats satas = new SenderAudioTrackAttachmentStats();
+                        satas.audioLevel = audioTrackStats.AudioLevel;
+                        satas.echoReturnLoss = audioTrackStats.EchoReturnLoss;
+                        satas.echoReturnLossEnhancement = audioTrackStats.EchoReturnLossEnhancement;
+                        satas.ended = audioTrackStats.Ended;
+                        satas.id = audioTrackStats.Id;
+                        satas.kind = audioTrackStats.Kind;
+                        satas.priority = audioTrackStats.Priority.ToString();
+                        satas.remoteSource = audioTrackStats.RemoteSource;
+                        satas.type = audioTrackStats.StatsType.ToString().ToLower();
+                        satas.statsTypeOther = audioTrackStats.StatsTypeOther;
+                        satas.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        satas.totalAudioEnergy = audioTrackStats.TotalAudioEnergy;
+                        satas.totalSamplesDuration = audioTrackStats.TotalSamplesDuration;
+                        satas.totalSamplesSent = audioTrackStats.TotalSamplesSent;
+                        satas.trackIdentifier = audioTrackStats.TrackIdentifier;
+                        satas.voiceActivityFlag = audioTrackStats.VoiceActivityFlag;
+
+                        _statsObjects.Add(satas);
+                    }
+
+                    else if (mediaHandlerStats.Kind == "video")
+                    {
+                        var videoTrackStats = RTCSenderVideoTrackAttachmentStats.Cast(rtcStats);
 
                         Debug.WriteLine($"videoTrack: {videoTrackStats}");
 
@@ -1385,35 +1410,6 @@ namespace PeerConnectionClient
                         svtas.trackIdentifier = videoTrackStats.TrackIdentifier;
 
                         _statsObjects.Add(svtas);
-                    }
-
-                    if (rtcStats.Id == "RTCMediaStreamTrack_sender_2")
-                    {
-                        RTCSenderAudioTrackAttachmentStats audioTrackStats;
-
-                        audioTrackStats = RTCSenderAudioTrackAttachmentStats.Cast(rtcStats);
-
-                        Debug.WriteLine($"audioTrack: {audioTrackStats}");
-
-                        SenderAudioTrackAttachmentStats satas = new SenderAudioTrackAttachmentStats();
-                        satas.audioLevel = audioTrackStats.AudioLevel;
-                        satas.echoReturnLoss = audioTrackStats.EchoReturnLoss;
-                        satas.echoReturnLossEnhancement = audioTrackStats.EchoReturnLossEnhancement;
-                        satas.ended = audioTrackStats.Ended;
-                        satas.id = audioTrackStats.Id;
-                        satas.kind = audioTrackStats.Kind;
-                        satas.priority = audioTrackStats.Priority.ToString();
-                        satas.remoteSource = audioTrackStats.RemoteSource;
-                        satas.type = audioTrackStats.StatsType.ToString().ToLower();
-                        satas.statsTypeOther = audioTrackStats.StatsTypeOther;
-                        satas.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-                        satas.totalAudioEnergy = audioTrackStats.TotalAudioEnergy;
-                        satas.totalSamplesDuration = audioTrackStats.TotalSamplesDuration;
-                        satas.totalSamplesSent = audioTrackStats.TotalSamplesSent;
-                        satas.trackIdentifier = audioTrackStats.TrackIdentifier;
-                        satas.voiceActivityFlag = audioTrackStats.VoiceActivityFlag;
-
-                        _statsObjects.Add(satas);
                     }
                 }
                 //TODO: if?
