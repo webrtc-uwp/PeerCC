@@ -635,16 +635,27 @@ namespace PeerConnectionClient
 
                 foreach (var k in d.Value)
                 {
-                    if (k.Key == "cname") ssrcData.cname = k.Value.Replace("\r", "");
-                    if (k.Key == "msid") ssrcData.msid = k.Value.Replace("\r", "");
-                    if (k.Key == "mslabel") ssrcData.mslabel = k.Value.Replace("\r", "");
+                    if (k.Key == "cname")
+                        ssrcData.cname = k.Value.Replace("\r", "");
+
+                    if (k.Key == "msid")
+                        ssrcData.msid = k.Value.Replace("\r", "");
+
+                    if (k.Key == "mslabel")
+                        ssrcData.mslabel = k.Value.Replace("\r", "");
+
                     if (k.Key == "label")
                     {
                         ssrcData.label = k.Value.Replace("\r", "");
 
-                        if (k.Value.Contains("audio")) ssrcData.mediaType = "audio";
-                        if (k.Value.Contains("video")) ssrcData.mediaType = "video";
-                        if (k.Value.Contains("screen")) ssrcData.mediaType = "screen";
+                        if (k.Value.Contains("audio") || k.Value.Contains("AUDIO"))
+                            ssrcData.mediaType = "audio";
+
+                        if (k.Value.Contains("video") || k.Value.Contains("VIDEO"))
+                            ssrcData.mediaType = "video";
+
+                        if (k.Value.Contains("screen") || k.Value.Contains("SCREEN"))
+                            ssrcData.mediaType = "screen";
                     }
                 }
 
@@ -1047,9 +1058,7 @@ namespace PeerConnectionClient
                 {
                     if (statsTypeOther == "ice-candidate")
                     {
-                        RTCIceCandidateStats iceCandidateStats;
-
-                        iceCandidateStats = RTCIceCandidateStats.Cast(rtcStats);
+                        RTCIceCandidateStats iceCandidateStats = RTCIceCandidateStats.Cast(rtcStats);
 
                         IceCandidateStats ics = new IceCandidateStats();
                         ics.candidateType = iceCandidateStats.CandidateType.ToString().ToLower();
@@ -1073,13 +1082,9 @@ namespace PeerConnectionClient
                     }
                 }
 
-                if (statsType == RTCStatsType.Codec)
+                else if (statsType == RTCStatsType.Codec)
                 {
-                    RTCCodecStats codecStats;
-
-                    codecStats = RTCCodecStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"codec: {codecStats}");
+                    RTCCodecStats codecStats = RTCCodecStats.Cast(rtcStats);
 
                     CodecStats cs = new CodecStats();
                     cs.channels = codecStats.Channels;
@@ -1098,13 +1103,9 @@ namespace PeerConnectionClient
                     _statsObjects.Add(cs);
                 }
 
-                if (statsType == RTCStatsType.InboundRtp)
+                else if (statsType == RTCStatsType.InboundRtp)
                 {
-                    RTCInboundRtpStreamStats inboundRtpStats;
-
-                    inboundRtpStats = RTCInboundRtpStreamStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"inboundRtp: {inboundRtpStats}");
+                    RTCInboundRtpStreamStats inboundRtpStats = RTCInboundRtpStreamStats.Cast(rtcStats);
 
                     InboundRtpStreamStats irss = new InboundRtpStreamStats();
                     irss.averageRtcpInterval = inboundRtpStats.AverageRtcpInterval;
@@ -1152,13 +1153,9 @@ namespace PeerConnectionClient
                     _statsObjects.Add(irss);
                 }
 
-                if (statsType == RTCStatsType.OutboundRtp)
+                else if (statsType == RTCStatsType.OutboundRtp)
                 {
-                    RTCOutboundRtpStreamStats outboundRtpStats;
-
-                    outboundRtpStats = RTCOutboundRtpStreamStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"outboundRtp: {outboundRtpStats}");
+                    RTCOutboundRtpStreamStats outboundRtpStats = RTCOutboundRtpStreamStats.Cast(rtcStats);
 
                     OutboundRtpStreamStat orss = new OutboundRtpStreamStat();
                     orss.averageRtcpInterval = outboundRtpStats.AverageRtcpInterval;
@@ -1195,13 +1192,9 @@ namespace PeerConnectionClient
                     _statsObjects.Add(orss);
                 }
 
-                if (statsType == RTCStatsType.RemoteInboundRtp)
+                else if (statsType == RTCStatsType.RemoteInboundRtp)
                 {
-                    RTCRemoteInboundRtpStreamStats remoteInboundRtpStats;
-
-                    remoteInboundRtpStats = RTCRemoteInboundRtpStreamStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"remoteInboundRtp: {remoteInboundRtpStats}");
+                    RTCRemoteInboundRtpStreamStats remoteInboundRtpStats = RTCRemoteInboundRtpStreamStats.Cast(rtcStats);
 
                     RemoteInboundRtpStreamStats rirss = new RemoteInboundRtpStreamStats();
                     rirss.burstDiscardCount = remoteInboundRtpStats.BurstDiscardCount;
@@ -1237,13 +1230,9 @@ namespace PeerConnectionClient
                     _statsObjects.Add(rirss);
                 }
 
-                if (statsType == RTCStatsType.RemoteOutboundRtp)
+                else if (statsType == RTCStatsType.RemoteOutboundRtp)
                 {
-                    RTCRemoteOutboundRtpStreamStats remoteOutboundRtpStats;
-
-                    remoteOutboundRtpStats = RTCRemoteOutboundRtpStreamStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"remoteOutboundRtp: {remoteOutboundRtpStats}");
+                    RTCRemoteOutboundRtpStreamStats remoteOutboundRtpStats = RTCRemoteOutboundRtpStreamStats.Cast(rtcStats);
 
                     RemoteOutboundRtpStreamStats rorss = new RemoteOutboundRtpStreamStats();
                     rorss.bytesDiscardedOnSend = remoteOutboundRtpStats.BytesDiscardedOnSend;
@@ -1269,13 +1258,9 @@ namespace PeerConnectionClient
                     _statsObjects.Add(rorss);
                 }
 
-                if (statsType == RTCStatsType.Csrc)
+                else if (statsType == RTCStatsType.Csrc)
                 {
-                    RTCRtpContributingSourceStats csrcStats;
-
-                    csrcStats = RTCRtpContributingSourceStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"csrc: {csrcStats}");
+                    RTCRtpContributingSourceStats csrcStats = RTCRtpContributingSourceStats.Cast(rtcStats);
 
                     RtpContributingSourceStats rcss = new RtpContributingSourceStats();
                     rcss.audioLevel = csrcStats.AudioLevel;
@@ -1290,13 +1275,9 @@ namespace PeerConnectionClient
                     _statsObjects.Add(rcss);
                 }
 
-                if (statsType == RTCStatsType.PeerConnection)
+                else if (statsType == RTCStatsType.PeerConnection)
                 {
-                    RTCPeerConnectionStats peerConnectionStats;
-
-                    peerConnectionStats = RTCPeerConnectionStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"peerConnectionStats: {peerConnectionStats.ToString()}");
+                    RTCPeerConnectionStats peerConnectionStats = RTCPeerConnectionStats.Cast(rtcStats);
 
                     PeerConnectionStats pcs = new PeerConnectionStats();
                     pcs.dataChannelsAccepted = peerConnectionStats.DataChannelsAccepted;
@@ -1311,13 +1292,9 @@ namespace PeerConnectionClient
                     _statsObjects.Add(pcs);
                 }
 
-                if (statsType == RTCStatsType.DataChannel)
+                else if (statsType == RTCStatsType.DataChannel)
                 {
-                    RTCDataChannelStats dataChannelStats;
-
-                    dataChannelStats = RTCDataChannelStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"dataChannel: {dataChannelStats}");
+                    RTCDataChannelStats dataChannelStats = RTCDataChannelStats.Cast(rtcStats);
 
                     DataChannelStats dc = new DataChannelStats();
                     dc.bytesReceived = dataChannelStats.BytesReceived;
@@ -1337,13 +1314,9 @@ namespace PeerConnectionClient
                     _statsObjects.Add(dc);
                 }
 
-                if (statsType == RTCStatsType.Stream)
+                else if (statsType == RTCStatsType.Stream)
                 {
-                    RTCMediaStreamStats mediaStreamStats;
-
-                    mediaStreamStats = RTCMediaStreamStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"mediaStream: {mediaStreamStats.ToString()}");
+                    RTCMediaStreamStats mediaStreamStats = RTCMediaStreamStats.Cast(rtcStats);
 
                     MediaStreamStats mss = new MediaStreamStats();
                     mss.id = mediaStreamStats.Id;
@@ -1356,13 +1329,13 @@ namespace PeerConnectionClient
                     _statsObjects.Add(mss);
                 }
 
-                if (statsType == RTCStatsType.Track)
+                else if (statsType == RTCStatsType.Track)
                 {
                     RTCMediaHandlerStats mediaHandlerStats = RTCMediaHandlerStats.Cast(rtcStats);
 
                     if (mediaHandlerStats.Kind == "audio")
                     {
-                        var audioTrackStats = RTCSenderAudioTrackAttachmentStats.Cast(rtcStats);
+                        RTCSenderAudioTrackAttachmentStats audioTrackStats = RTCSenderAudioTrackAttachmentStats.Cast(rtcStats);
 
                         SenderAudioTrackAttachmentStats satas = new SenderAudioTrackAttachmentStats();
                         satas.audioLevel = audioTrackStats.AudioLevel;
@@ -1387,9 +1360,7 @@ namespace PeerConnectionClient
 
                     else if (mediaHandlerStats.Kind == "video")
                     {
-                        var videoTrackStats = RTCSenderVideoTrackAttachmentStats.Cast(rtcStats);
-
-                        Debug.WriteLine($"videoTrack: {videoTrackStats}");
+                        RTCSenderVideoTrackAttachmentStats videoTrackStats = RTCSenderVideoTrackAttachmentStats.Cast(rtcStats);
 
                         SenderVideoTrackAttachmentStats svtas = new SenderVideoTrackAttachmentStats();
                         svtas.ended = videoTrackStats.Ended;
@@ -1413,7 +1384,7 @@ namespace PeerConnectionClient
                     }
                 }
 
-                if (statsType == RTCStatsType.Sender)
+                else if (statsType == RTCStatsType.Sender)
                 {
                     RTCMediaHandlerStats mediaHandlerStats = RTCMediaHandlerStats.Cast(rtcStats);
 
@@ -1468,7 +1439,7 @@ namespace PeerConnectionClient
                     }
                 }
 
-                if (statsType == RTCStatsType.Receiver)
+                else if (statsType == RTCStatsType.Receiver)
                 {
                     RTCMediaHandlerStats mediaHandlerStats = RTCMediaHandlerStats.Cast(rtcStats);
 
@@ -1527,13 +1498,9 @@ namespace PeerConnectionClient
                     }
                 }
 
-                if (statsType == RTCStatsType.Transport)
+                else if (statsType == RTCStatsType.Transport)
                 {
-                    RTCTransportStats transportStats;
-
-                    transportStats = RTCTransportStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"transport: {transportStats}");
+                    RTCTransportStats transportStats = RTCTransportStats.Cast(rtcStats);
 
                     TransportStats ts = new TransportStats();
                     ts.bytesReceived = transportStats.BytesReceived;
@@ -1558,13 +1525,9 @@ namespace PeerConnectionClient
                     _currSelectedCandidateId = transportStats.SelectedCandidatePairId;
                 }
 
-                if (statsType == RTCStatsType.CandidatePair)
+                else if (statsType == RTCStatsType.CandidatePair)
                 {
-                    RTCIceCandidatePairStats candidatePairStats;
-
-                    candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"candidatePair: {candidatePairStats}");
+                    RTCIceCandidatePairStats candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
 
                     _prevIceCandidatePairObj = _currIceCandidatePairObj;
 
@@ -1619,13 +1582,9 @@ namespace PeerConnectionClient
                     _currIceCandidatePairObj = GetIceCandidatePairData();
                 }
 
-                if (statsType == RTCStatsType.Certificate)
+                else if (statsType == RTCStatsType.Certificate)
                 {
-                    RTCCertificateStats certificateStats;
-
-                    certificateStats = RTCCertificateStats.Cast(rtcStats);
-
-                    Debug.WriteLine($"certificate: {certificateStats}");
+                    RTCCertificateStats certificateStats = RTCCertificateStats.Cast(rtcStats);
 
                     CertificateStats cs = new CertificateStats();
                     cs.base64Certificate = certificateStats.Base64Certificate;
