@@ -1412,35 +1412,119 @@ namespace PeerConnectionClient
                         _statsObjects.Add(svtas);
                     }
                 }
-                //TODO: if?
+
                 if (statsType == RTCStatsType.Sender)
                 {
-                    RTCAudioSenderStats audioSenderStats;
+                    RTCMediaHandlerStats mediaHandlerStats = RTCMediaHandlerStats.Cast(rtcStats);
 
-                    audioSenderStats = RTCAudioSenderStats.Cast(rtcStats);
+                    if (mediaHandlerStats.Kind == "audio")
+                    {
+                        RTCAudioSenderStats audioSenderStats = RTCAudioSenderStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"audioSender: {audioSenderStats}");
+                        AudioSenderStats aus = new AudioSenderStats();
+                        aus.audioLevel = audioSenderStats.AudioLevel;
+                        aus.echoReturnLoss = audioSenderStats.EchoReturnLoss;
+                        aus.echoReturnLossEnhancement = audioSenderStats.EchoReturnLossEnhancement;
+                        aus.ended = audioSenderStats.Ended;
+                        aus.id = audioSenderStats.Id;
+                        aus.kind = audioSenderStats.Kind;
+                        aus.priority = audioSenderStats.Priority.ToString();
+                        aus.remoteSource = audioSenderStats.RemoteSource;
+                        aus.statsTypeOther = audioSenderStats.StatsTypeOther;
+                        aus.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        aus.totalAudioEnergy = audioSenderStats.TotalAudioEnergy;
+                        aus.totalSamplesDuration = audioSenderStats.TotalSamplesDuration;
+                        aus.totalSamplesSent = audioSenderStats.TotalSamplesSent;
+                        aus.trackIdentifier = audioSenderStats.TrackIdentifier;
+                        aus.type = audioSenderStats.StatsType.ToString();
+                        aus.voiceActivityFlag = audioSenderStats.VoiceActivityFlag;
 
-                    RTCVideoSenderStats videoSenderStats;
+                        _statsObjects.Add(aus);
+                    }
 
-                    videoSenderStats = RTCVideoSenderStats.Cast(rtcStats);
+                    else if (mediaHandlerStats.Kind == "video")
+                    {
+                        RTCVideoSenderStats videoSenderStats = RTCVideoSenderStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"videoSender: {videoSenderStats}");
+                        VideoSenderStats vis = new VideoSenderStats();
+                        vis.ended = videoSenderStats.Ended;
+                        vis.frameHeight = videoSenderStats.FrameHeight;
+                        vis.framesCaptured = videoSenderStats.FramesCaptured;
+                        vis.framesPerSecond = videoSenderStats.FramesPerSecond;
+                        vis.framesSent = videoSenderStats.FramesSent;
+                        vis.frameWidth = videoSenderStats.FrameWidth;
+                        vis.hugeFramesSent = videoSenderStats.HugeFramesSent;
+                        vis.id = videoSenderStats.Id;
+                        vis.keyFramesSent = videoSenderStats.KeyFramesSent;
+                        vis.kind = videoSenderStats.Kind;
+                        vis.priority = videoSenderStats.Priority.ToString();
+                        vis.remoteSource = videoSenderStats.RemoteSource;
+                        vis.statsTypeOther = videoSenderStats.StatsTypeOther;
+                        vis.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        vis.trackIdentifier = videoSenderStats.TrackIdentifier;
+                        vis.type = videoSenderStats.StatsType.ToString();
+
+                        _statsObjects.Add(vis);
+                    }
                 }
 
                 if (statsType == RTCStatsType.Receiver)
                 {
-                    RTCAudioReceiverStats audioReceiverStats;
+                    RTCMediaHandlerStats mediaHandlerStats = RTCMediaHandlerStats.Cast(rtcStats);
 
-                    audioReceiverStats = RTCAudioReceiverStats.Cast(rtcStats);
+                    if (mediaHandlerStats.Kind == "audio")
+                    {
+                        RTCAudioReceiverStats audioReceiverStats = RTCAudioReceiverStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"audioReceiver: {audioReceiverStats}");
+                        AudioReceiverStats aur = new AudioReceiverStats();
+                        aur.audioLevel = audioReceiverStats.AudioLevel;
+                        aur.concealedSamples = audioReceiverStats.ConcealedSamples;
+                        aur.concealmentEvents = audioReceiverStats.ConcealmentEvents;
+                        aur.ended = audioReceiverStats.Ended;
+                        aur.id = audioReceiverStats.Id;
+                        aur.jitterBufferEmittedCount = audioReceiverStats.JitterBufferEmittedCount;
+                        aur.kind = audioReceiverStats.Kind;
+                        aur.priority = audioReceiverStats.Priority.ToString();
+                        aur.remoteSource = audioReceiverStats.RemoteSource;
+                        aur.statsTypeOther = audioReceiverStats.StatsTypeOther;
+                        aur.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        aur.totalAudioEnergy = audioReceiverStats.TotalAudioEnergy;
+                        aur.totalSamplesDuration = audioReceiverStats.TotalSamplesDuration;
+                        aur.totalSamplesReceived = audioReceiverStats.TotalSamplesReceived;
+                        aur.trackIdentifier = audioReceiverStats.TrackIdentifier;
+                        aur.type = audioReceiverStats.StatsType.ToString();
+                        aur.voiceActivityFlag = audioReceiverStats.VoiceActivityFlag;
 
-                    RTCVideoReceiverStats videoReceiverStats;
+                        _statsObjects.Add(aur);
+                    }
 
-                    videoReceiverStats = RTCVideoReceiverStats.Cast(rtcStats);
+                    else if (mediaHandlerStats.Kind == "video")
+                    {
+                        RTCVideoReceiverStats videoReceiverStats = RTCVideoReceiverStats.Cast(rtcStats);
 
-                    Debug.WriteLine($"videoReceiver: {videoReceiverStats}");
+                        VideoReceiverStats vir = new VideoReceiverStats();
+                        vir.ended = videoReceiverStats.Ended;
+                        vir.frameHeight = videoReceiverStats.FrameHeight;
+                        vir.framesDecoded = videoReceiverStats.FramesDecoded;
+                        vir.framesDropped = videoReceiverStats.FramesDropped;
+                        vir.framesPerSecond = videoReceiverStats.FramesPerSecond;
+                        vir.framesReceived = videoReceiverStats.FramesReceived;
+                        vir.frameWidth = videoReceiverStats.FrameWidth;
+                        vir.fullFramesLost = videoReceiverStats.FullFramesLost;
+                        vir.id = videoReceiverStats.Id;
+                        vir.jitterBufferEmittedCount = videoReceiverStats.JitterBufferEmittedCount;
+                        vir.keyFramesReceived = videoReceiverStats.KeyFramesReceived;
+                        vir.kind = videoReceiverStats.Kind;
+                        vir.partialFramesLost = videoReceiverStats.PartialFramesLost;
+                        vir.priority = videoReceiverStats.Priority.ToString();
+                        vir.remoteSource = videoReceiverStats.RemoteSource;
+                        vir.StatsTypeOther = videoReceiverStats.StatsTypeOther;
+                        vir.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        vir.trackIdentifier = videoReceiverStats.TrackIdentifier;
+                        vir.type = videoReceiverStats.StatsType.ToString();
+
+                        _statsObjects.Add(vir);
+                    }
                 }
 
                 if (statsType == RTCStatsType.Transport)

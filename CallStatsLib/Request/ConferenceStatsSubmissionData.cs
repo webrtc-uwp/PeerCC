@@ -24,6 +24,94 @@ namespace CallStatsLib.Request
         public List<string> trackIds { get; set; }
     }
 
+    public class AudioSenderStats
+    {
+        public double audioLevel { get; set; }
+        public double? echoReturnLoss { get; set; }
+        public double? echoReturnLossEnhancement { get; set; }
+        public bool ended { get; set; }
+        public string id { get; set; }
+        public string kind { get; set; }
+        public string priority { get; set; }
+        public bool? remoteSource { get; set; }
+        public string type { get; set; }
+        public string statsTypeOther { get; set; }
+        public long timestamp { get; set; }
+        public double totalAudioEnergy { get; set; }
+        public double totalSamplesDuration { get; set; }
+        public ulong totalSamplesSent { get; set; }
+        public string trackIdentifier { get; set; }
+        public bool voiceActivityFlag { get; set; }
+    }
+
+    public class VideoSenderStats
+    {
+        public bool ended { get; set; }
+        public ulong frameHeight { get; set; }
+        public ulong framesCaptured { get; set; }
+        public double framesPerSecond { get; set; }
+        public ulong framesSent { get; set; }
+        public ulong frameWidth { get; set; }
+        public ulong hugeFramesSent { get; set; }
+        public string id { get; set; }
+        public ulong keyFramesSent { get; set; }
+        public string kind { get; set; }
+        public string priority { get; set; }
+        public bool? remoteSource { get; set; }
+        public string type { get; set; }
+        public string statsTypeOther { get; set; }
+        public long timestamp { get; set; }
+        public string trackIdentifier { get; set; }
+    }
+
+    public class AudioReceiverStats
+    {
+        public double audioLevel { get; set; }
+        public ulong concealedSamples { get; set; }
+        public ulong concealmentEvents { get; set; }
+        public bool ended { get; set; }
+        //public DateTimeOffset estimatedPlayoutTimestamp { get; set; }
+        public string id { get; set; }
+        //public TimeSpan jitterBufferDelay { get; set; }
+        public ulong jitterBufferEmittedCount { get; set; }
+        public string kind { get; set; }
+        public string priority { get; set; }
+        public bool? remoteSource { get; set; }
+        public string type { get; set; }
+        public string statsTypeOther { get; set; }
+        public long timestamp { get; set; }
+        public double totalAudioEnergy { get; set; }
+        public double totalSamplesDuration { get; set; }
+        public ulong totalSamplesReceived { get; set; }
+        public string trackIdentifier { get; set; }
+        public bool voiceActivityFlag { get; set; }
+    }
+
+    public class VideoReceiverStats
+    {
+        public bool ended { get; set; }
+        //public DateTimeOffset EstimatedPlayoutTimestamp { get; set; }
+        public ulong frameHeight { get; set; }
+        public ulong framesDecoded { get; set; }
+        public ulong framesDropped { get; set; }
+        public double framesPerSecond { get; set; }
+        public ulong framesReceived { get; set; }
+        public ulong frameWidth { get; set; }
+        public ulong fullFramesLost { get; set; }
+        public string id { get; set; }
+        //public TimeSpan jitterBufferDelay { get; set; }
+        public ulong jitterBufferEmittedCount { get; set; }
+        public ulong keyFramesReceived { get; set; }
+        public string kind { get; set; }
+        public ulong partialFramesLost { get; set; }
+        public string priority { get; set; }
+        public bool? remoteSource { get; set; }
+        public string type { get; set; }
+        public string StatsTypeOther { get; set; }
+        public long timestamp { get; set; }
+        public string trackIdentifier { get; set; }
+    }
+
     public class SenderVideoTrackAttachmentStats
     {
         public bool ended { get; set; }
