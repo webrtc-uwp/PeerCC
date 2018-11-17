@@ -648,13 +648,13 @@ namespace PeerConnectionClient
                     {
                         ssrcData.label = k.Value.Replace("\r", "");
 
-                        if (k.Value.Contains("audio") || k.Value.Contains("AUDIO"))
+                        if (k.Value.ToLower().Contains("audio"))
                             ssrcData.mediaType = "audio";
 
-                        if (k.Value.Contains("video") || k.Value.Contains("VIDEO"))
+                        if (k.Value.ToLower().Contains("video"))
                             ssrcData.mediaType = "video";
 
-                        if (k.Value.Contains("screen") || k.Value.Contains("SCREEN"))
+                        if (k.Value.ToLower().Contains("screen"))
                             ssrcData.mediaType = "screen";
                     }
                 }
