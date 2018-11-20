@@ -821,11 +821,13 @@ namespace PeerConnectionClient
 
                     await SendConferenceStatsSubmission();
 
+                    _sec = DateTime.UtcNow.ToUnixTimeStampSeconds();
+
                     SendSystemStatusStatsSubmission();
  
                     if (_prevIceConnectionState == connected || _prevIceConnectionState == completed)
                     {
-                        if (_prevSelectedCandidateId != null && _prevSelectedCandidateId != _currSelectedCandidateId)
+                        if (_prevSelectedCandidateId != null && _prevSelectedCandidateId != null && _prevSelectedCandidateId != _currSelectedCandidateId)
                         {
                             await SendFabricTransportChange();
                         }
@@ -1040,7 +1042,7 @@ namespace PeerConnectionClient
 
         private double _prevBytesReceived = 0.0;
         private double _prevBytesSent = 0.0;
-        private int _sec = 1;
+        private long _sec = 1;
 
         public void GetAllStatsData(IRTCStatsReport statsReport)
         {
@@ -1145,10 +1147,12 @@ namespace PeerConnectionClient
                     irss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     irss.trackId = inboundRtpStats.TrackId;
                     irss.transportId = inboundRtpStats.TransportId;
-                    irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceived) / _sec;
+
+                    long csioIntMs = DateTime.UtcNow.ToUnixTimeStampSeconds() - _sec;
+
+                    irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceived) / csioIntMs;
 
                     _prevBytesReceived = irss.bytesReceived;
-                    _sec = 10;
 
                     _statsObjects.Add(irss);
                 }
@@ -1184,10 +1188,12 @@ namespace PeerConnectionClient
                     orss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     orss.trackId = outboundRtpStats.TrackId;
                     orss.transportId = outboundRtpStats.TransportId;
-                    orss.csioIntBRKbps = (orss.bytesSent - _prevBytesSent) / _sec;
+
+                    long csioIntMs = DateTime.UtcNow.ToUnixTimeStampSeconds() - _sec;
+
+                    orss.csioIntBRKbps = (orss.bytesSent - _prevBytesSent) / csioIntMs;
 
                     _prevBytesSent = orss.bytesSent;
-                    _sec = 10;
 
                     _statsObjects.Add(orss);
                 }
