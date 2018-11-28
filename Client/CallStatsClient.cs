@@ -358,6 +358,8 @@ namespace PeerConnectionClient
             cssd.remoteID = _remoteID;
             cssd.stats = _statsObjects;
 
+            _sec = DateTime.UtcNow.ToUnixTimeStampSeconds();
+
             Debug.WriteLine("ConferenceStatsSubmission: ");
             await callstats.ConferenceStatsSubmission(cssd);
         }
@@ -821,8 +823,6 @@ namespace PeerConnectionClient
 
                     await SendConferenceStatsSubmission();
 
-                    _sec = DateTime.UtcNow.ToUnixTimeStampSeconds();
-
                     SendSystemStatusStatsSubmission();
  
                     if (_prevIceConnectionState == connected || _prevIceConnectionState == completed)
@@ -1042,7 +1042,7 @@ namespace PeerConnectionClient
 
         private double _prevBytesReceived = 0.0;
         private double _prevBytesSent = 0.0;
-        private long _sec = 1;
+        private long _sec = 0;
 
         public void GetAllStatsData(IRTCStatsReport statsReport)
         {
@@ -1150,7 +1150,8 @@ namespace PeerConnectionClient
 
                     long csioIntMs = DateTime.UtcNow.ToUnixTimeStampSeconds() - _sec;
 
-                    irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceived) / csioIntMs;
+                    if (_sec != 0)
+                        irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceived) / csioIntMs;
 
                     _prevBytesReceived = irss.bytesReceived;
 
