@@ -84,7 +84,7 @@ namespace PeerConnectionClient
         private string _prevSelectedCandidateId;
         private string _currSelectedCandidateId;
 
-        private CallStats callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
+        private CallStats callstats;
         #endregion
 
         #region Generate JWT
@@ -120,7 +120,7 @@ namespace PeerConnectionClient
                     }
                     else
                     {
-                        Debug.WriteLine("[Error] Private key file is empty. Create .p12 certificate and copy to ecc-key.p12 file.");
+                        Debug.WriteLine("[Error] ecc-key.p12 certificate file is empty.");
                         return string.Empty;
                     }
                 }
@@ -141,7 +141,7 @@ namespace PeerConnectionClient
         #region Start CallStats
         public async Task SendStartCallStats()
         {
-            //callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
+            callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
 
             await callstats.StartCallStats(CreateConference(), UserAlive());
 
