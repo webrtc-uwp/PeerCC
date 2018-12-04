@@ -44,6 +44,7 @@ using UseRTCSessionDescription = Org.Ortc.Adapter.IRTCSessionDescription;
 #else
 using Org.WebRtc;
 using PeerConnectionClient.Utilities;
+using PeerConnectionClient.Stats;
 #if USE_CX_VERSION
 using UseMediaStreamTrack = Org.WebRtc.MediaStreamTrack;
 using UseRTCPeerConnectionIceEvent = Org.WebRtc.RTCPeerConnectionIceEvent;
@@ -68,7 +69,7 @@ namespace PeerConnectionClient.Signalling
     /// </summary>
     internal class Conductor
     {
-        public CallStatsClient callStatsClient = new CallStatsClient();
+        //public CallStatsClient callStatsClient = new CallStatsClient();
 
         private string _localSDPForCallStats;
 
@@ -448,11 +449,11 @@ namespace PeerConnectionClient.Signalling
             Debug.WriteLine("Conductor: Creating peer connection.");
             _peerConnection = new RTCPeerConnection(config);
 
-            await callStatsClient.SendStartCallStats();
+            await SharedProperties.callStatsClient.SendStartCallStats();
 
             _peerConnection.OnIceGatheringStateChange += async() =>
             {
-                await callStatsClient.StatsOnIceGatheringStateChange(_peerConnection);
+                await PeerCCData.StatsOnIceGatheringStateChange(_peerConnection);
 
                 Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString().ToLower());
             };
@@ -460,10 +461,10 @@ namespace PeerConnectionClient.Signalling
             _peerConnection.OnIceConnectionStateChange += async () =>
             {
                 if (_peerConnection != null)
-                    await callStatsClient.StatsOnIceConnectionStateChange(_peerConnection);
+                    await PeerCCData.StatsOnIceConnectionStateChange(_peerConnection);
                 else
                 {
-                    await callStatsClient.PeerConnectionClosedStateChange();
+                    await PeerCCData.PeerConnectionClosedStateChange();
                     ClosePeerConnection();
                 }
 
@@ -673,7 +674,7 @@ namespace PeerConnectionClient.Signalling
         {
             OnAddRemoteTrack?.Invoke(evt.Track);
 
-            await callStatsClient.SendSSRCMap();
+            await SharedProperties.callStatsClient.SendSSRCMap();
         }
 
         /// <summary>
@@ -727,7 +728,7 @@ namespace PeerConnectionClient.Signalling
         /// <param name="peerId">ID of the peer to hung up the call with.</param>
         private void Signaller_OnPeerHangup(int peerId)
         {
-            callStatsClient.SendUserLeft();
+            SharedProperties.callStatsClient.SendUserLeft();
 
             if (peerId != _peerId) return;
 
@@ -751,7 +752,7 @@ namespace PeerConnectionClient.Signalling
         {
             Debug.WriteLine("[Error]: Connection to server failed!");
 
-            callStatsClient.SendApplicationErrorLogs("error", "Connection to server failed!", "text");
+            SharedProperties.callStatsClient.SendApplicationErrorLogs("error", "Connection to server failed!", "text");
         }
 
         /// <summary>
@@ -792,7 +793,7 @@ namespace PeerConnectionClient.Signalling
                 {
                     Debug.WriteLine("[Error] Conductor: Received a message from unknown peer while already in a conversation with a different peer.");
 
-                    callStatsClient.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer", "text");
+                    SharedProperties.callStatsClient.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer", "text");
 
                     return;
                 }
@@ -802,7 +803,7 @@ namespace PeerConnectionClient.Signalling
                 {
                     Debug.WriteLine("[Error] Conductor: Received unknown message." + message);
 
-                    callStatsClient.SendApplicationErrorLogs("error", "Received unknown message.", "text");
+                    SharedProperties.callStatsClient.SendApplicationErrorLogs("error", "Received unknown message.", "text");
 
                     return;
                 }
@@ -838,7 +839,7 @@ namespace PeerConnectionClient.Signalling
                             {
                                 Debug.WriteLine("[Error] Conductor: Failed to initialize our PeerConnection instance");
 
-                                callStatsClient.SendApplicationErrorLogs("error", "Failed to initialize our PeerConnection instance.", "text");
+                                SharedProperties.callStatsClient.SendApplicationErrorLogs("error", "Failed to initialize our PeerConnection instance.", "text");
 
                                 await Signaller.SignOut();
                                 return;
@@ -847,7 +848,7 @@ namespace PeerConnectionClient.Signalling
                             {
                                 Debug.WriteLine("[Error] Conductor: Received a message from unknown peer while already in a conversation with a different peer.");
 
-                                callStatsClient.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer.", "text");
+                                SharedProperties.callStatsClient.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer.", "text");
 
                                 return;
                             }
@@ -885,16 +886,16 @@ namespace PeerConnectionClient.Signalling
                     {
                         Debug.WriteLine("[Error] Conductor: Can't parse received session description message.");
 
-                        callStatsClient.SendFabricSetupFailed("NegotiationFailure", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
+                        SharedProperties.callStatsClient.SendFabricSetupFailed("NegotiationFailure", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
 
-                        callStatsClient.SendApplicationErrorLogs("error", "Can't parse received session description message.", "text");
+                        SharedProperties.callStatsClient.SendApplicationErrorLogs("error", "Can't parse received session description message.", "text");
 
                         return;
                     }
 
-                    callStatsClient.SSRCMapDataSetup(sdp, "inbound", "remote");
+                    SharedProperties.callStatsClient.SSRCMapDataSetup(sdp, "inbound", "remote");
 
-                    callStatsClient.SendSDP(_localSDPForCallStats, sdp);
+                    SharedProperties.callStatsClient.SendSDP(_localSDPForCallStats, sdp);
 
                     Debug.WriteLine("Conductor: Received session description:\n" + message);
 #if ORTCLIB
@@ -962,7 +963,7 @@ namespace PeerConnectionClient.Signalling
                         {
                             Debug.WriteLine("[Error] Conductor: Can't parse received message.\n" + message);
 
-                            callStatsClient.SendApplicationErrorLogs("error", $"Can't parse received message.\n {message}", "text");
+                            SharedProperties.callStatsClient.SendApplicationErrorLogs("error", $"Can't parse received message.\n {message}", "text");
 
                             return;
                         }
@@ -1038,7 +1039,7 @@ namespace PeerConnectionClient.Signalling
             {
                 Debug.WriteLine("[Error] Conductor: We only support connecting to one peer at a time");
 
-                callStatsClient.SendApplicationErrorLogs("error", "We only support connecting to one peer at a time", "text");
+                SharedProperties.callStatsClient.SendApplicationErrorLogs("error", "We only support connecting to one peer at a time", "text");
 
                 return;
             }
@@ -1058,7 +1059,7 @@ namespace PeerConnectionClient.Signalling
 
                 if (IsNullOrEmpty(offer.Sdp))
                 {
-                    callStatsClient.SendFabricSetupFailed("SDPGenerationError", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
+                    SharedProperties.callStatsClient.SendFabricSetupFailed("SDPGenerationError", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
                 }
 #if ORTCLIB
                 var modifiedOffer = offer;
@@ -1077,7 +1078,7 @@ namespace PeerConnectionClient.Signalling
 
                 _localSDPForCallStats = offer.Sdp;
 
-                callStatsClient.SSRCMapDataSetup(offer.Sdp, "outbound", "local");
+                SharedProperties.callStatsClient.SSRCMapDataSetup(offer.Sdp, "outbound", "local");
 #if ORTCLIB
                 OrtcStatsManager.Instance.StartCallWatch(SessionId, true);
 #endif

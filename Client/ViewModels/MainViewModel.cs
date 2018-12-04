@@ -47,6 +47,7 @@ using UseMediaStreamTrack = Org.Ortc.IMediaStreamTrack;
 using Org.WebRtc;
 using CodecInfo = PeerConnectionClient.Signalling.Conductor.CodecInfo;
 using MediaDevice = PeerConnectionClient.Signalling.Conductor.MediaDevice;
+using PeerConnectionClient.Stats;
 #if USE_CX_VERSION
 using UseMediaStreamTrack = Org.WebRtc.MediaStreamTrack;
 #else
@@ -1231,13 +1232,13 @@ namespace PeerConnectionClient.ViewModels
 
                 if (_microphoneIsOn == false && _mute == false)
                 {
-                    Conductor.Instance.callStatsClient.SendMediaAction("audioMute");
+                    SharedProperties.callStatsClient.SendMediaAction("audioMute");
                     _mute = true;
                 }
 
                 if (_microphoneIsOn == true && _mute == true)
                 {
-                    Conductor.Instance.callStatsClient.SendMediaAction("audioUnmute");
+                    SharedProperties.callStatsClient.SendMediaAction("audioUnmute");
                     _mute = false;
                 }
 
