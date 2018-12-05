@@ -1,8 +1,13 @@
 ﻿using CallStatsLib.Request;
+using Jose;
 using Org.WebRtc;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Security.Cryptography.X509Certificates;
 
 namespace PeerConnectionClient.Stats
 {
@@ -26,6 +31,16 @@ namespace PeerConnectionClient.Stats
         }
 
         private StatsController() {}
+
+        
+        //{
+        //    return IPGlobalProperties.GetIPGlobalProperties().HostName?.ToLower() ?? "<unknown host>";
+
+        //    //HostName hostname =
+        //    //    NetworkInformation.GetHostNames().FirstOrDefault(h => h.Type == HostNameType.DomainName);
+
+        //    //return hostname?.CanonicalName.ToLower() ?? "<unknown host>";
+        //}
 
         public long gateheringTimeStart;
         public long gateheringTimeStop;
@@ -65,6 +80,57 @@ namespace PeerConnectionClient.Stats
 
         public string prevSelectedCandidateId;
         public string currSelectedCandidateId;
+
+        #region Generate JWT
+        public string GenerateJWT()
+        {
+            var header = new Dictionary<string, object>()
+            {
+                { "typ", "JWT" },
+                { "alg", "ES256" }
+            };
+
+            var payload = new Dictionary<string, object>()
+            {
+                { "userID", Settings.localID},
+                { "appID", Settings.appID},
+                { "keyID", Settings.keyID },
+                { "iat", DateTime.UtcNow.ToUnixTimeStampSeconds() },
+                { "nbf", DateTime.UtcNow.AddMinutes(-5).ToUnixTimeStampSeconds() },
+                { "exp", DateTime.UtcNow.AddHours(1).ToUnixTimeStampSeconds() },
+                { "jti", Settings.jti }
+            };
+
+            try
+            {
+                string eccKey = @"ecc-key.p12";
+                if (File.Exists(eccKey))
+                {
+                    if (new FileInfo(eccKey).Length != 0)
+                    {
+                        return JWT.Encode(payload, new X509Certificate2(eccKey,
+                            (string)Config.localSettings.Values["secret"]).GetECDsaPrivateKey(),
+                            JwsAlgorithm.ES256, extraHeaders: header);
+                    }
+                    else
+                    {
+                        Debug.WriteLine("[Error] ecc-key.p12 certificate file is empty.");
+                        return string.Empty;
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("[Error] ecc-key.p12 certificate file does not exist.");
+                    return string.Empty;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[Error] GenerateJWT: {ex.Message}");
+                return string.Empty;
+            }
+        }
+        #endregion
 
         public Dictionary<string, Dictionary<string, string>> ParseSdp(string sdp, string searchFirstStr)
         {
@@ -110,6 +176,31 @@ namespace PeerConnectionClient.Stats
             }
             return dict;
         }
+    }
+
+    public static class Settings
+    {
+        public static string userID = GetLocalPeerName();
+        public static string localID = GetLocalPeerName();
+        public static string appID = (string)Config.localSettings.Values["appID"];
+        public static string keyID = (string)Config.localSettings.Values["keyID"];
+        public static string confID = Config.localSettings.Values["confID"].ToString();
+
+        public static readonly string jti = new Func<string>(() =>
+        {
+            Random random = new Random();
+            const string chars = "abcdefghijklmnopqrstuvxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const int length = 10;
+            return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+        })();
+
+        public static string originID = null;
+        public static string deviceID = "desktop";
+        public static string connectionID = $"{GetLocalPeerName()}-{confID}";
+        public static string remoteID = "RemotePeer";
+
+        public static string GetLocalPeerName() =>
+            IPGlobalProperties.GetIPGlobalProperties().HostName?.ToLower() ?? "<unknown host>";
     }
 
     public static class DateTimeExtensions

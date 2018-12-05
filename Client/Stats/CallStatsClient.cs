@@ -1,15 +1,9 @@
 ﻿using CallStatsLib;
 using CallStatsLib.Request;
-using Jose;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using Windows.Networking;
-using Windows.Networking.Connectivity;
 
 namespace PeerConnectionClient.Stats
 {
@@ -19,88 +13,11 @@ namespace PeerConnectionClient.Stats
 
         private static readonly StatsController SC = StatsController.Instance;
 
-        private static string userID = GetLocalPeerName();
-        private static string localID = GetLocalPeerName();
-        private static string appID = (string)Config.localSettings.Values["appID"];
-        private static string keyID = (string)Config.localSettings.Values["keyID"];
-        private static string confID = Config.localSettings.Values["confID"].ToString();
-
-        private static readonly string jti = new Func<string>(() =>
-        {
-            Random random = new Random();
-            const string chars = "abcdefghijklmnopqrstuvxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            const int length = 10;
-            return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
-        })();
-
-        private static string originID = null;
-        private static string deviceID = "desktop";
-        private static string connectionID = $"{GetLocalPeerName()}-{confID}";
-        private static string remoteID = "RemotePeer";
-
-        public static string GetLocalPeerName()
-        {
-            HostName hostname = 
-                NetworkInformation.GetHostNames().FirstOrDefault(h => h.Type == HostNameType.DomainName);
-
-            return hostname?.CanonicalName.ToLower() ?? "<unknown host>";
-        }
-
-        #region Generate JWT
-        private static string GenerateJWT()
-        {
-            var header = new Dictionary<string, object>()
-            {
-                { "typ", "JWT" },
-                { "alg", "ES256" }
-            };
-
-            var payload = new Dictionary<string, object>()
-            {
-                { "userID", localID},
-                { "appID", appID},
-                { "keyID", keyID },
-                { "iat", DateTime.UtcNow.ToUnixTimeStampSeconds() },
-                { "nbf", DateTime.UtcNow.AddMinutes(-5).ToUnixTimeStampSeconds() },
-                { "exp", DateTime.UtcNow.AddHours(1).ToUnixTimeStampSeconds() },
-                { "jti", jti }
-            };
-
-            try
-            {
-                string eccKey = @"ecc-key.p12";
-                if (File.Exists(eccKey))
-                {
-                    if (new FileInfo(eccKey).Length != 0)
-                    {
-                        return JWT.Encode(payload, new X509Certificate2(eccKey,
-                            (string)Config.localSettings.Values["secret"]).GetECDsaPrivateKey(),
-                            JwsAlgorithm.ES256, extraHeaders: header);
-                    }
-                    else
-                    {
-                        Debug.WriteLine("[Error] ecc-key.p12 certificate file is empty.");
-                        return string.Empty;
-                    }
-                }
-                else
-                {
-                    Debug.WriteLine("[Error] ecc-key.p12 certificate file does not exist.");
-                    return string.Empty;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[Error] GenerateJWT: {ex.Message}");
-                return string.Empty;
-            }
-        }
-        #endregion
-
         #region Start CallStats
         public async Task SendStartCallStats()
         {
-            callstats = new CallStats(localID, appID, keyID, confID, GenerateJWT());
+            callstats = new CallStats(
+                Settings.localID, Settings.appID, Settings.keyID, Settings.confID, SC.GenerateJWT());
 
             await callstats.StartCallStats(CreateConference(), UserAlive());
 
@@ -121,9 +38,9 @@ namespace PeerConnectionClient.Stats
             endpointInfo.appVersion = "1.0";
 
             CreateConferenceData ccd = new CreateConferenceData();
-            ccd.localID = localID;
-            ccd.originID = originID;
-            ccd.deviceID = GetLocalPeerName();
+            ccd.localID = Settings.localID;
+            ccd.originID = Settings.originID;
+            ccd.deviceID = Settings.GetLocalPeerName();
             ccd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             ccd.endpointInfo = endpointInfo;
 
@@ -133,9 +50,9 @@ namespace PeerConnectionClient.Stats
         private UserAliveData UserAlive()
         {
             UserAliveData uad = new UserAliveData();
-            uad.localID = localID;
-            uad.originID = originID;
-            uad.deviceID = deviceID;
+            uad.localID = Settings.localID;
+            uad.originID = Settings.originID;
+            uad.deviceID = Settings.deviceID;
             uad.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
             return uad;
@@ -144,11 +61,11 @@ namespace PeerConnectionClient.Stats
         private void SendUserDetails()
         {
             UserDetailsData udd = new UserDetailsData();
-            udd.localID = localID;
-            udd.originID = originID;
-            udd.deviceID = deviceID;
+            udd.localID = Settings.localID;
+            udd.originID = Settings.originID;
+            udd.deviceID = Settings.deviceID;
             udd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            udd.userName = userID;
+            udd.userName = Settings.userID;
 
             Debug.WriteLine("UserDetails: ");
             var task = callstats.UserDetails(udd);
@@ -157,9 +74,9 @@ namespace PeerConnectionClient.Stats
         public void SendUserLeft()
         {
             UserLeftData uld = new UserLeftData();
-            uld.localID = localID;
-            uld.originID = originID;
-            uld.deviceID = GetLocalPeerName();
+            uld.localID = Settings.localID;
+            uld.originID = Settings.originID;
+            uld.deviceID = Settings.GetLocalPeerName();
             uld.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
             Debug.WriteLine("SendUserLeft: ");
@@ -174,12 +91,12 @@ namespace PeerConnectionClient.Stats
             AddToIceCandidatePairsList();
 
             FabricSetupData fsd = new FabricSetupData();
-            fsd.localID = localID;
-            fsd.originID = originID;
-            fsd.deviceID = deviceID;
+            fsd.localID = Settings.localID;
+            fsd.originID = Settings.originID;
+            fsd.deviceID = Settings.deviceID;
             fsd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            fsd.connectionID = connectionID;
-            fsd.remoteID = remoteID;
+            fsd.connectionID = Settings.connectionID;
+            fsd.remoteID = Settings.remoteID;
             fsd.delay = totalSetupDelay;
             fsd.iceGatheringDelay = gatheringDelayMiliseconds;
             fsd.iceConnectivityDelay = connectivityDelayMiliseconds;
@@ -199,9 +116,9 @@ namespace PeerConnectionClient.Stats
             // SDPGenerationError, TransportFailure, SignalingError, IceConnectionFailure
 
             FabricSetupFailedData fsfd = new FabricSetupFailedData();
-            fsfd.localID = localID;
-            fsfd.originID = originID;
-            fsfd.deviceID = deviceID;
+            fsfd.localID = Settings.localID;
+            fsfd.originID = Settings.originID;
+            fsfd.deviceID = Settings.deviceID;
             fsfd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             fsfd.fabricTransmissionDirection = "sendrecv";
             fsfd.remoteEndpointType = "peer";
@@ -217,12 +134,12 @@ namespace PeerConnectionClient.Stats
         public void SendFabricSetupTerminated()
         {
             FabricTerminatedData ftd = new FabricTerminatedData();
-            ftd.localID = localID;
-            ftd.originID = originID;
-            ftd.deviceID = deviceID;
+            ftd.localID = Settings.localID;
+            ftd.originID = Settings.originID;
+            ftd.deviceID = Settings.deviceID;
             ftd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            ftd.connectionID = connectionID;
-            ftd.remoteID = remoteID;
+            ftd.connectionID = Settings.connectionID;
+            ftd.remoteID = Settings.remoteID;
 
             Debug.WriteLine("FabricTerminated: ");
             var task = callstats.FabricTerminated(ftd);
@@ -231,12 +148,12 @@ namespace PeerConnectionClient.Stats
         public async Task SendFabricStateChange(string prevState, string newState, string changedState)
         {
             FabricStateChangeData fscd = new FabricStateChangeData();
-            fscd.localID = localID;
-            fscd.originID = originID;
-            fscd.deviceID = deviceID;
+            fscd.localID = Settings.localID;
+            fscd.originID = Settings.originID;
+            fscd.deviceID = Settings.deviceID;
             fscd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            fscd.remoteID = remoteID;
-            fscd.connectionID = connectionID;
+            fscd.remoteID = Settings.remoteID;
+            fscd.connectionID = Settings.connectionID;
             fscd.prevState = prevState;
             fscd.newState = newState;
             fscd.changedState = changedState;
@@ -250,12 +167,12 @@ namespace PeerConnectionClient.Stats
             IceCandidateStatsData();
 
             FabricTransportChangeData ftcd = new FabricTransportChangeData();
-            ftcd.localID = localID;
-            ftcd.originID = originID;
-            ftcd.deviceID = deviceID;
+            ftcd.localID = Settings.localID;
+            ftcd.originID = Settings.originID;
+            ftcd.deviceID = Settings.deviceID;
             ftcd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            ftcd.remoteID = remoteID;
-            ftcd.connectionID = connectionID;
+            ftcd.remoteID = Settings.remoteID;
+            ftcd.connectionID = Settings.connectionID;
             ftcd.localIceCandidates = SC.localIceCandidates;
             ftcd.remoteIceCandidates = SC.remoteIceCandidates;
             ftcd.currIceCandidatePair = SC.currIceCandidatePairObj;
@@ -273,12 +190,12 @@ namespace PeerConnectionClient.Stats
         {
             FabricDroppedData fdd = new FabricDroppedData();
 
-            fdd.localID = localID;
-            fdd.originID = originID;
-            fdd.deviceID = deviceID;
+            fdd.localID = Settings.localID;
+            fdd.originID = Settings.originID;
+            fdd.deviceID = Settings.deviceID;
             fdd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            fdd.remoteID = remoteID;
-            fdd.connectionID = connectionID;
+            fdd.remoteID = Settings.remoteID;
+            fdd.connectionID = Settings.connectionID;
             fdd.currIceCandidatePair = GetIceCandidatePairData();
             fdd.currIceConnectionState = SC.newIceConnectionState;
             fdd.prevIceConnectionState = SC.prevIceConnectionState;
@@ -293,12 +210,12 @@ namespace PeerConnectionClient.Stats
         {
             FabricActionData fad = new FabricActionData();
             fad.eventType = "fabricHold";  // fabricResume
-            fad.localID = localID;
-            fad.originID = originID;
-            fad.deviceID = deviceID;
+            fad.localID = Settings.localID;
+            fad.originID = Settings.originID;
+            fad.deviceID = Settings.deviceID;
             fad.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            fad.remoteID = remoteID;
-            fad.connectionID = connectionID;
+            fad.remoteID = Settings.remoteID;
+            fad.connectionID = Settings.connectionID;
 
             Debug.WriteLine("SendFabricAction: ");
             var task = callstats.FabricAction(fad);
@@ -309,12 +226,12 @@ namespace PeerConnectionClient.Stats
         public async Task SendConferenceStatsSubmission()
         {
             ConferenceStatsSubmissionData cssd = new ConferenceStatsSubmissionData();
-            cssd.localID = localID;
-            cssd.originID = originID;
-            cssd.deviceID = deviceID;
+            cssd.localID = Settings.localID;
+            cssd.originID = Settings.originID;
+            cssd.deviceID = Settings.deviceID;
             cssd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            cssd.connectionID = connectionID;
-            cssd.remoteID = remoteID;
+            cssd.connectionID = Settings.connectionID;
+            cssd.remoteID = Settings.remoteID;
             cssd.stats = SC.statsObjects;
 
             SC.sec = DateTime.UtcNow.ToUnixTimeStampSeconds();
@@ -327,9 +244,9 @@ namespace PeerConnectionClient.Stats
         public void SendSystemStatusStatsSubmission()
         {
             SystemStatusStatsSubmissionData sssd = new SystemStatusStatsSubmissionData();
-            sssd.localID = localID;
-            sssd.originID = originID;
-            sssd.deviceID = deviceID;
+            sssd.localID = Settings.localID;
+            sssd.originID = Settings.originID;
+            sssd.deviceID = Settings.deviceID;
             sssd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             sssd.cpuLevel = 1;
             sssd.batteryLevel = 1;
@@ -352,14 +269,14 @@ namespace PeerConnectionClient.Stats
 
             MediaActionData mad = new MediaActionData();
             mad.eventType = eventType;
-            mad.localID = localID;
-            mad.originID = originID;
-            mad.deviceID = deviceID;
+            mad.localID = Settings.localID;
+            mad.originID = Settings.originID;
+            mad.deviceID = Settings.deviceID;
             mad.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            mad.connectionID = connectionID;
-            mad.remoteID = remoteID;
+            mad.connectionID = Settings.connectionID;
+            mad.remoteID = Settings.remoteID;
             mad.ssrc = "";
-            mad.mediaDeviceID = deviceID;
+            mad.mediaDeviceID = Settings.deviceID;
             mad.remoteIDList = remoteIDList;
 
             if (callstats != null)
@@ -375,12 +292,12 @@ namespace PeerConnectionClient.Stats
         {
             IceDisruptionStartData ids = new IceDisruptionStartData();
             ids.eventType = "iceDisruptionStart";
-            ids.localID = localID;
-            ids.originID = originID;
-            ids.deviceID = deviceID;
+            ids.localID = Settings.localID;
+            ids.originID = Settings.originID;
+            ids.deviceID = Settings.deviceID;
             ids.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            ids.remoteID = remoteID;
-            ids.connectionID = connectionID;
+            ids.remoteID = Settings.remoteID;
+            ids.connectionID = Settings.connectionID;
             ids.currIceCandidatePair = SC.currIceCandidatePairObj;
             ids.currIceConnectionState = SC.newIceConnectionState;
             ids.prevIceConnectionState = SC.prevIceConnectionState;
@@ -393,12 +310,12 @@ namespace PeerConnectionClient.Stats
         {
             IceDisruptionEndData ide = new IceDisruptionEndData();
             ide.eventType = "iceDisruptionEnd";
-            ide.localID = localID;
-            ide.originID = originID;
-            ide.deviceID = deviceID;
+            ide.localID = Settings.localID;
+            ide.originID = Settings.originID;
+            ide.deviceID = Settings.deviceID;
             ide.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            ide.remoteID = remoteID;
-            ide.connectionID = connectionID;
+            ide.remoteID = Settings.remoteID;
+            ide.connectionID = Settings.connectionID;
             ide.currIceCandidatePair = SC.currIceCandidatePairObj;
             ide.prevIceCandidatePair = SC.prevIceCandidatePairObj;
             ide.currIceConnectionState = SC.newIceConnectionState;
@@ -412,12 +329,12 @@ namespace PeerConnectionClient.Stats
         {
             IceRestartData ird = new IceRestartData();
             ird.eventType = "iceRestarted";
-            ird.localID = localID;
-            ird.originID = originID;
-            ird.deviceID = deviceID;
+            ird.localID = Settings.localID;
+            ird.originID = Settings.originID;
+            ird.deviceID = Settings.deviceID;
             ird.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            ird.remoteID = remoteID;
-            ird.connectionID = connectionID;
+            ird.remoteID = Settings.remoteID;
+            ird.connectionID = Settings.connectionID;
             ird.prevIceCandidatePair = SC.prevIceCandidatePairObj;
             ird.currIceConnectionState = "new";
             ird.prevIceConnectionState = SC.prevIceConnectionState;
@@ -430,12 +347,12 @@ namespace PeerConnectionClient.Stats
         {
             IceFailedData ifd = new IceFailedData();
             ifd.eventType = "iceFailed";
-            ifd.localID = localID;
-            ifd.originID = originID;
-            ifd.deviceID = deviceID;
+            ifd.localID = Settings.localID;
+            ifd.originID = Settings.originID;
+            ifd.deviceID = Settings.deviceID;
             ifd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            ifd.remoteID = remoteID;
-            ifd.connectionID = connectionID;
+            ifd.remoteID = Settings.remoteID;
+            ifd.connectionID = Settings.connectionID;
             ifd.localIceCandidates = SC.localIceCandidates;
             ifd.remoteIceCandidates = SC.remoteIceCandidates;
             ifd.iceCandidatePairs = SC.iceCandidatePairList;
@@ -451,12 +368,12 @@ namespace PeerConnectionClient.Stats
         {
             IceAbortedData iad = new IceAbortedData();
             iad.eventType = "iceFailed";
-            iad.localID = localID;
-            iad.originID = originID;
-            iad.deviceID = deviceID;
+            iad.localID = Settings.localID;
+            iad.originID = Settings.originID;
+            iad.deviceID = Settings.deviceID;
             iad.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            iad.remoteID = remoteID;
-            iad.connectionID = connectionID;
+            iad.remoteID = Settings.remoteID;
+            iad.connectionID = Settings.connectionID;
             iad.localIceCandidates = SC.localIceCandidates;
             iad.remoteIceCandidates = SC.remoteIceCandidates;
             iad.iceCandidatePairs = SC.iceCandidatePairList;
@@ -472,12 +389,12 @@ namespace PeerConnectionClient.Stats
         {
             IceTerminatedData itd = new IceTerminatedData();
             itd.eventType = "iceTerminated";
-            itd.localID = localID;
-            itd.originID = originID;
-            itd.deviceID = deviceID;
+            itd.localID = Settings.localID;
+            itd.originID = Settings.originID;
+            itd.deviceID = Settings.deviceID;
             itd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            itd.remoteID = remoteID;
-            itd.connectionID = connectionID;
+            itd.remoteID = Settings.remoteID;
+            itd.connectionID = Settings.connectionID;
             itd.prevIceCandidatePair = SC.prevIceCandidatePairObj;
             itd.currIceConnectionState = SC.newIceConnectionState;
             itd.prevIceConnectionState = SC.prevIceConnectionState;
@@ -490,12 +407,12 @@ namespace PeerConnectionClient.Stats
         {
             IceConnectionDisruptionStartData icds = new IceConnectionDisruptionStartData();
             icds.eventType = "iceConnectionDisruptionStart";
-            icds.localID = localID;
-            icds.originID = originID;
-            icds.deviceID = deviceID;
+            icds.localID = Settings.localID;
+            icds.originID = Settings.originID;
+            icds.deviceID = Settings.deviceID;
             icds.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            icds.remoteID = remoteID;
-            icds.connectionID = connectionID;
+            icds.remoteID = Settings.remoteID;
+            icds.connectionID = Settings.connectionID;
             icds.currIceConnectionState = SC.newIceConnectionState;
             icds.prevIceConnectionState = SC.prevIceConnectionState;
 
@@ -507,12 +424,12 @@ namespace PeerConnectionClient.Stats
         {
             IceConnectionDisruptionEndData icde = new IceConnectionDisruptionEndData();
             icde.eventType = "iceConnectionDisruptionEnd";
-            icde.localID = localID;
-            icde.originID = originID;
-            icde.deviceID = deviceID;
+            icde.localID = Settings.localID;
+            icde.originID = Settings.originID;
+            icde.deviceID = Settings.deviceID;
             icde.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            icde.remoteID = remoteID;
-            icde.connectionID = connectionID;
+            icde.remoteID = Settings.remoteID;
+            icde.connectionID = Settings.connectionID;
             icde.currIceConnectionState = SC.newIceConnectionState;
             icde.prevIceConnectionState = SC.prevIceConnectionState;
             icde.delay = 2;
@@ -535,9 +452,9 @@ namespace PeerConnectionClient.Stats
             mediaDeviceList.Add(mediaDeviceObj);
 
             ConnectedOrActiveDevicesData cadd = new ConnectedOrActiveDevicesData();
-            cadd.localID = localID;
-            cadd.originID = originID;
-            cadd.deviceID = deviceID;
+            cadd.localID = Settings.localID;
+            cadd.originID = Settings.originID;
+            cadd.deviceID = Settings.deviceID;
             cadd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             cadd.mediaDeviceList = mediaDeviceList;
             cadd.eventType = "connectedDeviceList";
@@ -551,11 +468,11 @@ namespace PeerConnectionClient.Stats
         public void SendApplicationErrorLogs(string level, string message, string messageType)
         {
             ApplicationErrorLogsData aeld = new ApplicationErrorLogsData();
-            aeld.localID = localID;
-            aeld.originID = originID;
-            aeld.deviceID = deviceID;
+            aeld.localID = Settings.localID;
+            aeld.originID = Settings.originID;
+            aeld.deviceID = Settings.deviceID;
             aeld.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            aeld.connectionID = connectionID;
+            aeld.connectionID = Settings.connectionID;
             aeld.level = level;
             aeld.message = message;
             aeld.messageType = messageType;
@@ -573,11 +490,11 @@ namespace PeerConnectionClient.Stats
             feedbackObj.comments = comments;
 
             ConferenceUserFeedbackData cufd = new ConferenceUserFeedbackData();
-            cufd.localID = localID;
-            cufd.originID = originID;
-            cufd.deviceID = deviceID;
+            cufd.localID = Settings.localID;
+            cufd.originID = Settings.originID;
+            cufd.deviceID = Settings.deviceID;
             cufd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            cufd.remoteID = remoteID;
+            cufd.remoteID = Settings.remoteID;
             cufd.feedback = feedbackObj;
 
             Debug.WriteLine("ConferenceUserFeedback: ");
@@ -622,7 +539,7 @@ namespace PeerConnectionClient.Stats
 
                 ssrcData.streamType = streamType;
                 ssrcData.reportType = reportType;
-                ssrcData.userID = userID;
+                ssrcData.userID = Settings.userID;
                 ssrcData.localStartTime = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
                 SC.ssrcDataList.Add(ssrcData);
@@ -632,12 +549,12 @@ namespace PeerConnectionClient.Stats
         public async Task SendSSRCMap()
         {
             SSRCMapData ssrcMapData = new SSRCMapData();
-            ssrcMapData.localID = localID;
-            ssrcMapData.originID = originID;
-            ssrcMapData.deviceID = deviceID;
+            ssrcMapData.localID = Settings.localID;
+            ssrcMapData.originID = Settings.originID;
+            ssrcMapData.deviceID = Settings.deviceID;
             ssrcMapData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            ssrcMapData.connectionID = connectionID;
-            ssrcMapData.remoteID = remoteID;
+            ssrcMapData.connectionID = Settings.connectionID;
+            ssrcMapData.remoteID = Settings.remoteID;
             ssrcMapData.ssrcData = SC.ssrcDataList;
 
             Debug.WriteLine("SSRCMap: ");
@@ -647,12 +564,12 @@ namespace PeerConnectionClient.Stats
         public void SendSDP(string localSDP, string remoteSDP)
         {
             SDPEventData sdpEventData = new SDPEventData();
-            sdpEventData.localID = localID;
-            sdpEventData.originID = originID;
-            sdpEventData.deviceID = deviceID;
+            sdpEventData.localID = Settings.localID;
+            sdpEventData.originID = Settings.originID;
+            sdpEventData.deviceID = Settings.deviceID;
             sdpEventData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            sdpEventData.connectionID = connectionID;
-            sdpEventData.remoteID = remoteID;
+            sdpEventData.connectionID = Settings.connectionID;
+            sdpEventData.remoteID = Settings.remoteID;
             sdpEventData.localSDP = localSDP;
             sdpEventData.remoteSDP = remoteSDP;
 
