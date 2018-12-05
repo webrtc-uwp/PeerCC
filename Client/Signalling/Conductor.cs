@@ -451,7 +451,7 @@ namespace PeerConnectionClient.Signalling
             Debug.WriteLine("Conductor: Creating peer connection.");
             _peerConnection = new RTCPeerConnection(config);
 
-            await SC.callStatsClient.SendStartCallStats();
+            await SC.callStatsClient.SendStartCallStats("native", "UWP", "10.0", "1.0");
 
             _peerConnection.OnIceGatheringStateChange += async() =>
             {
@@ -888,7 +888,7 @@ namespace PeerConnectionClient.Signalling
                     {
                         Debug.WriteLine("[Error] Conductor: Can't parse received session description message.");
 
-                        SC.callStatsClient.SendFabricSetupFailed("NegotiationFailure", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
+                        SC.callStatsClient.SendFabricSetupFailed("sendrecv", "peer", "NegotiationFailure", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
 
                         SC.callStatsClient.SendApplicationErrorLogs("error", "Can't parse received session description message.", "text");
 
@@ -1061,7 +1061,7 @@ namespace PeerConnectionClient.Signalling
 
                 if (IsNullOrEmpty(offer.Sdp))
                 {
-                    SC.callStatsClient.SendFabricSetupFailed("SDPGenerationError", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
+                    SC.callStatsClient.SendFabricSetupFailed("sendrecv", "peer", "SDPGenerationError", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
                 }
 #if ORTCLIB
                 var modifiedOffer = offer;

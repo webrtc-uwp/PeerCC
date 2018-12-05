@@ -44,7 +44,7 @@ namespace PeerConnectionClient.Stats
                     || SC.prevIceConnectionState == disconnected
                     || SC.prevIceConnectionState == closed)
                 {
-                    await SC.callStatsClient.SendIceRestart();
+                    await SC.callStatsClient.SendIceRestart(newConnection);
                 }
 
                 if (SC.prevIceConnectionState == disconnected)
@@ -83,7 +83,7 @@ namespace PeerConnectionClient.Stats
                 totalSetupDelay = SC.totalSetupTimeStop - SC.totalSetupTimeStart;
 
                 //fabricSetup must be sent whenever iceConnectionState changes from "checking" to "connected" state.
-                await SC.callStatsClient.SendFabricSetup(gatheringDelayMiliseconds, connectivityDelayMiliseconds, totalSetupDelay);
+                await SC.callStatsClient.SendFabricSetup("sendrecv", "peer", gatheringDelayMiliseconds, connectivityDelayMiliseconds, totalSetupDelay);
 
                 if (SC.prevIceConnectionState == disconnected)
                 {
@@ -100,7 +100,8 @@ namespace PeerConnectionClient.Stats
 
                     await SC.callStatsClient.SendConferenceStatsSubmission();
 
-                    SC.callStatsClient.SendSystemStatusStatsSubmission();
+                    // TODO: add values
+                    SC.callStatsClient.SendSystemStatusStatsSubmission(1, 1, 1, 1, 1);
 
                     if (SC.prevIceConnectionState == connected 
                     || SC.prevIceConnectionState == completed)
@@ -109,7 +110,8 @@ namespace PeerConnectionClient.Stats
                         && SC.prevSelectedCandidateId != null 
                         && SC.prevSelectedCandidateId != SC.currSelectedCandidateId)
                         {
-                            await SC.callStatsClient.SendFabricTransportChange();
+                            // TODO: Set delay and relayType
+                            await SC.callStatsClient.SendFabricTransportChange(0, "");
                         }
                     }
                 };
@@ -153,10 +155,11 @@ namespace PeerConnectionClient.Stats
                 if (SC.prevIceConnectionState == disconnected 
                     || SC.prevIceConnectionState == completed)
                 {
-                    SC.callStatsClient.SendFabricDropped();
+                    // TODO: Set delay
+                    SC.callStatsClient.SendFabricDropped(0);
                 }
 
-                SC.callStatsClient.SendFabricSetupFailed("IceConnectionFailure", string.Empty, string.Empty, string.Empty);
+                SC.callStatsClient.SendFabricSetupFailed("sendrecv", "peer", "IceConnectionFailure", string.Empty, string.Empty, string.Empty);
             }
 
             if (pc.IceConnectionState == RTCIceConnectionState.Disconnected)

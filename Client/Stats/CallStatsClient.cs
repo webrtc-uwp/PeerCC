@@ -14,12 +14,13 @@ namespace PeerConnectionClient.Stats
         private static readonly StatsController SC = StatsController.Instance;
 
         #region Start CallStats
-        public async Task SendStartCallStats()
+        public async Task SendStartCallStats(string type, string buildName, string buildVersion, string appVersion)
         {
             callstats = new CallStats(
                 Settings.localID, Settings.appID, Settings.keyID, Settings.confID, SC.GenerateJWT());
 
-            await callstats.StartCallStats(CreateConference(), UserAlive());
+            await callstats.StartCallStats(
+                CreateConference(type, buildName, buildVersion, appVersion), UserAlive());
 
             SendUserDetails();
 
@@ -28,14 +29,15 @@ namespace PeerConnectionClient.Stats
         #endregion
 
         #region User Action Events
-        private CreateConferenceData CreateConference()
+        private CreateConferenceData CreateConference(
+            string type, string buildName, string buildVersion, string appVersion)
         {
             EndpointInfo endpointInfo = new EndpointInfo();
-            endpointInfo.type = "native";
+            endpointInfo.type = type;
             endpointInfo.os = Environment.OSVersion.ToString();
-            endpointInfo.buildName = "UWP";
-            endpointInfo.buildVersion = "10.0";
-            endpointInfo.appVersion = "1.0";
+            endpointInfo.buildName = buildName;
+            endpointInfo.buildVersion = buildVersion;
+            endpointInfo.appVersion = appVersion;
 
             CreateConferenceData ccd = new CreateConferenceData();
             ccd.localID = Settings.localID;
@@ -85,7 +87,9 @@ namespace PeerConnectionClient.Stats
         #endregion
 
         #region Fabric Events
-        public async Task SendFabricSetup(long gatheringDelayMiliseconds, long connectivityDelayMiliseconds, long totalSetupDelay)
+        public async Task SendFabricSetup(
+            string fabricTransmissionDirection, string remoteEndpointType, long gatheringDelayMiliseconds, 
+            long connectivityDelayMiliseconds, long totalSetupDelay)
         {
             IceCandidateStatsData();
             AddToIceCandidatePairsList();
@@ -100,8 +104,8 @@ namespace PeerConnectionClient.Stats
             fsd.delay = totalSetupDelay;
             fsd.iceGatheringDelay = gatheringDelayMiliseconds;
             fsd.iceConnectivityDelay = connectivityDelayMiliseconds;
-            fsd.fabricTransmissionDirection = "sendrecv";
-            fsd.remoteEndpointType = "peer";
+            fsd.fabricTransmissionDirection = fabricTransmissionDirection;
+            fsd.remoteEndpointType = remoteEndpointType;
             fsd.localIceCandidates = SC.localIceCandidates;
             fsd.remoteIceCandidates = SC.remoteIceCandidates;
             fsd.iceCandidatePairs = SC.iceCandidatePairList;
@@ -110,7 +114,9 @@ namespace PeerConnectionClient.Stats
             await callstats.FabricSetup(fsd);
         }
 
-        public void SendFabricSetupFailed(string reason, string name, string message, string stack)
+        public void SendFabricSetupFailed(
+            string fabricTransmissionDirection, string remoteEndpointType, 
+            string reason, string name, string message, string stack)
         {
             // MediaConfigError, MediaPermissionError, MediaDeviceError, NegotiationFailure,
             // SDPGenerationError, TransportFailure, SignalingError, IceConnectionFailure
@@ -120,8 +126,8 @@ namespace PeerConnectionClient.Stats
             fsfd.originID = Settings.originID;
             fsfd.deviceID = Settings.deviceID;
             fsfd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            fsfd.fabricTransmissionDirection = "sendrecv";
-            fsfd.remoteEndpointType = "peer";
+            fsfd.fabricTransmissionDirection = fabricTransmissionDirection;
+            fsfd.remoteEndpointType = remoteEndpointType;
             fsfd.reason = reason;
             fsfd.name = name;
             fsfd.message = message;
@@ -162,7 +168,7 @@ namespace PeerConnectionClient.Stats
             await callstats.FabricStateChange(fscd);
         }
 
-        public async Task SendFabricTransportChange()
+        public async Task SendFabricTransportChange(int delay, string relayType)
         {
             IceCandidateStatsData();
 
@@ -179,14 +185,14 @@ namespace PeerConnectionClient.Stats
             ftcd.prevIceCandidatePair = SC.prevIceCandidatePairObj;
             ftcd.currIceConnectionState = SC.newIceConnectionState;
             ftcd.prevIceConnectionState = SC.prevIceConnectionState;
-            ftcd.delay = 0;
-            ftcd.relayType = $"";
+            ftcd.delay = delay;
+            ftcd.relayType = relayType;
 
             Debug.WriteLine("FabricTransportChange: ");
             await callstats.FabricTransportChange(ftcd);
         }
 
-        public void SendFabricDropped()
+        public void SendFabricDropped(int delay)
         {
             FabricDroppedData fdd = new FabricDroppedData();
 
@@ -199,7 +205,7 @@ namespace PeerConnectionClient.Stats
             fdd.currIceCandidatePair = GetIceCandidatePairData();
             fdd.currIceConnectionState = SC.newIceConnectionState;
             fdd.prevIceConnectionState = SC.prevIceConnectionState;
-            fdd.delay = 0;
+            fdd.delay = delay;
 
             Debug.WriteLine("FabricDropped: ");
             var task = callstats.FabricDropped(fdd);
@@ -240,19 +246,19 @@ namespace PeerConnectionClient.Stats
             await callstats.ConferenceStatsSubmission(cssd);
         }
 
-        // TODO: add values
-        public void SendSystemStatusStatsSubmission()
+        public void SendSystemStatusStatsSubmission(
+            int cpuLevel, int batteryLevel, int memoryUsage, int memoryAvailable, int threadCount)
         {
             SystemStatusStatsSubmissionData sssd = new SystemStatusStatsSubmissionData();
             sssd.localID = Settings.localID;
             sssd.originID = Settings.originID;
             sssd.deviceID = Settings.deviceID;
             sssd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
-            sssd.cpuLevel = 1;
-            sssd.batteryLevel = 1;
-            sssd.memoryUsage = 1;
-            sssd.memoryAvailable = 1;
-            sssd.threadCount = 1;
+            sssd.cpuLevel = cpuLevel;
+            sssd.batteryLevel = batteryLevel;
+            sssd.memoryUsage = memoryUsage;
+            sssd.memoryAvailable = memoryAvailable;
+            sssd.threadCount = threadCount;
 
             Debug.WriteLine("SystemStatusStatsSubmission: ");
             var task = callstats.SystemStatusStatsSubmission(sssd);
@@ -260,7 +266,7 @@ namespace PeerConnectionClient.Stats
         #endregion
 
         #region Media Events
-        public void SendMediaAction(string eventType)
+        public void SendMediaAction(string eventType, string ssrc)
         {
             List<string> remoteIDList = new List<string>();
 
@@ -275,7 +281,7 @@ namespace PeerConnectionClient.Stats
             mad.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             mad.connectionID = Settings.connectionID;
             mad.remoteID = Settings.remoteID;
-            mad.ssrc = "";
+            mad.ssrc = ssrc;
             mad.mediaDeviceID = Settings.deviceID;
             mad.remoteIDList = remoteIDList;
 
@@ -325,7 +331,7 @@ namespace PeerConnectionClient.Stats
             await callstats.IceDisruptionEnd(ide);
         }
 
-        public async Task SendIceRestart()
+        public async Task SendIceRestart(string currIceConnectionState)
         {
             IceRestartData ird = new IceRestartData();
             ird.eventType = "iceRestarted";
@@ -336,7 +342,7 @@ namespace PeerConnectionClient.Stats
             ird.remoteID = Settings.remoteID;
             ird.connectionID = Settings.connectionID;
             ird.prevIceCandidatePair = SC.prevIceCandidatePairObj;
-            ird.currIceConnectionState = "new";
+            ird.currIceConnectionState = currIceConnectionState;
             ird.prevIceConnectionState = SC.prevIceConnectionState;
 
             Debug.WriteLine("IceRestart: ");
@@ -441,14 +447,15 @@ namespace PeerConnectionClient.Stats
 
         #region Device Events
         // TODO: call SendConnectedOrActiveDevices
-        private void SendConnectedOrActiveDevices()
+        private void SendConnectedOrActiveDevices(string mediaDeviceID, string kind, string label, 
+            string groupID, string eventType)
         {
             List<MediaDevice> mediaDeviceList = new List<MediaDevice>();
             MediaDevice mediaDeviceObj = new MediaDevice();
-            mediaDeviceObj.mediaDeviceID = "mediaDeviceID";
-            mediaDeviceObj.kind = "videoinput";
-            mediaDeviceObj.label = "external USB Webcam";
-            mediaDeviceObj.groupID = "groupID";
+            mediaDeviceObj.mediaDeviceID = mediaDeviceID;
+            mediaDeviceObj.kind = kind;
+            mediaDeviceObj.label = label;
+            mediaDeviceObj.groupID = groupID;
             mediaDeviceList.Add(mediaDeviceObj);
 
             ConnectedOrActiveDevicesData cadd = new ConnectedOrActiveDevicesData();
@@ -457,7 +464,7 @@ namespace PeerConnectionClient.Stats
             cadd.deviceID = Settings.deviceID;
             cadd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             cadd.mediaDeviceList = mediaDeviceList;
-            cadd.eventType = "connectedDeviceList";
+            cadd.eventType = eventType;
 
             Debug.WriteLine("ConnectedOrActiveDevices: ");
             var task = callstats.ConnectedOrActiveDevices(cadd);
