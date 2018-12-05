@@ -1232,13 +1232,13 @@ namespace PeerConnectionClient.ViewModels
 
                 if (_microphoneIsOn == false && _mute == false)
                 {
-                    SharedProperties.callStatsClient.SendMediaAction("audioMute");
+                    StatsController.Instance.callStatsClient.SendMediaAction("audioMute");
                     _mute = true;
                 }
 
                 if (_microphoneIsOn == true && _mute == true)
                 {
-                    SharedProperties.callStatsClient.SendMediaAction("audioUnmute");
+                    StatsController.Instance.callStatsClient.SendMediaAction("audioUnmute");
                     _mute = false;
                 }
 

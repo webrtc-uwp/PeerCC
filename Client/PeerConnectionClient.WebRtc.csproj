@@ -113,9 +113,9 @@
     <Compile Include="Signalling\Conductor.cs" />
     <Compile Include="Signalling\Signalling.cs" />
     <Compile Include="Stats\CallStatsClient.cs" />
-    <Compile Include="Stats\SharedProperties.cs" />
-    <Compile Include="Stats\PeerCCData.cs" />
-    <Compile Include="Stats\WebRtcData.cs" />
+    <Compile Include="Stats\StatsController.cs" />
+    <Compile Include="Stats\PeerConnectionStateChange.cs" />
+    <Compile Include="Stats\WebRtcStats.cs" />
     <Compile Include="Utilities\ActionCommand.cs" />
     <Compile Include="Utilities\AppPerf.cs" />
     <Compile Include="Utilities\BoolToVisConverter.cs" />

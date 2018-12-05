@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 
 namespace PeerConnectionClient.Stats
 {
-    public static class WebRtcData
+    public static class WebRtcStats
     {
+        private static readonly StatsController SC = StatsController.Instance;
+
         private static double _prevBytesReceivedVideo = 0.0;
         private static double _prevBytesReceivedAudio = 0.0;
         private static double _prevBytesSentVideo = 0.0;
@@ -82,9 +84,9 @@ namespace PeerConnectionClient.Stats
                         ics.transportId = iceCandidateStats.TransportId;
                         ics.url = iceCandidateStats.Url;
 
-                        SharedProperties.iceCandidateStatsList.Add(ics);
+                        SC.iceCandidateStatsList.Add(ics);
 
-                        SharedProperties.statsObjects.Add(ics);
+                        SC.statsObjects.Add(ics);
                     }
                 }
 
@@ -106,7 +108,7 @@ namespace PeerConnectionClient.Stats
                     cs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     cs.transportId = codecStats.TransportId;
 
-                    SharedProperties.statsObjects.Add(cs);
+                    SC.statsObjects.Add(cs);
                 }
 
                 else if (statsType == RTCStatsType.InboundRtp)
@@ -152,11 +154,11 @@ namespace PeerConnectionClient.Stats
                     irss.trackId = inboundRtpStats.TrackId;
                     irss.transportId = inboundRtpStats.TransportId;
 
-                    long csioIntMs = DateTime.UtcNow.ToUnixTimeStampSeconds() - SharedProperties.sec;
+                    long csioIntMs = DateTime.UtcNow.ToUnixTimeStampSeconds() - SC.sec;
 
                     if (irss.id.ToLower().Contains("audio"))
                     {
-                        if (SharedProperties.sec != 0)
+                        if (SC.sec != 0)
                             irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceivedAudio) / csioIntMs;
 
                         _prevBytesReceivedAudio = irss.bytesReceived;
@@ -164,13 +166,13 @@ namespace PeerConnectionClient.Stats
 
                     if (irss.id.ToLower().Contains("video"))
                     {
-                        if (SharedProperties.sec != 0)
+                        if (SC.sec != 0)
                             irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceivedVideo) / csioIntMs;
 
                         _prevBytesReceivedVideo = irss.bytesReceived;
                     }
 
-                    SharedProperties.statsObjects.Add(irss);
+                    SC.statsObjects.Add(irss);
                 }
 
                 else if (statsType == RTCStatsType.OutboundRtp)
@@ -205,11 +207,11 @@ namespace PeerConnectionClient.Stats
                     orss.trackId = outboundRtpStats.TrackId;
                     orss.transportId = outboundRtpStats.TransportId;
 
-                    long csioIntMs = DateTime.UtcNow.ToUnixTimeStampSeconds() - SharedProperties.sec;
+                    long csioIntMs = DateTime.UtcNow.ToUnixTimeStampSeconds() - SC.sec;
 
                     if (orss.id.ToLower().Contains("audio"))
                     {
-                        if (SharedProperties.sec != 0)
+                        if (SC.sec != 0)
                             orss.csioIntBRKbps = (orss.bytesSent - _prevBytesSentAudio) / csioIntMs;
 
                         _prevBytesSentAudio = orss.bytesSent;
@@ -217,13 +219,13 @@ namespace PeerConnectionClient.Stats
 
                     if (orss.id.ToLower().Contains("video"))
                     {
-                        if (SharedProperties.sec != 0)
+                        if (SC.sec != 0)
                             orss.csioIntBRKbps = (orss.bytesSent - _prevBytesSentVideo) / csioIntMs;
 
                         _prevBytesSentVideo = orss.bytesSent;
                     }
 
-                    SharedProperties.statsObjects.Add(orss);
+                    SC.statsObjects.Add(orss);
                 }
 
                 else if (statsType == RTCStatsType.RemoteInboundRtp)
@@ -261,7 +263,7 @@ namespace PeerConnectionClient.Stats
                     rirss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     rirss.transportId = remoteInboundRtpStats.TransportId;
 
-                    SharedProperties.statsObjects.Add(rirss);
+                    SC.statsObjects.Add(rirss);
                 }
 
                 else if (statsType == RTCStatsType.RemoteOutboundRtp)
@@ -289,7 +291,7 @@ namespace PeerConnectionClient.Stats
                     rorss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     rorss.TransportId = remoteOutboundRtpStats.TransportId;
 
-                    SharedProperties.statsObjects.Add(rorss);
+                    SC.statsObjects.Add(rorss);
                 }
 
                 else if (statsType == RTCStatsType.Csrc)
@@ -306,7 +308,7 @@ namespace PeerConnectionClient.Stats
                     rcss.statsTypeOther = csrcStats.StatsTypeOther;
                     rcss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
-                    SharedProperties.statsObjects.Add(rcss);
+                    SC.statsObjects.Add(rcss);
                 }
 
                 else if (statsType == RTCStatsType.PeerConnection)
@@ -323,7 +325,7 @@ namespace PeerConnectionClient.Stats
                     pcs.statsTypeOther = peerConnectionStats.StatsTypeOther;
                     pcs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
-                    SharedProperties.statsObjects.Add(pcs);
+                    SC.statsObjects.Add(pcs);
                 }
 
                 else if (statsType == RTCStatsType.DataChannel)
@@ -345,7 +347,7 @@ namespace PeerConnectionClient.Stats
                     dc.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     dc.transportId = dataChannelStats.TransportId;
 
-                    SharedProperties.statsObjects.Add(dc);
+                    SC.statsObjects.Add(dc);
                 }
 
                 else if (statsType == RTCStatsType.Stream)
@@ -360,7 +362,7 @@ namespace PeerConnectionClient.Stats
                     mss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                     mss.trackIds = mediaStreamStats.TrackIds.ToList();
 
-                    SharedProperties.statsObjects.Add(mss);
+                    SC.statsObjects.Add(mss);
                 }
 
                 else if (statsType == RTCStatsType.Track)
@@ -389,7 +391,7 @@ namespace PeerConnectionClient.Stats
                         satas.trackIdentifier = audioTrackStats.TrackIdentifier;
                         satas.voiceActivityFlag = audioTrackStats.VoiceActivityFlag;
 
-                        SharedProperties.statsObjects.Add(satas);
+                        SC.statsObjects.Add(satas);
                     }
 
                     else if (mediaHandlerStats.Kind == "video")
@@ -414,7 +416,7 @@ namespace PeerConnectionClient.Stats
                         svtas.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
                         svtas.trackIdentifier = videoTrackStats.TrackIdentifier;
 
-                        SharedProperties.statsObjects.Add(svtas);
+                        SC.statsObjects.Add(svtas);
                     }
                 }
 
@@ -444,7 +446,7 @@ namespace PeerConnectionClient.Stats
                         aus.type = audioSenderStats.StatsType.ToString();
                         aus.voiceActivityFlag = audioSenderStats.VoiceActivityFlag;
 
-                        SharedProperties.statsObjects.Add(aus);
+                        SC.statsObjects.Add(aus);
                     }
 
                     else if (mediaHandlerStats.Kind == "video")
@@ -469,7 +471,7 @@ namespace PeerConnectionClient.Stats
                         vis.trackIdentifier = videoSenderStats.TrackIdentifier;
                         vis.type = videoSenderStats.StatsType.ToString();
 
-                        SharedProperties.statsObjects.Add(vis);
+                        SC.statsObjects.Add(vis);
                     }
                 }
 
@@ -500,7 +502,7 @@ namespace PeerConnectionClient.Stats
                         aur.type = audioReceiverStats.StatsType.ToString();
                         aur.voiceActivityFlag = audioReceiverStats.VoiceActivityFlag;
 
-                        SharedProperties.statsObjects.Add(aur);
+                        SC.statsObjects.Add(aur);
                     }
 
                     else if (mediaHandlerStats.Kind == "video")
@@ -528,7 +530,7 @@ namespace PeerConnectionClient.Stats
                         vir.trackIdentifier = videoReceiverStats.TrackIdentifier;
                         vir.type = videoReceiverStats.StatsType.ToString();
 
-                        SharedProperties.statsObjects.Add(vir);
+                        SC.statsObjects.Add(vir);
                     }
                 }
 
@@ -554,16 +556,16 @@ namespace PeerConnectionClient.Stats
                     ts.statsTypeOther = transportStats.StatsTypeOther;
                     ts.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
-                    SharedProperties.statsObjects.Add(ts);
+                    SC.statsObjects.Add(ts);
 
-                    SharedProperties.currSelectedCandidateId = transportStats.SelectedCandidatePairId;
+                    SC.currSelectedCandidateId = transportStats.SelectedCandidatePairId;
                 }
 
                 else if (statsType == RTCStatsType.CandidatePair)
                 {
                     RTCIceCandidatePairStats candidatePairStats = RTCIceCandidatePairStats.Cast(rtcStats);
 
-                    SharedProperties.prevIceCandidatePairObj = SharedProperties.currIceCandidatePairObj;
+                    SC.prevIceCandidatePairObj = SC.currIceCandidatePairObj;
 
                     IceCandidatePairStats icp = new IceCandidatePairStats();
                     //icp.availableIncomingBitrate = candidatePairStats.AvailableIncomingBitrate;
@@ -601,7 +603,7 @@ namespace PeerConnectionClient.Stats
                     icp.totalRoundTripTime = 1.234;
                     icp.transportId = candidatePairStats.TransportId;
 
-                    SharedProperties.statsObjects.Add(icp);
+                    SC.statsObjects.Add(icp);
 
                     if (!candidatePairsDict.ContainsKey(candidatePairStats.LocalCandidateId))
                         candidatePairsDict.Add(candidatePairStats.LocalCandidateId, "local-candidate");
@@ -609,11 +611,11 @@ namespace PeerConnectionClient.Stats
                     if (!candidatePairsDict.ContainsKey(candidatePairStats.RemoteCandidateId))
                         candidatePairsDict.Add(candidatePairStats.RemoteCandidateId, "remote-candidate");
 
-                    SharedProperties.iceCandidatePairStatsList.Add(icp);
+                    SC.iceCandidatePairStatsList.Add(icp);
 
-                    SharedProperties.currIceCandidatePair = candidatePairStats;
+                    SC.currIceCandidatePair = candidatePairStats;
 
-                    SharedProperties.currIceCandidatePairObj = SharedProperties.callStatsClient.GetIceCandidatePairData();
+                    SC.currIceCandidatePairObj = SC.callStatsClient.GetIceCandidatePairData();
                 }
 
                 else if (statsType == RTCStatsType.Certificate)
@@ -630,7 +632,7 @@ namespace PeerConnectionClient.Stats
                     cs.statsTypeOther = certificateStats.StatsTypeOther;
                     cs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
-                    SharedProperties.statsObjects.Add(cs);
+                    SC.statsObjects.Add(cs);
                 }
             }
         }
