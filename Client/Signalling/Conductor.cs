@@ -895,7 +895,7 @@ namespace PeerConnectionClient.Signalling
                         return;
                     }
 
-                    SC.callStatsClient.SSRCMapDataSetup(sdp, "inbound", "remote");
+                    SC.SSRCMapDataSetup(sdp, "inbound", "remote");
 
                     SC.callStatsClient.SendSDP(_localSDPForCallStats, sdp);
 
@@ -1080,7 +1080,7 @@ namespace PeerConnectionClient.Signalling
 
                 _localSDPForCallStats = offer.Sdp;
 
-                SC.callStatsClient.SSRCMapDataSetup(offer.Sdp, "outbound", "local");
+                SC.SSRCMapDataSetup(offer.Sdp, "outbound", "local");
 #if ORTCLIB
                 OrtcStatsManager.Instance.StartCallWatch(SessionId, true);
 #endif

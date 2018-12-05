@@ -32,16 +32,6 @@ namespace PeerConnectionClient.Stats
 
         private StatsController() {}
 
-        
-        //{
-        //    return IPGlobalProperties.GetIPGlobalProperties().HostName?.ToLower() ?? "<unknown host>";
-
-        //    //HostName hostname =
-        //    //    NetworkInformation.GetHostNames().FirstOrDefault(h => h.Type == HostNameType.DomainName);
-
-        //    //return hostname?.CanonicalName.ToLower() ?? "<unknown host>";
-        //}
-
         public long gateheringTimeStart;
         public long gateheringTimeStop;
 
@@ -131,6 +121,51 @@ namespace PeerConnectionClient.Stats
             }
         }
         #endregion
+
+        public void SSRCMapDataSetup(string sdp, string streamType, string reportType)
+        {
+            var dict = Instance.ParseSdp(sdp, "a=ssrc:");
+
+            foreach (var d in dict)
+            {
+                SSRCData ssrcData = new SSRCData();
+
+                ssrcData.ssrc = d.Key;
+
+                foreach (var k in d.Value)
+                {
+                    if (k.Key == "cname")
+                        ssrcData.cname = k.Value.Replace("\r", "");
+
+                    if (k.Key == "msid")
+                        ssrcData.msid = k.Value.Replace("\r", "");
+
+                    if (k.Key == "mslabel")
+                        ssrcData.mslabel = k.Value.Replace("\r", "");
+
+                    if (k.Key == "label")
+                    {
+                        ssrcData.label = k.Value.Replace("\r", "");
+
+                        if (k.Value.ToLower().Contains("audio"))
+                            ssrcData.mediaType = "audio";
+
+                        if (k.Value.ToLower().Contains("video"))
+                            ssrcData.mediaType = "video";
+
+                        if (k.Value.ToLower().Contains("screen"))
+                            ssrcData.mediaType = "screen";
+                    }
+                }
+
+                ssrcData.streamType = streamType;
+                ssrcData.reportType = reportType;
+                ssrcData.userID = Settings.userID;
+                ssrcData.localStartTime = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+
+                Instance.ssrcDataList.Add(ssrcData);
+            }
+        }
 
         public Dictionary<string, Dictionary<string, string>> ParseSdp(string sdp, string searchFirstStr)
         {
