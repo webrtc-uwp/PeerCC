@@ -69,8 +69,6 @@ namespace PeerConnectionClient.Signalling
     /// </summary>
     internal class Conductor
     {
-        //public CallStatsClient callStatsClient = new CallStatsClient();
-
         private static readonly StatsController SC = StatsController.Instance;
 
         private string _localSDPForCallStats;
@@ -705,7 +703,6 @@ namespace PeerConnectionClient.Signalling
         /// </summary>
         private Conductor()
         {
-            Config.AppSettings();
 #if ORTCLIB
             _signalingMode = RTCPeerConnectionSignalingMode.Json;
 //#else

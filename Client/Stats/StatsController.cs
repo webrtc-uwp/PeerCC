@@ -30,7 +30,16 @@ namespace PeerConnectionClient.Stats
             }
         }
 
-        private StatsController() {}
+        private StatsController()
+        {
+            Config.AppSettings();
+        }
+
+        private string localID = (string)Config.localSettings.Values["localID"];
+        private string appID = (string)Config.localSettings.Values["appID"];
+        private string keyID = (string)Config.localSettings.Values["keyID"];
+        private string confID = (string)Config.localSettings.Values["confID"];
+        private string userID = (string)Config.localSettings.Values["userID"];
 
         public long gateheringTimeStart;
         public long gateheringTimeStop;
@@ -72,6 +81,14 @@ namespace PeerConnectionClient.Stats
         public string currSelectedCandidateId;
 
         #region Generate JWT
+        private static readonly string jti = new Func<string>(() =>
+        {
+            Random random = new Random();
+            const string chars = "abcdefghijklmnopqrstuvxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const int length = 10;
+            return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+        })();
+
         public string GenerateJWT()
         {
             var header = new Dictionary<string, object>()
@@ -82,13 +99,13 @@ namespace PeerConnectionClient.Stats
 
             var payload = new Dictionary<string, object>()
             {
-                { "userID", Settings.localID},
-                { "appID", Settings.appID},
-                { "keyID", Settings.keyID },
+                { "userID", localID},
+                { "appID", appID},
+                { "keyID", keyID },
                 { "iat", DateTime.UtcNow.ToUnixTimeStampSeconds() },
                 { "nbf", DateTime.UtcNow.AddMinutes(-5).ToUnixTimeStampSeconds() },
                 { "exp", DateTime.UtcNow.AddHours(1).ToUnixTimeStampSeconds() },
-                { "jti", Settings.jti }
+                { "jti", jti }
             };
 
             try
@@ -122,6 +139,7 @@ namespace PeerConnectionClient.Stats
         }
         #endregion
 
+        #region SSRC Data
         public void SSRCMapDataSetup(string sdp, string streamType, string reportType)
         {
             var dict = Instance.ParseSdp(sdp, "a=ssrc:");
@@ -160,7 +178,7 @@ namespace PeerConnectionClient.Stats
 
                 ssrcData.streamType = streamType;
                 ssrcData.reportType = reportType;
-                ssrcData.userID = Settings.userID;
+                ssrcData.userID = userID;
                 ssrcData.localStartTime = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
                 Instance.ssrcDataList.Add(ssrcData);
@@ -211,6 +229,7 @@ namespace PeerConnectionClient.Stats
             }
             return dict;
         }
+        #endregion
 
         #region Ice Candidates Data
         public void IceCandidateStatsData()
@@ -272,32 +291,7 @@ namespace PeerConnectionClient.Stats
         }
         #endregion
     }
-
-    public static class Settings
-    {
-        public static string userID = GetLocalPeerName();
-        public static string localID = GetLocalPeerName();
-        public static string appID = (string)Config.localSettings.Values["appID"];
-        public static string keyID = (string)Config.localSettings.Values["keyID"];
-        public static string confID = Config.localSettings.Values["confID"].ToString();
-
-        public static readonly string jti = new Func<string>(() =>
-        {
-            Random random = new Random();
-            const string chars = "abcdefghijklmnopqrstuvxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            const int length = 10;
-            return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
-        })();
-
-        public static string originID = null;
-        public static string deviceID = "desktop";
-        public static string connectionID = $"{GetLocalPeerName()}-{confID}";
-        public static string remoteID = "RemotePeer";
-
-        public static string GetLocalPeerName() =>
-            IPGlobalProperties.GetIPGlobalProperties().HostName?.ToLower() ?? "<unknown host>";
-    }
-
+    
     public static class DateTimeExtensions
     {
         private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
