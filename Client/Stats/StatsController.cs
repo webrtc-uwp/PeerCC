@@ -60,7 +60,7 @@ namespace PeerConnectionClient.Stats
 
         public RTCIceCandidatePairStats currIceCandidatePair;
 
-        public long sec = 0;
+        public long milisec = 0;
 
         public List<SSRCData> ssrcDataList = new List<SSRCData>();
 

@@ -240,7 +240,7 @@ namespace PeerConnectionClient.Stats
             cssd.remoteID = Settings.remoteID;
             cssd.stats = SC.statsObjects;
 
-            SC.sec = DateTime.UtcNow.ToUnixTimeStampSeconds();
+            SC.milisec = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
             Debug.WriteLine("ConferenceStatsSubmission: ");
             await callstats.ConferenceStatsSubmission(cssd);

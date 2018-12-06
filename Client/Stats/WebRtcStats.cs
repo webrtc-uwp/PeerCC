@@ -154,20 +154,20 @@ namespace PeerConnectionClient.Stats
                     irss.trackId = inboundRtpStats.TrackId;
                     irss.transportId = inboundRtpStats.TransportId;
 
-                    long csioIntMs = DateTime.UtcNow.ToUnixTimeStampSeconds() - SC.sec;
+                    long csioIntMs = DateTime.UtcNow.ToUnixTimeStampMiliseconds() - SC.milisec;
 
                     if (irss.id.ToLower().Contains("audio"))
                     {
-                        if (SC.sec != 0)
-                            irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceivedAudio) / csioIntMs;
+                        if (SC.milisec != 0)
+                            irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceivedAudio) * 8 / csioIntMs;
 
                         _prevBytesReceivedAudio = irss.bytesReceived;
                     }
 
                     if (irss.id.ToLower().Contains("video"))
                     {
-                        if (SC.sec != 0)
-                            irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceivedVideo) / csioIntMs;
+                        if (SC.milisec != 0)
+                            irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceivedVideo) * 8 / csioIntMs;
 
                         _prevBytesReceivedVideo = irss.bytesReceived;
                     }
@@ -207,20 +207,20 @@ namespace PeerConnectionClient.Stats
                     orss.trackId = outboundRtpStats.TrackId;
                     orss.transportId = outboundRtpStats.TransportId;
 
-                    long csioIntMs = DateTime.UtcNow.ToUnixTimeStampSeconds() - SC.sec;
+                    long csioIntMs = DateTime.UtcNow.ToUnixTimeStampMiliseconds() - SC.milisec;
 
                     if (orss.id.ToLower().Contains("audio"))
                     {
-                        if (SC.sec != 0)
-                            orss.csioIntBRKbps = (orss.bytesSent - _prevBytesSentAudio) / csioIntMs;
+                        if (SC.milisec != 0)
+                            orss.csioIntBRKbps = (orss.bytesSent - _prevBytesSentAudio) * 8 / csioIntMs;
 
                         _prevBytesSentAudio = orss.bytesSent;
                     }
 
                     if (orss.id.ToLower().Contains("video"))
                     {
-                        if (SC.sec != 0)
-                            orss.csioIntBRKbps = (orss.bytesSent - _prevBytesSentVideo) / csioIntMs;
+                        if (SC.milisec != 0)
+                            orss.csioIntBRKbps = (orss.bytesSent - _prevBytesSentVideo) * 8 / csioIntMs;
 
                         _prevBytesSentVideo = orss.bytesSent;
                     }
