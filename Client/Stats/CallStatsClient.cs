@@ -22,20 +22,18 @@ namespace PeerConnectionClient.Stats
 
         private CallStats callstats;
 
-        private static readonly StatsController SC = StatsController.Instance;
-
         #region Start CallStats
-        public async Task SendStartCallStats(string type, string buildName, string buildVersion, string appVersion)
+        public async Task SendStartCallStats(string type, string buildName, string buildVersion, 
+            string appVersion, string token, long totalSetupTimeStart)
         {
-            callstats = new CallStats(
-                localID, appID, keyID, confID, SC.GenerateJWT());
+            callstats = new CallStats(localID, appID, keyID, confID, token);
 
             await callstats.StartCallStats(
                 CreateConference(type, buildName, buildVersion, appVersion), UserAlive());
 
             SendUserDetails();
 
-            SC.totalSetupTimeStart = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            totalSetupTimeStart = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
         }
         #endregion
 
@@ -100,11 +98,9 @@ namespace PeerConnectionClient.Stats
         #region Fabric Events
         public async Task SendFabricSetup(
             string fabricTransmissionDirection, string remoteEndpointType, long gatheringDelayMiliseconds, 
-            long connectivityDelayMiliseconds, long totalSetupDelay)
+            long connectivityDelayMiliseconds, long totalSetupDelay, List<IceCandidate> localIceCandidates, 
+            List<IceCandidate> remoteIceCandidates, List<IceCandidatePair> iceCandidatePairList)
         {
-            SC.IceCandidateStatsData();
-            SC.AddToIceCandidatePairsList();
-
             FabricSetupData fsd = new FabricSetupData();
             fsd.localID = localID;
             fsd.originID = originID;
@@ -117,9 +113,9 @@ namespace PeerConnectionClient.Stats
             fsd.iceConnectivityDelay = connectivityDelayMiliseconds;
             fsd.fabricTransmissionDirection = fabricTransmissionDirection;
             fsd.remoteEndpointType = remoteEndpointType;
-            fsd.localIceCandidates = SC.localIceCandidates;
-            fsd.remoteIceCandidates = SC.remoteIceCandidates;
-            fsd.iceCandidatePairs = SC.iceCandidatePairList;
+            fsd.localIceCandidates = localIceCandidates;
+            fsd.remoteIceCandidates = remoteIceCandidates;
+            fsd.iceCandidatePairs = iceCandidatePairList;
 
             Debug.WriteLine("FabricSetup: ");
             await callstats.FabricSetup(fsd);
@@ -179,10 +175,11 @@ namespace PeerConnectionClient.Stats
             await callstats.FabricStateChange(fscd);
         }
 
-        public async Task SendFabricTransportChange(int delay, string relayType)
+        public async Task SendFabricTransportChange(int delay, string relayType, 
+            List<IceCandidate> localIceCandidates, List<IceCandidate> remoteIceCandidates, 
+            IceCandidatePair currIceCandidatePairObj, IceCandidatePair prevIceCandidatePairObj, 
+            string newIceConnectionState, string prevIceConnectionState)
         {
-            SC.IceCandidateStatsData();
-
             FabricTransportChangeData ftcd = new FabricTransportChangeData();
             ftcd.localID = localID;
             ftcd.originID = originID;
@@ -190,12 +187,12 @@ namespace PeerConnectionClient.Stats
             ftcd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             ftcd.remoteID = remoteID;
             ftcd.connectionID = connectionID;
-            ftcd.localIceCandidates = SC.localIceCandidates;
-            ftcd.remoteIceCandidates = SC.remoteIceCandidates;
-            ftcd.currIceCandidatePair = SC.currIceCandidatePairObj;
-            ftcd.prevIceCandidatePair = SC.prevIceCandidatePairObj;
-            ftcd.currIceConnectionState = SC.newIceConnectionState;
-            ftcd.prevIceConnectionState = SC.prevIceConnectionState;
+            ftcd.localIceCandidates = localIceCandidates;
+            ftcd.remoteIceCandidates = remoteIceCandidates;
+            ftcd.currIceCandidatePair = currIceCandidatePairObj;
+            ftcd.prevIceCandidatePair = prevIceCandidatePairObj;
+            ftcd.currIceConnectionState = newIceConnectionState;
+            ftcd.prevIceConnectionState = prevIceConnectionState;
             ftcd.delay = delay;
             ftcd.relayType = relayType;
 
@@ -203,7 +200,8 @@ namespace PeerConnectionClient.Stats
             await callstats.FabricTransportChange(ftcd);
         }
 
-        public void SendFabricDropped(int delay)
+        public void SendFabricDropped(int delay, IceCandidatePair currIceCandidatePair, 
+            string newIceConnectionState, string prevIceConnectionState)
         {
             FabricDroppedData fdd = new FabricDroppedData();
 
@@ -213,20 +211,20 @@ namespace PeerConnectionClient.Stats
             fdd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             fdd.remoteID = remoteID;
             fdd.connectionID = connectionID;
-            fdd.currIceCandidatePair = SC.GetIceCandidatePairData();
-            fdd.currIceConnectionState = SC.newIceConnectionState;
-            fdd.prevIceConnectionState = SC.prevIceConnectionState;
+            fdd.currIceCandidatePair = currIceCandidatePair;
+            fdd.currIceConnectionState = newIceConnectionState;
+            fdd.prevIceConnectionState = prevIceConnectionState;
             fdd.delay = delay;
 
             Debug.WriteLine("FabricDropped: ");
             var task = callstats.FabricDropped(fdd);
         }
 
-        // TODO: fabricHold or fabricResume
-        private void SendFabricAction()
+        // TODO: Call SendFabricAction method
+        private void SendFabricAction(string eventType)
         {
             FabricActionData fad = new FabricActionData();
-            fad.eventType = "fabricHold";  // fabricResume
+            fad.eventType = eventType;  // fabricHold, fabricResume
             fad.localID = localID;
             fad.originID = originID;
             fad.deviceID = deviceID;
@@ -240,7 +238,7 @@ namespace PeerConnectionClient.Stats
         #endregion
 
         #region Stats Submission
-        public async Task SendConferenceStatsSubmission()
+        public async Task SendConferenceStatsSubmission(List<object> statsObjects)
         {
             ConferenceStatsSubmissionData cssd = new ConferenceStatsSubmissionData();
             cssd.localID = localID;
@@ -249,9 +247,7 @@ namespace PeerConnectionClient.Stats
             cssd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             cssd.connectionID = connectionID;
             cssd.remoteID = remoteID;
-            cssd.stats = SC.statsObjects;
-
-            SC.milisec = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            cssd.stats = statsObjects;
 
             Debug.WriteLine("ConferenceStatsSubmission: ");
             await callstats.ConferenceStatsSubmission(cssd);
@@ -277,12 +273,12 @@ namespace PeerConnectionClient.Stats
         #endregion
 
         #region Media Events
-        public void SendMediaAction(string eventType, string ssrc)
+        public void SendMediaAction(string eventType, string ssrc, List<IceCandidate> remoteIceCandidates)
         {
             List<string> remoteIDList = new List<string>();
 
-            for (int i = 0; i < SC.remoteIceCandidates.Count; i++)
-                remoteIDList.Add(SC.remoteIceCandidates[i].id);
+            for (int i = 0; i < remoteIceCandidates.Count; i++)
+                remoteIDList.Add(remoteIceCandidates[i].id);
 
             MediaActionData mad = new MediaActionData();
             mad.eventType = eventType;
@@ -305,7 +301,8 @@ namespace PeerConnectionClient.Stats
         #endregion
 
         #region Ice Events
-        public async Task SendIceDisruptionStart()
+        public async Task SendIceDisruptionStart(IceCandidatePair currIceCandidatePairObj, 
+            string newIceConnectionState, string prevIceConnectionState)
         {
             IceDisruptionStartData ids = new IceDisruptionStartData();
             ids.eventType = "iceDisruptionStart";
@@ -315,15 +312,16 @@ namespace PeerConnectionClient.Stats
             ids.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             ids.remoteID = remoteID;
             ids.connectionID = connectionID;
-            ids.currIceCandidatePair = SC.currIceCandidatePairObj;
-            ids.currIceConnectionState = SC.newIceConnectionState;
-            ids.prevIceConnectionState = SC.prevIceConnectionState;
+            ids.currIceCandidatePair = currIceCandidatePairObj;
+            ids.currIceConnectionState = newIceConnectionState;
+            ids.prevIceConnectionState = prevIceConnectionState;
 
             Debug.WriteLine("IceDisruptionStart: ");
             await callstats.IceDisruptionStart(ids);
         }
 
-        public async Task SendIceDisruptionEnd()
+        public async Task SendIceDisruptionEnd(IceCandidatePair currIceCandidatePairObj, 
+            IceCandidatePair prevIceCandidatePairObj, string newIceConnectionState, string prevIceConnectionState)
         {
             IceDisruptionEndData ide = new IceDisruptionEndData();
             ide.eventType = "iceDisruptionEnd";
@@ -333,16 +331,17 @@ namespace PeerConnectionClient.Stats
             ide.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             ide.remoteID = remoteID;
             ide.connectionID = connectionID;
-            ide.currIceCandidatePair = SC.currIceCandidatePairObj;
-            ide.prevIceCandidatePair = SC.prevIceCandidatePairObj;
-            ide.currIceConnectionState = SC.newIceConnectionState;
-            ide.prevIceConnectionState = SC.prevIceConnectionState;
+            ide.currIceCandidatePair = currIceCandidatePairObj;
+            ide.prevIceCandidatePair = prevIceCandidatePairObj;
+            ide.currIceConnectionState = newIceConnectionState;
+            ide.prevIceConnectionState = prevIceConnectionState;
 
             Debug.WriteLine("IceDisruptionEnd: ");
             await callstats.IceDisruptionEnd(ide);
         }
 
-        public async Task SendIceRestart(string currIceConnectionState)
+        public async Task SendIceRestart(IceCandidatePair prevIceCandidatePairObj, 
+            string currIceConnectionState, string prevIceConnectionState)
         {
             IceRestartData ird = new IceRestartData();
             ird.eventType = "iceRestarted";
@@ -352,15 +351,18 @@ namespace PeerConnectionClient.Stats
             ird.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             ird.remoteID = remoteID;
             ird.connectionID = connectionID;
-            ird.prevIceCandidatePair = SC.prevIceCandidatePairObj;
+            ird.prevIceCandidatePair = prevIceCandidatePairObj;
             ird.currIceConnectionState = currIceConnectionState;
-            ird.prevIceConnectionState = SC.prevIceConnectionState;
+            ird.prevIceConnectionState = prevIceConnectionState;
 
             Debug.WriteLine("IceRestart: ");
             await callstats.IceRestart(ird);
         }
 
-        public async Task SendIceFailed()
+        public async Task SendIceFailed(
+            List<IceCandidate> localIceCandidates, List<IceCandidate> remoteIceCandidates, 
+            List<IceCandidatePair> iceCandidatePairList, string newIceConnectionState, 
+            string prevIceConnectionState, int delay)
         {
             IceFailedData ifd = new IceFailedData();
             ifd.eventType = "iceFailed";
@@ -370,18 +372,21 @@ namespace PeerConnectionClient.Stats
             ifd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             ifd.remoteID = remoteID;
             ifd.connectionID = connectionID;
-            ifd.localIceCandidates = SC.localIceCandidates;
-            ifd.remoteIceCandidates = SC.remoteIceCandidates;
-            ifd.iceCandidatePairs = SC.iceCandidatePairList;
-            ifd.currIceConnectionState = SC.newIceConnectionState;
-            ifd.prevIceConnectionState = SC.prevIceConnectionState;
-            ifd.delay = 9;
+            ifd.localIceCandidates = localIceCandidates;
+            ifd.remoteIceCandidates = remoteIceCandidates;
+            ifd.iceCandidatePairs = iceCandidatePairList;
+            ifd.currIceConnectionState = newIceConnectionState;
+            ifd.prevIceConnectionState = prevIceConnectionState;
+            ifd.delay = delay;
 
             Debug.WriteLine("IceFailed: ");
             await callstats.IceFailed(ifd);
         }
 
-        public async Task SendIceAborted()
+        public async Task SendIceAborted(
+            List<IceCandidate> localIceCandidates, List<IceCandidate> remoteIceCandidates, 
+            List<IceCandidatePair> iceCandidatePairList, string newIceConnectionState, 
+            string prevIceConnectionState, int delay)
         {
             IceAbortedData iad = new IceAbortedData();
             iad.eventType = "iceFailed";
@@ -391,18 +396,19 @@ namespace PeerConnectionClient.Stats
             iad.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             iad.remoteID = remoteID;
             iad.connectionID = connectionID;
-            iad.localIceCandidates = SC.localIceCandidates;
-            iad.remoteIceCandidates = SC.remoteIceCandidates;
-            iad.iceCandidatePairs = SC.iceCandidatePairList;
-            iad.currIceConnectionState = SC.newIceConnectionState;
-            iad.prevIceConnectionState = SC.prevIceConnectionState;
-            iad.delay = 3;
+            iad.localIceCandidates = localIceCandidates;
+            iad.remoteIceCandidates = remoteIceCandidates;
+            iad.iceCandidatePairs = iceCandidatePairList;
+            iad.currIceConnectionState = newIceConnectionState;
+            iad.prevIceConnectionState = prevIceConnectionState;
+            iad.delay = delay;
 
             Debug.WriteLine("IceAborted: ");
             await callstats.IceAborted(iad);
         }
 
-        public async Task SendIceTerminated()
+        public async Task SendIceTerminated(IceCandidatePair prevIceCandidatePairObj, 
+            string newIceConnectionState, string prevIceConnectionState)
         {
             IceTerminatedData itd = new IceTerminatedData();
             itd.eventType = "iceTerminated";
@@ -412,15 +418,16 @@ namespace PeerConnectionClient.Stats
             itd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             itd.remoteID = remoteID;
             itd.connectionID = connectionID;
-            itd.prevIceCandidatePair = SC.prevIceCandidatePairObj;
-            itd.currIceConnectionState = SC.newIceConnectionState;
-            itd.prevIceConnectionState = SC.prevIceConnectionState;
+            itd.prevIceCandidatePair = prevIceCandidatePairObj;
+            itd.currIceConnectionState = newIceConnectionState;
+            itd.prevIceConnectionState = prevIceConnectionState;
 
             Debug.WriteLine("IceTerminated: ");
             await callstats.IceTerminated(itd);
         }
 
-        public async Task SendIceConnectionDisruptionStart()
+        public async Task SendIceConnectionDisruptionStart(
+            string newIceConnectionState, string prevIceConnectionState)
         {
             IceConnectionDisruptionStartData icds = new IceConnectionDisruptionStartData();
             icds.eventType = "iceConnectionDisruptionStart";
@@ -430,14 +437,15 @@ namespace PeerConnectionClient.Stats
             icds.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             icds.remoteID = remoteID;
             icds.connectionID = connectionID;
-            icds.currIceConnectionState = SC.newIceConnectionState;
-            icds.prevIceConnectionState = SC.prevIceConnectionState;
+            icds.currIceConnectionState = newIceConnectionState;
+            icds.prevIceConnectionState = prevIceConnectionState;
 
             Debug.WriteLine("IceConnectionDisruptionStart: ");
             await callstats.IceConnectionDisruptionStart(icds);
         }
 
-        public async Task SendIceConnectionDisruptionEnd()
+        public async Task SendIceConnectionDisruptionEnd(
+            string newIceConnectionState, string prevIceConnectionState, int delay)
         {
             IceConnectionDisruptionEndData icde = new IceConnectionDisruptionEndData();
             icde.eventType = "iceConnectionDisruptionEnd";
@@ -447,9 +455,9 @@ namespace PeerConnectionClient.Stats
             icde.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             icde.remoteID = remoteID;
             icde.connectionID = connectionID;
-            icde.currIceConnectionState = SC.newIceConnectionState;
-            icde.prevIceConnectionState = SC.prevIceConnectionState;
-            icde.delay = 2;
+            icde.currIceConnectionState = newIceConnectionState;
+            icde.prevIceConnectionState = prevIceConnectionState;
+            icde.delay = delay;
 
             Debug.WriteLine("IceConnectionDisruptionEnd: ");
             await callstats.IceConnectionDisruptionEnd(icde);
@@ -519,7 +527,7 @@ namespace PeerConnectionClient.Stats
             var task = callstats.ConferenceUserFeedback(cufd);
         }
 
-        public async Task SendSSRCMap()
+        public async Task SendSSRCMap(List<SSRCData> ssrcDataList)
         {
             SSRCMapData ssrcMapData = new SSRCMapData();
             ssrcMapData.localID = localID;
@@ -528,7 +536,7 @@ namespace PeerConnectionClient.Stats
             ssrcMapData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             ssrcMapData.connectionID = connectionID;
             ssrcMapData.remoteID = remoteID;
-            ssrcMapData.ssrcData = SC.ssrcDataList;
+            ssrcMapData.ssrcData = ssrcDataList;
 
             Debug.WriteLine("SSRCMap: ");
             await callstats.SSRCMap(ssrcMapData);

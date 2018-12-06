@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 
 namespace PeerConnectionClient.Stats
 {
@@ -35,6 +35,7 @@ namespace PeerConnectionClient.Stats
             Config.AppSettings();
         }
 
+        #region properties
         private string localID = (string)Config.localSettings.Values["localID"];
         private string appID = (string)Config.localSettings.Values["appID"];
         private string keyID = (string)Config.localSettings.Values["keyID"];
@@ -69,7 +70,7 @@ namespace PeerConnectionClient.Stats
 
         public RTCIceCandidatePairStats currIceCandidatePair;
 
-        public long milisec = 0;
+        public long timeMilisec = 0;
 
         public List<SSRCData> ssrcDataList = new List<SSRCData>();
 
@@ -79,6 +80,7 @@ namespace PeerConnectionClient.Stats
 
         public string prevSelectedCandidateId;
         public string currSelectedCandidateId;
+        #endregion
 
         #region Generate JWT
         private static readonly string jti = new Func<string>(() =>
@@ -230,6 +232,33 @@ namespace PeerConnectionClient.Stats
             return dict;
         }
         #endregion
+
+        public async Task FabricSetup(string fabricTransmissionDirection, string remoteEndpointType, long gatheringDelayMiliseconds,
+            long connectivityDelayMiliseconds, long totalSetupDelay)
+        {
+            Instance.IceCandidateStatsData();
+            Instance.AddToIceCandidatePairsList();
+
+            await callStatsClient.SendFabricSetup(fabricTransmissionDirection, remoteEndpointType, 
+                gatheringDelayMiliseconds, connectivityDelayMiliseconds, totalSetupDelay, 
+                Instance.localIceCandidates, Instance.remoteIceCandidates, Instance.iceCandidatePairList);
+        }
+
+        public async Task FabricTransportChange(int delay, string relayType)
+        {
+            Instance.IceCandidateStatsData();
+
+            await callStatsClient.SendFabricTransportChange(delay, relayType, Instance.localIceCandidates, 
+                Instance.remoteIceCandidates, Instance.currIceCandidatePairObj, Instance.prevIceCandidatePairObj, 
+                Instance.newIceConnectionState, Instance.prevIceConnectionState);
+        }
+
+        public async Task ConferenceStatsSubmission()
+        {
+            Instance.timeMilisec = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+
+            await callStatsClient.SendConferenceStatsSubmission(Instance.statsObjects);
+        }
 
         #region Ice Candidates Data
         public void IceCandidateStatsData()

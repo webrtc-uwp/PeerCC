@@ -1216,6 +1216,8 @@ namespace PeerConnectionClient.ViewModels
         private bool _microphoneIsOn = true;
         private bool _mute = false;
 
+        private static readonly StatsController SC = StatsController.Instance;
+
         /// <summary>
         /// Microphone on/off toggle button.
         /// Unmute/Mute audio if the microphone is off/on.
@@ -1232,13 +1234,13 @@ namespace PeerConnectionClient.ViewModels
 
                 if (_microphoneIsOn == false && _mute == false)
                 {
-                    StatsController.Instance.callStatsClient.SendMediaAction("audioMute", "");
+                    SC.callStatsClient.SendMediaAction("audioMute", "", SC.remoteIceCandidates);
                     _mute = true;
                 }
 
                 if (_microphoneIsOn == true && _mute == true)
                 {
-                    StatsController.Instance.callStatsClient.SendMediaAction("audioUnmute", "");
+                    SC.callStatsClient.SendMediaAction("audioUnmute", "", SC.remoteIceCandidates);
                     _mute = false;
                 }
 
