@@ -211,6 +211,66 @@ namespace PeerConnectionClient.Stats
             }
             return dict;
         }
+
+        #region Ice Candidates Data
+        public void IceCandidateStatsData()
+        {
+            for (int i = 0; i < Instance.iceCandidateStatsList.Count; i++)
+            {
+                IceCandidateStats ics = Instance.iceCandidateStatsList[i];
+
+                IceCandidate iceCandidate = new IceCandidate();
+
+                iceCandidate.id = ics.id;
+                iceCandidate.type = ics.type;
+                iceCandidate.ip = ics.ip;
+                iceCandidate.port = ics.port;
+                iceCandidate.candidateType = ics.candidateType;
+                iceCandidate.transport = ics.protocol;
+
+                if (iceCandidate.candidateType == "srflex")
+                    iceCandidate.candidateType = "srflx";
+
+                if (ics.type.Contains("local"))
+                    Instance.localIceCandidates.Add(iceCandidate);
+
+                if (ics.type.Contains("remote"))
+                    Instance.remoteIceCandidates.Add(iceCandidate);
+            }
+        }
+
+        public void AddToIceCandidatePairsList()
+        {
+            for (int i = 0; i < Instance.iceCandidatePairStatsList.Count; i++)
+            {
+                IceCandidatePairStats icps = Instance.iceCandidatePairStatsList[i];
+
+                IceCandidatePair iceCandidatePair = new IceCandidatePair();
+
+                iceCandidatePair.id = icps.id;
+                iceCandidatePair.localCandidateId = icps.localCandidateId;
+                iceCandidatePair.remoteCandidateId = icps.remoteCandidateId;
+                iceCandidatePair.state = icps.state;
+                iceCandidatePair.priority = 1;
+                iceCandidatePair.nominated = icps.nominated;
+
+                Instance.iceCandidatePairList.Add(iceCandidatePair);
+            }
+        }
+
+        public IceCandidatePair GetIceCandidatePairData()
+        {
+            IceCandidatePair icp = new IceCandidatePair();
+            icp.id = Instance.currIceCandidatePair.Id;
+            icp.localCandidateId = Instance.currIceCandidatePair.LocalCandidateId;
+            icp.remoteCandidateId = Instance.currIceCandidatePair.RemoteCandidateId;
+            icp.state = Instance.currIceCandidatePair.State.ToString().ToLower();
+            icp.priority = 1;
+            icp.nominated = Instance.currIceCandidatePair.Nominated;
+
+            return icp;
+        }
+        #endregion
     }
 
     public static class Settings

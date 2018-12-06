@@ -615,7 +615,7 @@ namespace PeerConnectionClient.Stats
 
                     SC.currIceCandidatePair = candidatePairStats;
 
-                    SC.currIceCandidatePairObj = SC.callStatsClient.GetIceCandidatePairData();
+                    SC.currIceCandidatePairObj = SC.GetIceCandidatePairData();
                 }
 
                 else if (statsType == RTCStatsType.Certificate)

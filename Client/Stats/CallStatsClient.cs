@@ -91,8 +91,8 @@ namespace PeerConnectionClient.Stats
             string fabricTransmissionDirection, string remoteEndpointType, long gatheringDelayMiliseconds, 
             long connectivityDelayMiliseconds, long totalSetupDelay)
         {
-            IceCandidateStatsData();
-            AddToIceCandidatePairsList();
+            SC.IceCandidateStatsData();
+            SC.AddToIceCandidatePairsList();
 
             FabricSetupData fsd = new FabricSetupData();
             fsd.localID = Settings.localID;
@@ -170,7 +170,7 @@ namespace PeerConnectionClient.Stats
 
         public async Task SendFabricTransportChange(int delay, string relayType)
         {
-            IceCandidateStatsData();
+            SC.IceCandidateStatsData();
 
             FabricTransportChangeData ftcd = new FabricTransportChangeData();
             ftcd.localID = Settings.localID;
@@ -202,7 +202,7 @@ namespace PeerConnectionClient.Stats
             fdd.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
             fdd.remoteID = Settings.remoteID;
             fdd.connectionID = Settings.connectionID;
-            fdd.currIceCandidatePair = GetIceCandidatePairData();
+            fdd.currIceCandidatePair = SC.GetIceCandidatePairData();
             fdd.currIceConnectionState = SC.newIceConnectionState;
             fdd.prevIceConnectionState = SC.prevIceConnectionState;
             fdd.delay = delay;
@@ -537,66 +537,6 @@ namespace PeerConnectionClient.Stats
 
             Debug.WriteLine("SDPEvent: ");
             var task = callstats.SDPEvent(sdpEventData);
-        }
-        #endregion
-
-        #region Ice Candidates Data
-        private void IceCandidateStatsData()
-        {
-            for (int i = 0; i < SC.iceCandidateStatsList.Count; i++)
-            {
-                IceCandidateStats ics = SC.iceCandidateStatsList[i];
-
-                IceCandidate iceCandidate = new IceCandidate();
-
-                iceCandidate.id = ics.id;
-                iceCandidate.type = ics.type;
-                iceCandidate.ip = ics.ip;
-                iceCandidate.port = ics.port;
-                iceCandidate.candidateType = ics.candidateType;
-                iceCandidate.transport = ics.protocol;
-
-                if (iceCandidate.candidateType == "srflex")
-                    iceCandidate.candidateType = "srflx";
-
-                if (ics.type.Contains("local"))
-                    SC.localIceCandidates.Add(iceCandidate);
-
-                if (ics.type.Contains("remote"))
-                    SC.remoteIceCandidates.Add(iceCandidate);
-            }
-        }
-
-        private void AddToIceCandidatePairsList()
-        {
-            for (int i = 0; i < SC.iceCandidatePairStatsList.Count; i++)
-            {
-                IceCandidatePairStats icps = SC.iceCandidatePairStatsList[i];
-
-                IceCandidatePair iceCandidatePair = new IceCandidatePair();
-
-                iceCandidatePair.id = icps.id;
-                iceCandidatePair.localCandidateId = icps.localCandidateId;
-                iceCandidatePair.remoteCandidateId = icps.remoteCandidateId;
-                iceCandidatePair.state = icps.state;
-                iceCandidatePair.priority = 1;
-                iceCandidatePair.nominated = icps.nominated;
-
-                SC.iceCandidatePairList.Add(iceCandidatePair);
-            }
-        }
-
-        public IceCandidatePair GetIceCandidatePairData()
-        {
-            IceCandidatePair icp = new IceCandidatePair();
-            icp.id = SC.currIceCandidatePair.Id;
-            icp.localCandidateId = SC.currIceCandidatePair.LocalCandidateId;
-            icp.remoteCandidateId = SC.currIceCandidatePair.RemoteCandidateId;
-            icp.state = SC.currIceCandidatePair.State.ToString().ToLower();
-            icp.priority = 1;
-            icp.nominated = SC.currIceCandidatePair.Nominated;
-
-            return icp;
         }
         #endregion
     }
