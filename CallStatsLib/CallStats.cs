@@ -14,6 +14,9 @@ using Newtonsoft.Json.Linq;
 
 namespace CallStatsLib
 {
+    /// <summary>
+    /// Connects objects to endpoints, serializes objects to JSON data and makes requests to the API.
+    /// </summary>
     public class CallStats
     {
         private static readonly HttpClient _client = new HttpClient();

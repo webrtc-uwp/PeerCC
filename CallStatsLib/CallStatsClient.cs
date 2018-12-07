@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace CallStatsLib
 {
+    /// <summary>
+    /// Consists of methods which prepare data and call method for request sending.
+    /// </summary>
     public class CallStatsClient
     {
         private static string localID;

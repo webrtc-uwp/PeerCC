@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace PeerConnectionClient.Stats
 {
+    /// <summary>
+    /// Prepares stats obtained from peer connections GetStats method for Callstats client.
+    /// </summary>
     public static class WebRtcStats
     {
         private static readonly StatsController SC = StatsController.Instance;

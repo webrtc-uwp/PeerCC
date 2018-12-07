@@ -10,6 +10,9 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
+/// <summary>
+/// A singleton controller for shared properties and methods used to collect stats.
+/// </summary>
 namespace PeerConnectionClient.Stats
 {
     public sealed class StatsController

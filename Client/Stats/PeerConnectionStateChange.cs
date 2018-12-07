@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 
 namespace PeerConnectionClient.Stats
 {
+    /// <summary>
+    /// Tracks peer connection states change to get data needed for Callstats client.
+    /// </summary>
     public class PeerConnectionStateChange
     {
         private static readonly StatsController SC = StatsController.Instance;
