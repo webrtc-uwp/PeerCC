@@ -33,7 +33,7 @@ namespace CallStatsLib
 
         #region Start CallStats
         public async Task SendStartCallStats(string type, string buildName, string buildVersion, 
-            string appVersion, string token, long totalSetupTimeStart)
+            string appVersion, string token)
         {
             callstats = new CallStats(localID, appID, keyID, confID, token);
 
@@ -41,8 +41,6 @@ namespace CallStatsLib
                 CreateConference(type, buildName, buildVersion, appVersion), UserAlive());
 
             SendUserDetails();
-
-            totalSetupTimeStart = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
         }
         #endregion
 

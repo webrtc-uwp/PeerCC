@@ -449,8 +449,9 @@ namespace PeerConnectionClient.Signalling
             Debug.WriteLine("Conductor: Creating peer connection.");
             _peerConnection = new RTCPeerConnection(config);
 
-            await SC.callStatsClient.SendStartCallStats(
-                "native", "UWP", "10.0", "1.0", SC.GenerateJWT(), SC.totalSetupTimeStart);
+            await SC.callStatsClient.SendStartCallStats("native", "UWP", "10.0", "1.0", SC.GenerateJWT());
+
+            SC.totalSetupTimeStart = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
             _peerConnection.OnIceGatheringStateChange += async() =>
             {
