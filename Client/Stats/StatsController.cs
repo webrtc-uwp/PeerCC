@@ -37,20 +37,14 @@ namespace PeerConnectionClient.Stats
         }
 
         #region properties
-        private string localID = (string)Config.localSettings.Values["localID"];
-        private string appID = (string)Config.localSettings.Values["appID"];
-        private string keyID = (string)Config.localSettings.Values["keyID"];
-        private string confID = (string)Config.localSettings.Values["confID"];
-        private string userID = (string)Config.localSettings.Values["userID"];
-
-        public long gateheringTimeStart;
-        public long gateheringTimeStop;
-
-        public long connectingTimeStart;
-        public long connectingTimeStop;
+        private static string localID = (string)Config.localSettings.Values["localID"];
+        private static string appID = (string)Config.localSettings.Values["appID"];
+        private static string keyID = (string)Config.localSettings.Values["keyID"];
+        private static string confID = (string)Config.localSettings.Values["confID"];
+        private static string userID = (string)Config.localSettings.Values["userID"];
 
         public long totalSetupTimeStart;
-        public long totalSetupTimeStop;
+        public long totalSetupTimeStop;     
 
         public List<IceCandidate> localIceCandidates = new List<IceCandidate>();
         public List<IceCandidate> remoteIceCandidates = new List<IceCandidate>();
@@ -63,28 +57,17 @@ namespace PeerConnectionClient.Stats
         public IceCandidatePair currIceCandidatePairObj;
         public IceCandidatePair prevIceCandidatePairObj;
 
-        public string prevIceConnectionState;
-        public string newIceConnectionState;
-
-        public string prevIceGatheringState;
-        public string newIceGatheringState;
-
         public RTCIceCandidatePairStats currIceCandidatePair;
 
         public long timeMilisec = 0;
 
         public List<SSRCData> ssrcDataList = new List<SSRCData>();
 
-        public CallStatsClient callStatsClient = new CallStatsClient(
-            (string)Config.localSettings.Values["localID"],
-            (string)Config.localSettings.Values["appID"],
-            (string)Config.localSettings.Values["keyID"],
-            (string)Config.localSettings.Values["confID"],
-            (string)Config.localSettings.Values["userID"]);
+        public CallStatsClient callStatsClient = new CallStatsClient(localID, appID, keyID, confID, userID);
 
         public List<object> statsObjects = new List<object>();
 
-        public string prevSelectedCandidateId;
+        public string prevSelectedCandidateId; 
         public string currSelectedCandidateId;
         #endregion
 
@@ -250,13 +233,14 @@ namespace PeerConnectionClient.Stats
                 Instance.localIceCandidates, Instance.remoteIceCandidates, Instance.iceCandidatePairList);
         }
 
-        public async Task FabricTransportChange(int delay, string relayType)
+        public async Task FabricTransportChange(
+            int delay, string relayType, string newIceConnectionState, string prevIceConnectionState)
         {
             Instance.IceCandidateStatsData();
 
             await callStatsClient.SendFabricTransportChange(delay, relayType, Instance.localIceCandidates, 
                 Instance.remoteIceCandidates, Instance.currIceCandidatePairObj, Instance.prevIceCandidatePairObj, 
-                Instance.newIceConnectionState, Instance.prevIceConnectionState);
+                newIceConnectionState, prevIceConnectionState);
         }
 
         public async Task ConferenceStatsSubmission()
