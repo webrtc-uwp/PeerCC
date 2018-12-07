@@ -1,24 +1,33 @@
-﻿using CallStatsLib;
-using CallStatsLib.Request;
+﻿using CallStatsLib.Request;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace PeerConnectionClient.Stats
+namespace CallStatsLib
 {
     public class CallStatsClient
     {
-        private static string localID = (string)Config.localSettings.Values["localID"];
-        private static string appID = (string)Config.localSettings.Values["appID"];
-        private static string keyID = (string)Config.localSettings.Values["keyID"];
-        private static string confID = (string)Config.localSettings.Values["confID"];
-        private static string userID = (string)Config.localSettings.Values["userID"];
+        private static string localID;
+        private static string appID;
+        private static string keyID;
+        private static string confID;
+        private static string userID;
 
         public static string originID = null;
         public static string deviceID = "desktop";
         public static string connectionID = $"{localID}-{confID}";
         public static string remoteID = "RemotePeer";
+
+        public CallStatsClient(
+            string localIDCSC, string appIDCSC, string keyIDCSC, string confIDCSC, string userIDCSC)
+        {
+            localID = localIDCSC;
+            appID = appIDCSC;
+            keyID = keyIDCSC;
+            confID = confIDCSC;
+            userID = userIDCSC;
+        }
 
         private CallStats callstats;
 
@@ -558,5 +567,20 @@ namespace PeerConnectionClient.Stats
             var task = callstats.SDPEvent(sdpEventData);
         }
         #endregion
+    }
+
+    public static class DateTimeExtensions
+    {
+        private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        public static long ToUnixTimeStampSeconds(this DateTime dateTimeUtc)
+        {
+            return (long)Math.Round((dateTimeUtc.ToUniversalTime() - UnixEpoch).TotalSeconds);
+        }
+
+        public static long ToUnixTimeStampMiliseconds(this DateTime dateTimeUtc)
+        {
+            return (long)Math.Round((dateTimeUtc.ToUniversalTime() - UnixEpoch).TotalMilliseconds);
+        }
     }
 }

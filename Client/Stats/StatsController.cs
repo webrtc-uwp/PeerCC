@@ -1,4 +1,5 @@
-﻿using CallStatsLib.Request;
+﻿using CallStatsLib;
+using CallStatsLib.Request;
 using Jose;
 using Org.WebRtc;
 using System;
@@ -74,7 +75,12 @@ namespace PeerConnectionClient.Stats
 
         public List<SSRCData> ssrcDataList = new List<SSRCData>();
 
-        public CallStatsClient callStatsClient = new CallStatsClient();
+        public CallStatsClient callStatsClient = new CallStatsClient(
+            (string)Config.localSettings.Values["localID"],
+            (string)Config.localSettings.Values["appID"],
+            (string)Config.localSettings.Values["keyID"],
+            (string)Config.localSettings.Values["confID"],
+            (string)Config.localSettings.Values["userID"]);
 
         public List<object> statsObjects = new List<object>();
 
