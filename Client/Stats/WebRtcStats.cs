@@ -19,6 +19,21 @@ namespace PeerConnectionClient.Stats
         private static double _prevBytesSentVideo = 0.0;
         private static double _prevBytesSentAudio = 0.0;
 
+        private static double _totalBytesReceivedVideo;
+        private static int _intBytesReceivedVideo;
+
+        private static double _totalBytesReceivedAudio;
+        private static int _intBytesReceivedAudio;
+
+        private static double _totalBytesSentVideo;
+        private static int _intBytesSentVideo;
+
+        private static double _totalBytesSentAudio;
+        private static int _intBytesSentAudio;
+
+        private static double _totalJitter;
+        private static int _intJitter;
+
         #region WebRtc Stats
         public static Dictionary<RTCStatsType, object> MakeDictionaryOfAllStats()
         {
@@ -162,7 +177,14 @@ namespace PeerConnectionClient.Stats
                     if (irss.id.ToLower().Contains("audio"))
                     {
                         if (SC.timeMilisec != 0)
+                        {
                             irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceivedAudio) * 8 / csioIntMs;
+
+                            _totalBytesReceivedAudio += irss.csioIntBRKbps;
+                            _intBytesReceivedAudio++;
+
+                            irss.csioAvgBRKbps = _totalBytesReceivedAudio / _intBytesReceivedAudio;
+                        }
 
                         _prevBytesReceivedAudio = irss.bytesReceived;
                     }
@@ -170,10 +192,22 @@ namespace PeerConnectionClient.Stats
                     if (irss.id.ToLower().Contains("video"))
                     {
                         if (SC.timeMilisec != 0)
+                        {
                             irss.csioIntBRKbps = (irss.bytesReceived - _prevBytesReceivedVideo) * 8 / csioIntMs;
+
+                            _totalBytesReceivedVideo += irss.csioIntBRKbps;
+                            _intBytesReceivedVideo++;
+
+                            irss.csioAvgBRKbps = _totalBytesReceivedVideo / _intBytesReceivedVideo;
+                        }
 
                         _prevBytesReceivedVideo = irss.bytesReceived;
                     }
+
+                    _totalJitter += irss.jitter;
+                    _intJitter++;
+
+                    irss.csioAvgJitter = _totalJitter / _intJitter;
 
                     SC.statsObjects.Add(irss);
                 }
@@ -182,7 +216,7 @@ namespace PeerConnectionClient.Stats
                 {
                     RTCOutboundRtpStreamStats outboundRtpStats = RTCOutboundRtpStreamStats.Cast(rtcStats);
 
-                    OutboundRtpStreamStat orss = new OutboundRtpStreamStat();
+                    OutboundRtpStreamStats orss = new OutboundRtpStreamStats();
                     orss.averageRtcpInterval = outboundRtpStats.AverageRtcpInterval;
                     orss.bytesDiscardedOnSend = outboundRtpStats.BytesDiscardedOnSend;
                     orss.bytesSent = outboundRtpStats.BytesSent;
@@ -215,7 +249,15 @@ namespace PeerConnectionClient.Stats
                     if (orss.id.ToLower().Contains("audio"))
                     {
                         if (SC.timeMilisec != 0)
+                        {
                             orss.csioIntBRKbps = (orss.bytesSent - _prevBytesSentAudio) * 8 / csioIntMs;
+
+                            _totalBytesSentAudio += orss.csioIntBRKbps;
+                            _intBytesSentAudio++;
+
+                            orss.csioAvgBRKbps = _totalBytesSentAudio / _intBytesSentAudio;
+                        }
+                            
 
                         _prevBytesSentAudio = orss.bytesSent;
                     }
@@ -223,7 +265,14 @@ namespace PeerConnectionClient.Stats
                     if (orss.id.ToLower().Contains("video"))
                     {
                         if (SC.timeMilisec != 0)
+                        {
                             orss.csioIntBRKbps = (orss.bytesSent - _prevBytesSentVideo) * 8 / csioIntMs;
+
+                            _totalBytesSentVideo += orss.csioIntBRKbps;
+                            _intBytesSentVideo++;
+
+                            orss.csioAvgBRKbps = _totalBytesSentVideo / _intBytesSentVideo;
+                        }
 
                         _prevBytesSentVideo = orss.bytesSent;
                     }

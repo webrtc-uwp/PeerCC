@@ -238,9 +238,11 @@ namespace CallStatsLib.Request
         public string trackId { get; set; }
         public string transportId { get; set; }
         public double csioIntBRKbps { get; set; }
+        public double csioAvgJitter { get; set; }
+        public double csioAvgBRKbps { get; set; }
     }
 
-    public class OutboundRtpStreamStat
+    public class OutboundRtpStreamStats
     {
         public double averageRtcpInterval { get; set; }
         public ulong bytesDiscardedOnSend { get; set; }
@@ -272,6 +274,7 @@ namespace CallStatsLib.Request
         public string trackId { get; set; }
         public string transportId { get; set; }
         public double csioIntBRKbps { get; set; }
+        public double csioAvgBRKbps { get; set; }
     }
 
     public class RemoteInboundRtpStreamStats

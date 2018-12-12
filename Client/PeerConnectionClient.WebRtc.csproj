@@ -192,7 +192,7 @@
       <Name>Org.WebRtc</Name>
     </ProjectReference>
     <ProjectReference Include="..\CallStatsLib\CallStatsLib.csproj">
-      <Project>{f1882413-ec60-4e12-9725-86b27246b1cc}</Project>
+      <Project>{7ac0e36d-2ffa-4379-8bbd-1c5dd724f409}</Project>
       <Name>CallStatsLib</Name>
     </ProjectReference>
   </ItemGroup>
