@@ -95,7 +95,7 @@ public class ControlScript : MonoBehaviour
             Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
         }
 #endif
-        ServerAddressInputField.text = "127.0.0.1";
+        ServerAddressInputField.text = "peercc-server.ortclib.org";
     }
 
     private void OnEnable()
