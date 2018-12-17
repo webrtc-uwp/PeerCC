@@ -1,6 +1,10 @@
 # PeerCC
 
-## CallStatsClient Authentication steps:
+## Requirements
+
+* OpenSSL https://slproweb.com/products/Win32OpenSSL.html 
+
+## CallStatsClient authentication steps:
 
 * Rename PeerCC/Client/RenameToConfig.cs class and file to Config.cs
 
