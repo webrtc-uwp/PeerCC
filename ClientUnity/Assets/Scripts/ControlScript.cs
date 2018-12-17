@@ -363,6 +363,24 @@ public class ControlScript : MonoBehaviour
 #endif
     }
 
+    public void OnRemotePeerItemClick(GameObject item)
+    {
+#if !UNITY_EDITOR
+        for (int i = 0; i < PeerContent.transform.childCount; i++)
+        {
+            if (PeerContent.GetChild(i) == item.transform)
+            {
+                item.GetComponent<Text>().fontStyle = FontStyle.Bold;
+                selectedPeerIndex = i;
+            }
+            else
+            {
+                PeerContent.GetChild(i).GetComponent<Text>().fontStyle = FontStyle.Normal;
+            }
+        }
+#endif
+    }
+
 #if !UNITY_EDITOR
     public async Task OnAppSuspending()
     {

@@ -28,11 +28,11 @@ public class WorldCursor : MonoBehaviour
        
         if (Physics.Raycast(headPosition, gazeDirection, out hitInfo, 20.0f, Physics.DefaultRaycastLayers))
         {
-            this.transform.position = new Vector3(hitInfo.point.x, hitInfo.point.y, 1.95f);
+            this.transform.position = new Vector3(hitInfo.point.x, hitInfo.point.y, 1.97f);
             this.transform.rotation = Quaternion.FromToRotation(Vector3.up, hitInfo.normal);
             meshRenderer.enabled = true;
 
-            System.Diagnostics.Debug.WriteLine("WorldCursor - Raycast - objects hit");
+            //System.Diagnostics.Debug.WriteLine("WorldCursor - Raycast - objects hit");
 
             if (hitInfo.collider.gameObject.GetComponent<Button>() == ConnectButton)
             {
@@ -59,11 +59,12 @@ public class WorldCursor : MonoBehaviour
                 ResetButtons();
             }
         }
-        else if (connectButtonSelected || callButtonSelected)
+        else
         {
             meshRenderer.enabled = false;
 
-            ResetButtons();
+            if (connectButtonSelected || callButtonSelected)
+                ResetButtons();
         }
     }
 

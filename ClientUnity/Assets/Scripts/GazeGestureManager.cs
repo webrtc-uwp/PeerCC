@@ -32,6 +32,10 @@ public class GazeGestureManager : MonoBehaviour
                 {
                     ControlScript.Instance.OnCallClick();
                 }
+                else if (FocusedObject.name == "TextItemPreftab(Clone)")
+                {
+                    ControlScript.Instance.OnRemotePeerItemClick(FocusedObject);
+                }
             }
         };
         recognizer.StartCapturingGestures();
@@ -54,6 +58,10 @@ public class GazeGestureManager : MonoBehaviour
                 FocusedObject = hitInfo.collider.gameObject;
             }
             else if (hitInfo.collider.gameObject.GetComponent<Button>() == CallButton)
+            {
+                FocusedObject = hitInfo.collider.gameObject;
+            }
+            else if (hitInfo.collider.gameObject.name == "TextItemPreftab(Clone)")
             {
                 FocusedObject = hitInfo.collider.gameObject;
             }
