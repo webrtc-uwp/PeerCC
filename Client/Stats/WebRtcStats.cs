@@ -98,7 +98,7 @@ namespace PeerConnectionClient.Stats
                         ics.relayProtocol = iceCandidateStats.RelayProtocol;
                         ics.type = candidatePairsDict[ics.id];
                         ics.statsTypeOther = iceCandidateStats.StatsTypeOther;
-                        ics.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        ics.timestamp = iceCandidateStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                         ics.transportId = iceCandidateStats.TransportId;
                         ics.url = iceCandidateStats.Url;
 
@@ -123,7 +123,7 @@ namespace PeerConnectionClient.Stats
                     cs.sdpFmtpLine = codecStats.SdpFmtpLine;
                     cs.type = codecStats.StatsType.ToString().ToLower();
                     cs.statsTypeOther = codecStats.StatsTypeOther;
-                    cs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    cs.timestamp = codecStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                     cs.transportId = codecStats.TransportId;
 
                     SC.statsObjects.Add(cs);
@@ -168,7 +168,7 @@ namespace PeerConnectionClient.Stats
                     irss.ssrc = inboundRtpStats.Ssrc;
                     irss.type = "inbound-rtp";
                     irss.statsTypeOther = inboundRtpStats.StatsTypeOther;
-                    irss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    irss.timestamp = inboundRtpStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                     irss.trackId = inboundRtpStats.TrackId;
                     irss.transportId = inboundRtpStats.TransportId;
 
@@ -240,7 +240,7 @@ namespace PeerConnectionClient.Stats
                     orss.type = "outbound-rtp";
                     orss.statsTypeOther = outboundRtpStats.StatsTypeOther;
                     orss.targetBitrate = outboundRtpStats.TargetBitrate;
-                    orss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    orss.timestamp = outboundRtpStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                     orss.trackId = outboundRtpStats.TrackId;
                     orss.transportId = outboundRtpStats.TransportId;
 
@@ -312,7 +312,7 @@ namespace PeerConnectionClient.Stats
                     rirss.ssrc = remoteInboundRtpStats.Ssrc;
                     rirss.type = remoteInboundRtpStats.StatsType.ToString().ToLower();
                     rirss.statsTypeOther = remoteInboundRtpStats.StatsTypeOther;
-                    rirss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    rirss.timestamp = remoteInboundRtpStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                     rirss.transportId = remoteInboundRtpStats.TransportId;
 
                     SC.statsObjects.Add(rirss);
@@ -340,7 +340,7 @@ namespace PeerConnectionClient.Stats
                     rorss.ssrc = remoteOutboundRtpStats.Ssrc;
                     rorss.type = remoteOutboundRtpStats.StatsType.ToString().ToLower();
                     rorss.StatsTypeOther = remoteOutboundRtpStats.StatsTypeOther;
-                    rorss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    rorss.timestamp = remoteOutboundRtpStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                     rorss.TransportId = remoteOutboundRtpStats.TransportId;
 
                     SC.statsObjects.Add(rorss);
@@ -358,7 +358,7 @@ namespace PeerConnectionClient.Stats
                     rcss.packetsContributedTo = csrcStats.PacketsContributedTo;
                     rcss.type = csrcStats.StatsType.ToString().ToLower();
                     rcss.statsTypeOther = csrcStats.StatsTypeOther;
-                    rcss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    rcss.timestamp = csrcStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
 
                     SC.statsObjects.Add(rcss);
                 }
@@ -375,7 +375,7 @@ namespace PeerConnectionClient.Stats
                     pcs.id = peerConnectionStats.Id;
                     pcs.type = "peer-connection";
                     pcs.statsTypeOther = peerConnectionStats.StatsTypeOther;
-                    pcs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    pcs.timestamp = peerConnectionStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
 
                     SC.statsObjects.Add(pcs);
                 }
@@ -396,7 +396,7 @@ namespace PeerConnectionClient.Stats
                     dc.state = dataChannelStats.State.ToString().ToLower();
                     dc.type = "data-channel";
                     dc.statsTypeOther = dataChannelStats.StatsTypeOther;
-                    dc.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    dc.timestamp = dataChannelStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                     dc.transportId = dataChannelStats.TransportId;
 
                     SC.statsObjects.Add(dc);
@@ -411,7 +411,7 @@ namespace PeerConnectionClient.Stats
                     mss.type = mediaStreamStats.StatsType.ToString().ToLower();
                     mss.statsTypeOther = mediaStreamStats.StatsTypeOther;
                     mss.streamIdentifier = mediaStreamStats.StreamIdentifier;
-                    mss.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    mss.timestamp = mediaStreamStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                     mss.trackIds = mediaStreamStats.TrackIds.ToList();
 
                     SC.statsObjects.Add(mss);
@@ -436,7 +436,7 @@ namespace PeerConnectionClient.Stats
                         satas.remoteSource = audioTrackStats.RemoteSource;
                         satas.type = audioTrackStats.StatsType.ToString().ToLower();
                         satas.statsTypeOther = audioTrackStats.StatsTypeOther;
-                        satas.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        satas.timestamp = audioTrackStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                         satas.totalAudioEnergy = audioTrackStats.TotalAudioEnergy;
                         satas.totalSamplesDuration = audioTrackStats.TotalSamplesDuration;
                         satas.totalSamplesSent = audioTrackStats.TotalSamplesSent;
@@ -465,7 +465,7 @@ namespace PeerConnectionClient.Stats
                         svtas.remoteSource = (bool)videoTrackStats.RemoteSource;
                         svtas.type = videoTrackStats.StatsType.ToString().ToLower();
                         svtas.statsTypeOther = videoTrackStats.StatsTypeOther;
-                        svtas.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        svtas.timestamp = videoTrackStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                         svtas.trackIdentifier = videoTrackStats.TrackIdentifier;
 
                         SC.statsObjects.Add(svtas);
@@ -490,7 +490,7 @@ namespace PeerConnectionClient.Stats
                         aus.priority = audioSenderStats.Priority.ToString();
                         aus.remoteSource = audioSenderStats.RemoteSource;
                         aus.statsTypeOther = audioSenderStats.StatsTypeOther;
-                        aus.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        aus.timestamp = audioSenderStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                         aus.totalAudioEnergy = audioSenderStats.TotalAudioEnergy;
                         aus.totalSamplesDuration = audioSenderStats.TotalSamplesDuration;
                         aus.totalSamplesSent = audioSenderStats.TotalSamplesSent;
@@ -519,7 +519,7 @@ namespace PeerConnectionClient.Stats
                         vis.priority = videoSenderStats.Priority.ToString();
                         vis.remoteSource = videoSenderStats.RemoteSource;
                         vis.statsTypeOther = videoSenderStats.StatsTypeOther;
-                        vis.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        vis.timestamp = videoSenderStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                         vis.trackIdentifier = videoSenderStats.TrackIdentifier;
                         vis.type = videoSenderStats.StatsType.ToString();
 
@@ -546,7 +546,7 @@ namespace PeerConnectionClient.Stats
                         aur.priority = audioReceiverStats.Priority.ToString();
                         aur.remoteSource = audioReceiverStats.RemoteSource;
                         aur.statsTypeOther = audioReceiverStats.StatsTypeOther;
-                        aur.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        aur.timestamp = audioReceiverStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                         aur.totalAudioEnergy = audioReceiverStats.TotalAudioEnergy;
                         aur.totalSamplesDuration = audioReceiverStats.TotalSamplesDuration;
                         aur.totalSamplesReceived = audioReceiverStats.TotalSamplesReceived;
@@ -578,7 +578,7 @@ namespace PeerConnectionClient.Stats
                         vir.priority = videoReceiverStats.Priority.ToString();
                         vir.remoteSource = videoReceiverStats.RemoteSource;
                         vir.StatsTypeOther = videoReceiverStats.StatsTypeOther;
-                        vir.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                        vir.timestamp = videoReceiverStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                         vir.trackIdentifier = videoReceiverStats.TrackIdentifier;
                         vir.type = videoReceiverStats.StatsType.ToString();
 
@@ -606,7 +606,7 @@ namespace PeerConnectionClient.Stats
                     ts.srtpCipher = transportStats.SrtpCipher;
                     ts.type = transportStats.StatsType.ToString().ToLower();
                     ts.statsTypeOther = transportStats.StatsTypeOther;
-                    ts.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    ts.timestamp = transportStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
 
                     SC.statsObjects.Add(ts);
 
@@ -650,7 +650,7 @@ namespace PeerConnectionClient.Stats
                     //icp.type = candidatePairStats.StatsType.ToString().ToLower();
                     icp.type = "candidate-pair";
                     icp.statsTypeOther = candidatePairStats.StatsTypeOther;
-                    icp.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    icp.timestamp = candidatePairStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
                     //icp.totalRoundTripTime = candidatePairStats.TotalRoundTripTime;
                     icp.totalRoundTripTime = 1.234;
                     icp.transportId = candidatePairStats.TransportId;
@@ -682,7 +682,7 @@ namespace PeerConnectionClient.Stats
                     cs.issuerCertificateId = certificateStats.IssuerCertificateId;
                     cs.type = certificateStats.StatsType.ToString().ToLower();
                     cs.statsTypeOther = certificateStats.StatsTypeOther;
-                    cs.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+                    cs.timestamp = certificateStats.Timestamp.DateTime.ToUnixTimeStampMiliseconds();
 
                     SC.statsObjects.Add(cs);
                 }
