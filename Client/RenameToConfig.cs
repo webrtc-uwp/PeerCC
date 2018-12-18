@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.NetworkInformation;
 using Windows.Storage;
 
 namespace PeerConnectionClient
@@ -20,6 +21,13 @@ namespace PeerConnectionClient
 
             // secret string
             localSettings.Values["secret"] = "";
+
+            localSettings.Values["userID"] = GetLocalPeerName();
+            localSettings.Values["localID"] = GetLocalPeerName();
+
         }
+
+        public static string GetLocalPeerName() =>
+            IPGlobalProperties.GetIPGlobalProperties().HostName?.ToLower() ?? "<unknown host>";
     }
 }
