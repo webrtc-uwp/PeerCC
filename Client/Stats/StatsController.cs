@@ -66,7 +66,8 @@ namespace PeerConnectionClient.Stats
 
         public List<SSRCData> ssrcDataList = new List<SSRCData>();
 
-        public CallStatsClient callStatsClient = new CallStatsClient(localID, appID, keyID, confID, userID);
+        public CallStatsClient callStatsClient = 
+            new CallStatsClient(localID, appID, keyID, confID, userID, "desktop", "RemotePeer");
 
         public List<object> statsObjects = new List<object>();
 

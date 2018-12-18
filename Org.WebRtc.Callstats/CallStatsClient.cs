@@ -18,12 +18,13 @@ namespace Org.WebRtc.Callstats
         private static string userID;
 
         public static string originID = null;
-        public static string deviceID = "desktop";
+        public static string deviceID;
         public static string connectionID;
-        public static string remoteID = "RemotePeer";
+        public static string remoteID;
 
         public CallStatsClient(
-            string localIDCSC, string appIDCSC, string keyIDCSC, string confIDCSC, string userIDCSC)
+            string localIDCSC, string appIDCSC, string keyIDCSC, string confIDCSC, string userIDCSC, 
+            string deviceIDCSC, string remoteIDCSC)
         {
             localID = localIDCSC;
             appID = appIDCSC;
@@ -31,6 +32,8 @@ namespace Org.WebRtc.Callstats
             confID = confIDCSC;
             userID = userIDCSC;
             connectionID = $"{localID}-{confID}";
+            deviceID = deviceIDCSC;
+            remoteID = remoteIDCSC;
         }
 
         private CallStats callstats;
