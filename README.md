@@ -1,12 +1,10 @@
-# PeerCC
-
 ## Requirements
 
 * OpenSSL https://slproweb.com/products/Win32OpenSSL.html 
 * Tested with version 1.1.1a 
 > NOTE: The WebRTC SDK development environment requires the installation of Strawberry Perl and adding it to the system path.  It may be necessary to add the OpenSSL 1.1.1a installation location to the path to prevent issues.  To check the location of the openssl binary, type 'where openssl.exe' in the command prompt.   
     
-## CallStatsClient authentication steps:
+## Callstats REST API authentication steps:
 
 * Rename PeerCC/Client/RenameToConfig.cs class and file to Config.cs
 
