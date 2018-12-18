@@ -187,13 +187,13 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.1.5</Version>
     </PackageReference>
-    <ProjectReference Include="..\..\..\..\..\..\..\66\webrtc-uwp-sdk\common\windows\samples\Org.WebRtc.Callstats\Org.WebRtc.Callstats.csproj">
-      <Project>{9cf8f056-bf01-483f-a527-ecdf8624c8f4}</Project>
-      <Name>Org.WebRtc.Callstats</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\..\..\..\66\webrtc-uwp-sdk\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
+    <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
       <Project>{3dd8fdcd-b703-4b75-826a-2c7e844f903e}</Project>
       <Name>Org.WebRtc</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Org.WebRtc.Callstats\Org.WebRtc.Callstats.csproj">
+      <Project>{9cf8f056-bf01-483f-a527-ecdf8624c8f4}</Project>
+      <Name>Org.WebRtc.Callstats</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
