@@ -19,7 +19,7 @@ namespace CallStatsLib
 
         public static string originID = null;
         public static string deviceID = "desktop";
-        public static string connectionID = $"{localID}-{confID}";
+        public static string connectionID;
         public static string remoteID = "RemotePeer";
 
         public CallStatsClient(
@@ -30,6 +30,7 @@ namespace CallStatsLib
             keyID = keyIDCSC;
             confID = confIDCSC;
             userID = userIDCSC;
+            connectionID = $"{localID}-{confID}";
         }
 
         private CallStats callstats;
