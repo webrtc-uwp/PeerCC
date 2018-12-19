@@ -1226,6 +1226,7 @@ namespace PeerConnectionClient.Signalling
         private void SendSdp(RTCSessionDescription description)
         {
             JsonObject json = null;
+            Debug.WriteLine("Conductor: Sent session description: " + description.Sdp);
 #if ORTCLIB
             var type = description.Type.ToString().ToLower();
             string formattedDescription = description.FormattedDescription;

@@ -2099,7 +2099,7 @@ namespace PeerConnectionClient.ViewModels
             // Default values:
             var configTraceServerIp = "127.0.0.1";
             var configTraceServerPort = "55000";
-            var peerCcServerIp = new ValidableNonEmptyString("40.74.241.212");
+            var peerCcServerIp = new ValidableNonEmptyString("127.0.0.1");
             var ntpServerAddress = new ValidableNonEmptyString("time.windows.com");
             var peerCcPortInt = 8888;
 
@@ -2147,10 +2147,6 @@ namespace PeerConnectionClient.ViewModels
                 configIceServers.Add(new IceServer("stun2.l.google.com:19302", IceServer.ServerType.STUN));
                 configIceServers.Add(new IceServer("stun3.l.google.com:19302", IceServer.ServerType.STUN));
                 configIceServers.Add(new IceServer("stun4.l.google.com:19302", IceServer.ServerType.STUN));
-                IceServer myTurn = new IceServer("turnserver3dstreaming.centralus.cloudapp.azure.com:5349", IceServer.ServerType.TURN);
-                myTurn.Credential = "3Dtoolkit072017";
-                myTurn.Username = "user";
-                configIceServers.Add(myTurn);
             }
 
             if (settings.Values["NTPServer"] != null && (string)settings.Values["NTPServer"] !="" )
