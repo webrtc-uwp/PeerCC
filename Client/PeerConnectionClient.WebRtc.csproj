@@ -97,7 +97,6 @@
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Config.cs" />
     <Compile Include="Main\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -108,7 +107,7 @@
     <Compile Include="Model\Peer.cs" />
     <Compile Include="MVVM\BindableBase.cs" />
     <Compile Include="MVVM\DispatcherBindableBase.cs" />
-    <Compile Include="RenameToConfig.cs" />
+    <Compile Include="Config.cs" />
     <Compile Include="Signalling\Conductor.cs" />
     <Compile Include="Signalling\Signalling.cs" />
     <Compile Include="Stats\StatsController.cs" />
@@ -137,7 +136,6 @@
     <AppxManifest Include="Package.WebRtc.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <Content Include="ecc-key.p12" />
     <None Include="PeerConnectionClient.WebRtc_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -187,12 +185,13 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.1.5</Version>
     </PackageReference>
-    <ProjectReference Include="..\..\..\..\..\webrtc\windows\projects\msvc\Org.WebRtc.Universal\Org.WebRtc.vcxproj">
-      <Project>{3dd8fdcd-b703-4b75-826a-2c7e844f903e}</Project>
-      <Name>Org.WebRtc</Name>
-    </ProjectReference>
+    <PackageReference Include="WebRtc">
+      <Version>1.66.0.3-Alpha</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Org.WebRtc.Callstats\Org.WebRtc.Callstats.csproj">
-      <Project>{9cf8f056-bf01-483f-a527-ecdf8624c8f4}</Project>
+      <Project>{45dd320b-8b3a-442b-a5e7-c9c4296cd93d}</Project>
       <Name>Org.WebRtc.Callstats</Name>
     </ProjectReference>
   </ItemGroup>
