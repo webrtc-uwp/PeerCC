@@ -37,14 +37,22 @@ namespace PeerConnectionClient.Stats
         private StatsController()
         {
             Config.AppSettings();
+
+            localID = (string)Config.localSettings.Values["localID"];
+            appID = (string)Config.localSettings.Values["appID"];
+            keyID = (string)Config.localSettings.Values["keyID"];
+            confID = (string)Config.localSettings.Values["confID"];
+            userID = (string)Config.localSettings.Values["userID"];
+
+            callStatsClient = new CallStatsClient(localID, appID, keyID, confID, userID, "desktop", "RemotePeer");
         }
 
-        #region properties
-        private static string localID = (string)Config.localSettings.Values["localID"];
-        private static string appID = (string)Config.localSettings.Values["appID"];
-        private static string keyID = (string)Config.localSettings.Values["keyID"];
-        private static string confID = (string)Config.localSettings.Values["confID"];
-        private static string userID = (string)Config.localSettings.Values["userID"];
+        #region Properties
+        private static string localID;
+        private static string appID;
+        private static string keyID;
+        private static string confID;
+        private static string userID;
 
         public long totalSetupTimeStart;
         public long totalSetupTimeStop;     
@@ -66,8 +74,7 @@ namespace PeerConnectionClient.Stats
 
         public List<SSRCData> ssrcDataList = new List<SSRCData>();
 
-        public CallStatsClient callStatsClient = 
-            new CallStatsClient(localID, appID, keyID, confID, userID, "desktop", "RemotePeer");
+        public CallStatsClient callStatsClient;
 
         public List<object> statsObjects = new List<object>();
 
