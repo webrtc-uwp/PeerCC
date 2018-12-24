@@ -8,14 +8,11 @@
     
 ## Callstats REST API authentication steps:
 
-* Rename PeerCC/Client/RenameToConfig.cs class and file to Config.cs
-
 * Set `App ID`: copy from your application settings to Config.cs 
 `localSettings.Values["appID"]`
 
-* Set `secret string` in Config.cs 
+* Set `secret string` (any string the user chooses) in Config.cs 
 `localSettings.Values["secret"]`
-> `secret string` is any string the user chooses  
     
 * Open Command Prompt: 
 `set RANDFILE=.rnd` 
