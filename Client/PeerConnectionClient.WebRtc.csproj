@@ -108,7 +108,6 @@
     <Compile Include="Model\Peer.cs" />
     <Compile Include="MVVM\BindableBase.cs" />
     <Compile Include="MVVM\DispatcherBindableBase.cs" />
-    <Compile Include="RenameToConfig.cs" />
     <Compile Include="Signalling\Conductor.cs" />
     <Compile Include="Signalling\Signalling.cs" />
     <Compile Include="Stats\StatsController.cs" />
@@ -137,6 +136,7 @@
     <AppxManifest Include="Package.WebRtc.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <Content Include="config.txt" />
     <Content Include="ecc-key.p12" />
     <None Include="PeerConnectionClient.WebRtc_TemporaryKey.pfx" />
   </ItemGroup>
