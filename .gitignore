@@ -8,3 +8,8 @@ project.lock.json
 *.bak
 Client/ecc-key.p12
 Client/config.txt
+Client/.vs/PeerConnectionClient.WebRtc/v15/Server/sqlite3/storage.ide-wal
+Client/.vs/PeerConnectionClient.WebRtc/DesignTimeBuild/.dtbcache
+Client/.vs/PeerConnectionClient.WebRtc/v15/Server/sqlite3/db.lock
+Client/.vs/PeerConnectionClient.WebRtc/v15/Server/sqlite3/storage.ide
+Client/.vs/PeerConnectionClient.WebRtc/v15/Server/sqlite3/storage.ide-shm

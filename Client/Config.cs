@@ -14,11 +14,7 @@ namespace PeerConnectionClient
 
         public static void AppSettings()
         {
-            string conf = @"config.txt";
-            Dictionary<string, string> dict;
-
-
-            if (!File.Exists(conf))
+            if (!File.Exists(@"config.txt"))
             {
                 localSettings.Values["appID"] = "";
                 localSettings.Values["keyID"] = "";
@@ -28,7 +24,7 @@ namespace PeerConnectionClient
             }
             else
             {
-                dict = File.ReadAllLines("config.txt")
+                var dict = File.ReadAllLines("config.txt")
                 .Select(l => l.Split(new[] { '=' }))
                 .ToDictionary(s => s[0].Trim(), s => s[1].Trim());
 
