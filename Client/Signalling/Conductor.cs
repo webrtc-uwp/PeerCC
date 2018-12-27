@@ -714,10 +714,6 @@ namespace PeerConnectionClient.Signalling
         /// </summary>
         private Conductor()
         {
-            string appID = (string)Config.localSettings.Values["appID"];
-
-            if (appID == Empty) SC.callStatsClient = null;
-
 #if ORTCLIB
             _signalingMode = RTCPeerConnectionSignalingMode.Json;
 //#else

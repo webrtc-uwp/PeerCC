@@ -44,7 +44,8 @@ namespace PeerConnectionClient.Stats
             confID = (string)Config.localSettings.Values["confID"];
             userID = (string)Config.localSettings.Values["userID"];
 
-            callStatsClient = new CallStatsClient(localID, appID, keyID, confID, userID, "desktop", "RemotePeer");
+            if (appID != string.Empty) 
+                callStatsClient = new CallStatsClient(localID, appID, keyID, confID, userID, "desktop", "RemotePeer");
         }
 
         #region Properties

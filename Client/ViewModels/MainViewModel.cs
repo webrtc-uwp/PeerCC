@@ -1232,21 +1232,16 @@ namespace PeerConnectionClient.ViewModels
                     return;
                 }
 
-                var appID = (string)Config.localSettings.Values["appID"];
-
-                if (appID != string.Empty)
+                if (_microphoneIsOn == false && _mute == false)
                 {
-                    if (_microphoneIsOn == false && _mute == false)
-                    {
-                        SC.callStatsClient.SendMediaAction("audioMute", "", SC.remoteIceCandidates);
-                        _mute = true;
-                    }
+                    SC.callStatsClient?.SendMediaAction("audioMute", "", SC.remoteIceCandidates);
+                    _mute = true;
+                }
 
-                    if (_microphoneIsOn == true && _mute == true)
-                    {
-                        SC.callStatsClient.SendMediaAction("audioUnmute", "", SC.remoteIceCandidates);
-                        _mute = false;
-                    }
+                if (_microphoneIsOn == true && _mute == true)
+                {
+                    SC.callStatsClient?.SendMediaAction("audioUnmute", "", SC.remoteIceCandidates);
+                    _mute = false;
                 }
 
                 if (IsConnectedToPeer && _selfAudioTrack != null)
