@@ -6,3 +6,16 @@ packages/
 project.lock.json
 *.sdf
 *.bak
+ClientUnity/Assets/Plugins/WSA/*.dll
+ClientUnity/Assets/Plugins/WSA/*.pdb
+ClientUnity/Assets/Plugins/WSA/x86/*.dll
+ClientUnity/Assets/Plugins/WSA/x86/*.winmd
+ClientUnity/Assets/Plugins/WSA/x86/*.pdb
+ClientUnity/Assets/Plugins/WSA/x64/*.dll
+ClientUnity/Assets/Plugins/WSA/x64/*.winmd
+ClientUnity/Assets/Plugins/WSA/x64/*.pdb
+ClientUnity/Library
+ClientUnity/*.sln
+ClientUnity/*.csproj
+ClientUnity/.vs
+ClientUnity/Temp
