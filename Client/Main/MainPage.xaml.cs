@@ -15,8 +15,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
+using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -40,15 +44,19 @@ namespace PeerConnectionClient
         public MainPage()
         {
             this.InitializeComponent();
+            NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Required;
         }
 
         /// <summary>
-        /// See Page.OnNavigatedTo()
+        /// Invoked when this page is about to be displayed in a Frame.
         /// </summary>
+        /// <param name="e">Event data that describes how this page was reached.  The Parameter
+        /// property is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             _mainViewModel = (MainViewModel)e.Parameter;
             this.DataContext = _mainViewModel;
+
             _mainViewModel.PeerVideo = PeerVideo;
             _mainViewModel.SelfVideo = SelfVideo;
         }
