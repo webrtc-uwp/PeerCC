@@ -187,12 +187,15 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.1.5</Version>
     </PackageReference>
-    <PackageReference Include="Org.WebRtc.Callstats">
-      <Version>1.0.1-Alpha</Version>
-    </PackageReference>
     <PackageReference Include="WebRtc">
       <Version>1.66.0.5-DebugAlpha</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Org.WebRtc.Callstats\Org.WebRtc.Callstats.csproj">
+      <Project>{45dd320b-8b3a-442b-a5e7-c9c4296cd93d}</Project>
+      <Name>Org.WebRtc.Callstats</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
