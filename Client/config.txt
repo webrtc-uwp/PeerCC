@@ -1,0 +1,3 @@
+﻿appID = 
+keyID = 
+secret = 
