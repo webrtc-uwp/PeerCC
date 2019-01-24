@@ -183,10 +183,6 @@
       <Project>{3dd8fdcd-b703-4b75-826a-2c7e844f903e}</Project>
       <Name>Org.WebRtc</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Org.WebRtc.Callstats\Org.WebRtc.Callstats.csproj">
-      <Project>{8c436a7a-3bc0-413d-9c51-36fa42e45809}</Project>
-      <Name>Org.WebRtc.Callstats</Name>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

@@ -30,7 +30,6 @@ using PeerConnectionClient.Model;
 using PeerConnectionClient.MVVM;
 using PeerConnectionClient.Signalling;
 using PeerConnectionClient.Utilities;
-using PeerConnectionClientCore.Stats;
 using Windows.Foundation;
 #if ORTCLIB
 using Org.Ortc;
@@ -1150,9 +1149,6 @@ namespace PeerConnectionClient.ViewModels
         }
 
         private bool _microphoneIsOn = true;
-        private bool _mute = false;
-
-        private static readonly StatsController SC = StatsController.Instance;
 
         /// <summary>
         /// Microphone on/off toggle button.
@@ -1166,18 +1162,6 @@ namespace PeerConnectionClient.ViewModels
                 if (!SetProperty(ref _microphoneIsOn, value))
                 {
                     return;
-                }
-
-                if (_microphoneIsOn == false && _mute == false)
-                {
-                    SC.callStatsClient?.SendMediaAction("audioMute", "", SC.remoteIceCandidates);
-                    _mute = true;
-                }
-
-                if (_microphoneIsOn == true && _mute == true)
-                {
-                    SC.callStatsClient?.SendMediaAction("audioUnmute", "", SC.remoteIceCandidates);
-                    _mute = false;
                 }
 
                 if (IsConnectedToPeer)
