@@ -665,6 +665,13 @@ namespace PeerConnectionClient.Signalling
             }
 #else
             var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id);
+            ((VideoCapturer)videoCapturer).OnVideoSampleReceived += (IMediaSample sample) =>
+            {
+                MediaSample mediaSample = MediaSample.Cast(sample);
+                IReadOnlyList<float> viewTransform = mediaSample.GetCameraViewTransform();
+                IReadOnlyList<float> projectionTransform = mediaSample.GetCameraProjectionTransform();
+            };
+
             var videoTrackSource = VideoTrackSource.Create(videoCapturer, mediaConstraints);
             _selfVideoTrack = MediaStreamTrack.CreateVideoTrack("SELF_VIDEO", videoTrackSource);
 
