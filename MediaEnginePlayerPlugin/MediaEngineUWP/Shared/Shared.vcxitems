@@ -4,10 +4,14 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <HasSharedItems>true</HasSharedItems>
     <ItemsProjectGuid>{fe4a5965-ec67-4f68-b11d-6608906ef016}</ItemsProjectGuid>
-    <ItemsSccProjectName>SAK</ItemsSccProjectName>
-    <ItemsSccAuxPath>SAK</ItemsSccAuxPath>
-    <ItemsSccLocalPath>SAK</ItemsSccLocalPath>
-    <ItemsSccProvider>SAK</ItemsSccProvider>
+    <ItemsSccProjectName>
+    </ItemsSccProjectName>
+    <ItemsSccAuxPath>
+    </ItemsSccAuxPath>
+    <ItemsSccLocalPath>
+    </ItemsSccLocalPath>
+    <ItemsSccProvider>
+    </ItemsSccProvider>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
