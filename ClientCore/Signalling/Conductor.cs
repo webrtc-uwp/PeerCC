@@ -664,7 +664,7 @@ namespace PeerConnectionClient.Signalling
                 }
             }
 #else
-            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id);
+            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id, false);
             ((VideoCapturer)videoCapturer).OnVideoSampleReceived += (IMediaSample sample) =>
             {
                 MediaSample mediaSample = MediaSample.Cast(sample);
