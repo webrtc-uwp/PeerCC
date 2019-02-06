@@ -677,7 +677,7 @@ namespace PeerConnectionClient.ViewModels
         /// Add remote media track event handler.
         /// </summary>
         /// <param name="kind">Media track kind.</param>
-        private void Conductor_OnAddRemoteTrack(string kind)
+        private void Conductor_OnAddRemoteTrack(Org.WebRtc.IMediaStreamTrack track)
         {
             IsReadyToDisconnect = true;
         }
@@ -686,7 +686,7 @@ namespace PeerConnectionClient.ViewModels
         /// Remove remote media track event handler.
         /// </summary>
         /// <param name="kind">Media track kind.</param>
-        private void Conductor_OnRemoveRemoteTrack(string kind)
+        private void Conductor_OnRemoveRemoteTrack(Org.WebRtc.IMediaStreamTrack track)
         {
         }
 #endif
@@ -695,12 +695,12 @@ namespace PeerConnectionClient.ViewModels
         /// Add local edia track event handler.
         /// </summary>
         /// <param name="kind">Media track kind.</param>
-        private void Conductor_OnAddLocalTrack(string kind)
+        private void Conductor_OnAddLocalTrack(Org.WebRtc.IMediaStreamTrack track)
         {
 #if ORTCLIB
             if (track.Kind == MediaStreamTrackKind.Video)
 #else
-            if (kind == "video")
+            if (track.Kind == "video")
 #endif
             {
                 RunOnUiThread(() =>
@@ -718,7 +718,7 @@ namespace PeerConnectionClient.ViewModels
 #if ORTCLIB
             if (track.Kind == MediaStreamTrackKind.Audio)
 #else
-            if (kind == "audio")
+            if (track.Kind == "audio")
 #endif
             {
                 RunOnUiThread(() =>
