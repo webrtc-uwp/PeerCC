@@ -1320,7 +1320,11 @@ namespace PeerConnectionClient.Signalling
                 default: Debug.Assert(false, description.SdpType.ToString()); break;
             }
 
-            json.Add(kSessionDescriptionTypeName, JsonValue.CreateStringValue(messageType));
+            json = new JsonObject
+            {
+                { kSessionDescriptionTypeName, JsonValue.CreateStringValue(messageType) },
+                { kSessionDescriptionSdpName, JsonValue.CreateStringValue(description.Sdp) }
+            };
 #endif
             SendMessage(json);
         }
