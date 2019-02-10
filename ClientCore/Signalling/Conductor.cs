@@ -332,7 +332,9 @@ namespace PeerConnectionClient.Signalling
             _uiDispatcher = uiDispatcher;
 #if !ORTCLIB
             var queue = Org.WebRtc.EventQueueMaker.Bind(uiDispatcher);
-            Org.WebRtc.WebRtcLib.Setup(queue, true, true);
+            var configuration = new Org.WebRtc.WebRtcLibConfiguration();
+            configuration.Queue = queue;
+            Org.WebRtc.WebRtcLib.Setup(configuration);
 #endif
 
             Initialized?.Invoke(true);
