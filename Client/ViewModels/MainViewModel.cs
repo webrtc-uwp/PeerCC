@@ -89,7 +89,19 @@ namespace PeerConnectionClient.ViewModels
             Conductor.Instance.VideoLoopbackEnabled = _videoLoopbackEnabled;
             Conductor.RequestAccessForMediaCapture().AsTask().ContinueWith(antecedent =>
             {
-                Conductor.Instance.Initialize(uiDispatcher);
+                if (antecedent.Result)
+                {
+                    Conductor.Instance.Initialize(uiDispatcher);
+                }
+                else
+                {
+                    RunOnUiThread(async () =>
+                    {
+                        var msgDialog = new MessageDialog(
+                            "Failed to obtain access to multimedia devices!");
+                        await msgDialog.ShowAsync();
+                    });
+                }
             });
         }
 
@@ -104,7 +116,7 @@ namespace PeerConnectionClient.ViewModels
                 RunOnUiThread(async () =>
                 {
                     var msgDialog = new MessageDialog(
-                        "Failed to obtain access to multimedia devices!");
+                        "Failed to initialize WebRTC library!");
                     await msgDialog.ShowAsync();
                 });
             }

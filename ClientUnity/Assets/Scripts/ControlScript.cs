@@ -80,26 +80,40 @@ public class ControlScript : MonoBehaviour
     void Awake()
     {
     }
-    
+
+#if !UNITY_EDITOR
+    void RequestAccessForMediaCaptureAndInit()
+    {
+        Conductor.RequestAccessForMediaCapture().AsTask().ContinueWith(antecedent =>
+        {
+            if (antecedent.Result)
+            {
+                Conductor.Instance.Initialized += Conductor_Initialized;
+                Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
+                Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Failed to obtain access to media devices");
+            }
+        });
+    }
+#endif
+
     void Start()
     {
         Instance = this;
-
 #if !UNITY_EDITOR
         if(!UnityEngine.WSA.Application.RunningOnUIThread())
         {
             UnityEngine.WSA.Application.InvokeOnUIThread(() =>
             {
-                Conductor.Instance.Initialized += Conductor_Initialized;
-                Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
-                Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
+                RequestAccessForMediaCaptureAndInit();
             }, false);
         }
         else
         {
-            Conductor.Instance.Initialized += Conductor_Initialized;
-            Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
-            Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
+            RequestAccessForMediaCaptureAndInit();
         }
 #endif
         ServerAddressInputField.text = "peercc-server.ortclib.org";
