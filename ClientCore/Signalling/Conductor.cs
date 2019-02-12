@@ -332,7 +332,9 @@ namespace PeerConnectionClient.Signalling
             _uiDispatcher = uiDispatcher;
 #if !ORTCLIB
             var queue = Org.WebRtc.EventQueueMaker.Bind(uiDispatcher);
-            Org.WebRtc.WebRtcLib.Setup(queue, true, true);
+            var configuration = new Org.WebRtc.WebRtcLibConfiguration();
+            configuration.Queue = queue;
+            Org.WebRtc.WebRtcLib.Setup(configuration);
 #endif
 
             Initialized?.Invoke(true);
@@ -665,7 +667,14 @@ namespace PeerConnectionClient.Signalling
                 }
             }
 #else
-            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id);
+            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id, false);
+            ((VideoCapturer)videoCapturer).OnVideoSampleReceived += (IMediaSample sample) =>
+            {
+                MediaSample mediaSample = MediaSample.Cast(sample);
+                IReadOnlyList<float> viewTransform = mediaSample.GetCameraViewTransform();
+                IReadOnlyList<float> projectionTransform = mediaSample.GetCameraProjectionTransform();
+            };
+
             var videoTrackSource = VideoTrackSource.Create(videoCapturer, mediaConstraints);
             _selfVideoTrack = MediaStreamTrack.CreateVideoTrack("SELF_VIDEO", videoTrackSource);
 
