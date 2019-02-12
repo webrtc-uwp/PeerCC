@@ -122,7 +122,7 @@ namespace PeerConnectionClient
             new System.Threading.Tasks.Task(async () =>
             {
                 await mainViewModel.OnAppSuspending();
-            deferral.Complete();
+                deferral.Complete();
             }).Start();
         }
 
