@@ -117,6 +117,7 @@ namespace PeerConnectionClient.Signalling
 
         public class CodecInfo
         {
+            public byte PreferredPayloadType { get; set; }
             public string Name { get; set; }
             public int ClockRate { get; set; }
         }
@@ -336,7 +337,9 @@ namespace PeerConnectionClient.Signalling
             _uiDispatcher = uiDispatcher;
 #if !ORTCLIB
             var queue = Org.WebRtc.EventQueueMaker.Bind(uiDispatcher);
-            Org.WebRtc.WebRtcLib.Setup(queue, true, true);
+            var configuration = new Org.WebRtc.WebRtcLibConfiguration();
+            configuration.Queue = queue;
+            Org.WebRtc.WebRtcLib.Setup(configuration);
 #endif
 
             Initialized?.Invoke(true);
@@ -432,7 +435,7 @@ namespace PeerConnectionClient.Signalling
         Task<bool> _connectToPeerTask;
 
         // Public events for adding and removing the local track
-        public event Action<string> OnAddLocalTrack;
+        public event Action<UseMediaStreamTrack> OnAddLocalTrack;
 
         // Public events to notify about connection status
         public event Action OnPeerConnectionCreated;
@@ -533,13 +536,13 @@ namespace PeerConnectionClient.Signalling
         {
             var ret = new List<CodecInfo>
             {
-                new CodecInfo { ClockRate = 48000, Name = "opus" },
-                new CodecInfo { ClockRate = 16000, Name = "ISAC" },
-                new CodecInfo { ClockRate = 32000, Name = "ISAC" },
-                new CodecInfo { ClockRate = 8000, Name = "G722" },
-                new CodecInfo { ClockRate = 8000, Name = "ILBC" },
-                new CodecInfo { ClockRate = 8000, Name = "PCMU" },
-                new CodecInfo { ClockRate = 8000, Name = "PCMA" }
+                new CodecInfo { PreferredPayloadType = 111, ClockRate = 48000, Name = "opus" },
+                new CodecInfo { PreferredPayloadType = 103, ClockRate = 16000, Name = "ISAC" },
+                new CodecInfo { PreferredPayloadType = 104, ClockRate = 32000, Name = "ISAC" },
+                new CodecInfo { PreferredPayloadType = 9, ClockRate = 8000, Name = "G722" },
+                new CodecInfo { PreferredPayloadType = 102, ClockRate = 8000, Name = "ILBC" },
+                new CodecInfo { PreferredPayloadType = 0, ClockRate = 8000, Name = "PCMU" },
+                new CodecInfo { PreferredPayloadType = 8, ClockRate = 8000, Name = "PCMA" }
             };
             return ret;
 		}
@@ -548,9 +551,9 @@ namespace PeerConnectionClient.Signalling
         {
             var ret = new List<CodecInfo>
             {
-                new CodecInfo { ClockRate = 90000, Name = "VP8" },
-                new CodecInfo { ClockRate = 90000, Name = "VP9" },
-                new CodecInfo { ClockRate = 90000, Name = "H264" }
+                new CodecInfo { PreferredPayloadType = 96, ClockRate = 90000, Name = "VP8" },
+                new CodecInfo { PreferredPayloadType = 98, ClockRate = 90000, Name = "VP9" },
+                new CodecInfo { PreferredPayloadType = 100, ClockRate = 90000, Name = "H264" }
             };
             return ret;
 		}
@@ -704,7 +707,14 @@ namespace PeerConnectionClient.Signalling
                 }
             }
 #else
-            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id);
+            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id, false);
+            ((VideoCapturer)videoCapturer).OnVideoSampleReceived += (IMediaSample sample) =>
+            {
+                MediaSample mediaSample = MediaSample.Cast(sample);
+                IReadOnlyList<float> viewTransform = mediaSample.GetCameraViewTransform();
+                IReadOnlyList<float> projectionTransform = mediaSample.GetCameraProjectionTransform();
+            };
+
             var videoTrackSource = VideoTrackSource.Create(videoCapturer, mediaConstraints);
             _selfVideoTrack = MediaStreamTrack.CreateVideoTrack("SELF_VIDEO", videoTrackSource);
 
@@ -723,8 +733,8 @@ namespace PeerConnectionClient.Signalling
             _peerConnection.AddTrack(_selfVideoTrack);
             _peerConnection.AddTrack(_selfAudioTrack);
 #endif
-            OnAddLocalTrack?.Invoke(_selfVideoTrack?.Kind);
-            OnAddLocalTrack?.Invoke(_selfAudioTrack?.Kind);
+            OnAddLocalTrack?.Invoke(_selfVideoTrack);
+            OnAddLocalTrack?.Invoke(_selfAudioTrack);
             if (_selfVideoTrack != null)
             {
                 if (VideoLoopbackEnabled)
@@ -875,7 +885,7 @@ namespace PeerConnectionClient.Signalling
         /// <summary>
         /// Invoked when the remote peer added a media stream to the peer connection.
         /// </summary>
-        public event Action<string> OnAddRemoteTrack;
+        public event Action<UseMediaStreamTrack> OnAddRemoteTrack;
         private void PeerConnection_OnTrack(UseRTCTrackEvent evt)
         {
 #if !UNITY && !ORTCLIB
@@ -901,7 +911,7 @@ namespace PeerConnectionClient.Signalling
                 _peerAudioTrack = evt.Track;
             }
 #endif
-            OnAddRemoteTrack?.Invoke(evt.Track.Kind);
+            OnAddRemoteTrack?.Invoke(evt.Track);
 
             SC.callStatsClient?.SendSSRCMap(SC.ssrcDataList);
         }
@@ -909,7 +919,7 @@ namespace PeerConnectionClient.Signalling
         /// <summary>
         /// Invoked when the remote peer removed a media stream from the peer connection.
         /// </summary>
-        public event Action<string> OnRemoveRemoteTrack;
+        public event Action<UseMediaStreamTrack> OnRemoveRemoteTrack;
         private void PeerConnection_OnRemoveTrack(UseRTCTrackEvent evt)
         {
 #if !UNITY && !ORTCLIB
@@ -918,7 +928,7 @@ namespace PeerConnectionClient.Signalling
                 _peerVideoTrack.Element = null; //Org.WebRtc.MediaElementMaker.Bind(obj)
             }
 #endif
-            OnRemoveRemoteTrack?.Invoke(evt.Track.Kind);
+            OnRemoveRemoteTrack?.Invoke(evt.Track);
         }
 
         /// <summary>
@@ -1302,7 +1312,7 @@ namespace PeerConnectionClient.Signalling
 #else
                 // Alter sdp to force usage of selected codecs
                 string modifiedSdp = offer.Sdp;
-                SdpUtils.SelectCodecs(ref modifiedSdp, AudioCodec.Name, VideoCodec.Name);
+                SdpUtils.SelectCodecs(ref modifiedSdp, AudioCodec.PreferredPayloadType, VideoCodec.PreferredPayloadType);
                 RTCSessionDescriptionInit sdpInit = new RTCSessionDescriptionInit();
                 sdpInit.Sdp = modifiedSdp;
                 sdpInit.Type = offer.SdpType;
@@ -1409,7 +1419,11 @@ namespace PeerConnectionClient.Signalling
                 default: Debug.Assert(false, description.SdpType.ToString()); break;
             }
 
-            json.Add(kSessionDescriptionTypeName, JsonValue.CreateStringValue(messageType));
+            json = new JsonObject
+            {
+                { kSessionDescriptionTypeName, JsonValue.CreateStringValue(messageType) },
+                { kSessionDescriptionSdpName, JsonValue.CreateStringValue(description.Sdp) }
+            };
 #endif
             SendMessage(json);
         }

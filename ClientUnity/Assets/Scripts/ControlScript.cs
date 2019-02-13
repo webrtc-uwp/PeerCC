@@ -13,6 +13,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using PeerConnectionClient.Signalling;
 using Windows.ApplicationModel.Core;
+
+#if USE_CX_VERSION
+using UseMediaStreamTrack = Org.WebRtc.MediaStreamTrack;
+#else
+using UseMediaStreamTrack = Org.WebRtc.IMediaStreamTrack;
+#endif
+
 #endif
 
 public class ControlScript : MonoBehaviour
@@ -73,26 +80,40 @@ public class ControlScript : MonoBehaviour
     void Awake()
     {
     }
-    
+
+#if !UNITY_EDITOR
+    void RequestAccessForMediaCaptureAndInit()
+    {
+        Conductor.RequestAccessForMediaCapture().AsTask().ContinueWith(antecedent =>
+        {
+            if (antecedent.Result)
+            {
+                Conductor.Instance.Initialized += Conductor_Initialized;
+                Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
+                Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Failed to obtain access to media devices");
+            }
+        });
+    }
+#endif
+
     void Start()
     {
         Instance = this;
-
 #if !UNITY_EDITOR
         if(!UnityEngine.WSA.Application.RunningOnUIThread())
         {
             UnityEngine.WSA.Application.InvokeOnUIThread(() =>
             {
-                Conductor.Instance.Initialized += Conductor_Initialized;
-                Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
-                Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
+                RequestAccessForMediaCaptureAndInit();
             }, false);
         }
         else
         {
-            Conductor.Instance.Initialized += Conductor_Initialized;
-            Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
-            Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
+            RequestAccessForMediaCaptureAndInit();
         }
 #endif
         ServerAddressInputField.text = "peercc-server.ortclib.org";
@@ -270,7 +291,9 @@ public class ControlScript : MonoBehaviour
     {
         if (succeeded)
         {
-            Initialize();
+#if !UNITY_EDITOR
+            Task.Run(async () => { await Initialize(); });
+#endif
         }
         else
         {
@@ -398,9 +421,9 @@ public class ControlScript : MonoBehaviour
     }
 #endif
 
-    public void Initialize()
-    {
 #if !UNITY_EDITOR
+    public async Task Initialize()
+    {
         // A Peer is connected to the server event handler
         Conductor.Instance.Signaller.OnPeerConnected += (peerId, peerName) =>
         {
@@ -493,9 +516,9 @@ public class ControlScript : MonoBehaviour
             });
         };
 
-        Conductor.Instance.OnAddRemoteStream += Conductor_OnAddRemoteStream;
-        Conductor.Instance.OnRemoveRemoteStream += Conductor_OnRemoveRemoteStream;
-        Conductor.Instance.OnAddLocalStream += Conductor_OnAddLocalStream;
+        Conductor.Instance.OnAddRemoteTrack += Conductor_OnAddRemoteTrack;
+        Conductor.Instance.OnRemoveRemoteTrack += Conductor_OnRemoveRemoteTrack;
+        Conductor.Instance.OnAddLocalTrack += Conductor_OnAddLocalTrack;
 
         // Connected to a peer event handler
         Conductor.Instance.OnPeerConnectionCreated += () =>
@@ -566,12 +589,12 @@ public class ControlScript : MonoBehaviour
         iceServers.Add(turnServer);
         Conductor.Instance.ConfigureIceServers(iceServers);
 
-        var audioCodecList = Conductor.Instance.GetAudioCodecs();
+        var audioCodecList = Conductor.GetAudioCodecs();
         Conductor.Instance.AudioCodec = audioCodecList.FirstOrDefault(c => c.Name == "opus");
         System.Diagnostics.Debug.WriteLine("Selected audio codec - " + Conductor.Instance.AudioCodec.Name);
 
         // Order the video codecs so that the stable VP8 is in front.
-        var videoCodecList = Conductor.Instance.GetVideoCodecs();
+        var videoCodecList = Conductor.GetVideoCodecs();
         Conductor.Instance.VideoCodec = videoCodecList.FirstOrDefault(c => c.Name == "H264");
         System.Diagnostics.Debug.WriteLine("Selected video codec - " + Conductor.Instance.VideoCodec.Name);
 
@@ -580,8 +603,7 @@ public class ControlScript : MonoBehaviour
         uint preferredFrameRate = 15;
         uint minSizeDiff = uint.MaxValue;
         Conductor.CaptureCapability selectedCapability = null;
-        var videoDeviceList = Conductor.Instance.GetVideoCaptureDevices();
-        foreach (Conductor.MediaDevice device in videoDeviceList)
+        foreach (Conductor.MediaDevice device in await Conductor.GetVideoCaptureDevices())
         {
             Conductor.Instance.GetVideoCaptureCapabilities(device.Id).AsTask().ContinueWith(capabilities =>
             {
@@ -603,16 +625,14 @@ public class ControlScript : MonoBehaviour
             selectedCapability.FrameRate = preferredFrameRate;
             selectedCapability.MrcEnabled = true;
             Conductor.Instance.VideoCaptureProfile = selectedCapability;
-            Conductor.Instance.UpdatePreferredFrameFormat();
             System.Diagnostics.Debug.WriteLine("Selected video device capability - " + selectedCapability.Width + "x" + selectedCapability.Height + "@" + selectedCapability.FrameRate);
         }
-
+}
 #endif
-    }
 
-    private void Conductor_OnAddRemoteStream()
-    {
 #if !UNITY_EDITOR
+    private void Conductor_OnAddRemoteTrack(UseMediaStreamTrack track)
+    {
         var task = RunOnUiThread(() =>
         {
             lock (this)
@@ -641,12 +661,12 @@ public class ControlScript : MonoBehaviour
                 }
             }
         });
+}
 #endif
-    }
 
-    private void Conductor_OnRemoveRemoteStream()
-    {
 #if !UNITY_EDITOR
+    private void Conductor_OnRemoveRemoteTrack(UseMediaStreamTrack track)
+    {
         var task = RunOnUiThread(() =>
         {
             lock (this)
@@ -663,12 +683,12 @@ public class ControlScript : MonoBehaviour
                 }
             }
         });
+}
 #endif
-    }
 
-    private void Conductor_OnAddLocalStream()
-    {
 #if !UNITY_EDITOR
+    private void Conductor_OnAddLocalTrack(UseMediaStreamTrack track)
+    {
         var task = RunOnUiThread(() =>
         {
             lock (this)
@@ -695,8 +715,8 @@ public class ControlScript : MonoBehaviour
                 }
             }
         });
-#endif
     }
+#endif
 
     private static class Plugin
     {
