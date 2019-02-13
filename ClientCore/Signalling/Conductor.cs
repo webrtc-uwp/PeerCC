@@ -1474,6 +1474,8 @@ namespace PeerConnectionClient.Signalling
                     _selfAudioTrack.Enabled = false;
                 }
                 AudioEnabled = false;
+
+                SC.callStatsClient?.SendMediaAction("audioMute", "", SC.remoteIceCandidates);
             }
         }
 
@@ -1489,6 +1491,8 @@ namespace PeerConnectionClient.Signalling
                     _selfAudioTrack.Enabled = true;
                 }
                 AudioEnabled = true;
+
+                SC.callStatsClient?.SendMediaAction("audioUnmute", "", SC.remoteIceCandidates);
             }
         }
 
