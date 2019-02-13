@@ -127,6 +127,8 @@
     <AppxManifest Include="Package.WebRtc.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <Content Include="config.txt" />
+    <Content Include="ecc-key.p12" />
     <None Include="PeerConnectionClient.WebRtc_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
