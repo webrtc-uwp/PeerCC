@@ -209,6 +209,7 @@ namespace PeerConnectionClient.Signalling
         private static readonly string kSessionDescriptionJsonName = "session";
 #endif
         RTCPeerConnection _peerConnection;
+        WebRtcFactory _factory;
 
         MediaDevice _selectedVideoDevice = null;
 
@@ -574,9 +575,13 @@ namespace PeerConnectionClient.Signalling
             {
                 return false;
             }
-            
+
+            var factoryConfig = new WebRtcFactoryConfiguration();
+            _factory = new WebRtcFactory(factoryConfig);
+
             var config = new RTCConfiguration()
             {
+                Factory = _factory,
                 BundlePolicy = RTCBundlePolicy.Balanced,
 #if ORTCLIB
                 SignalingMode = _signalingMode,
@@ -715,10 +720,16 @@ namespace PeerConnectionClient.Signalling
                 IReadOnlyList<float> projectionTransform = mediaSample.GetCameraProjectionTransform();
             };
 
-            var videoTrackSource = VideoTrackSource.Create(videoCapturer, mediaConstraints);
+            VideoOptions options = new VideoOptions();
+            options.Factory = _factory;
+            options.Capturer = videoCapturer;
+            options.Constraints = mediaConstraints;
+
+            var videoTrackSource = VideoTrackSource.Create(options);
             _selfVideoTrack = MediaStreamTrack.CreateVideoTrack("SELF_VIDEO", videoTrackSource);
 
             AudioOptions audioOptions = new AudioOptions();
+            audioOptions.Factory = _factory;
             var audioTrackSource = AudioTrackSource.Create(audioOptions);
             _selfAudioTrack = MediaStreamTrack.CreateAudioTrack("SELF_AUDIO", audioTrackSource);
 #endif
