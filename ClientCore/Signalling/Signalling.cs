@@ -638,31 +638,4 @@ namespace PeerConnectionClient.Signalling
             return int.Parse(Regex.Match(str, "\\d+").Value);
         }
     }
-
-#if false
-    /// <summary>
-    /// Class providing helper functions for parsing responses and messages.
-    /// </summary>
-    public static class Extensions
-    {
-        public static async void WriteStringAsync(this StreamSocket socket, string str)
-        {
-            try
-            {
-                var writer = new DataWriter(socket.OutputStream);
-                writer.WriteString(str);
-                await writer.StoreAsync();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("[Error] Singnaling: Couldn't write to socket : " + ex.Message);
-            }
-        }
-
-        public static int ParseLeadingInt(this string str)
-        {
-            return int.Parse(Regex.Match(str, "\\d+").Value);
-        }
-    }
-#endif
 }

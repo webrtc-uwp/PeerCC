@@ -113,7 +113,7 @@ internal:
 		UINT32 height,
 		_COM_Outptr_ ID3D11Texture2D** primaryTexture);
 
-	HRESULT SetMediaStreamSource(Windows::Media::Core::IMediaStreamSource^ streamSource);
+	HRESULT SetMediaStreamSource(Windows::Media::Core::IMediaSource^ streamSource);
 
     // Media Engine related
     virtual void OnMediaEngineEvent(DWORD meEvent) override;

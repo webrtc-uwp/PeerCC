@@ -552,14 +552,7 @@ public class ControlScript : MonoBehaviour
             {
                 lock (this)
                 {
-                    if (status == Status.EndingCall)
-                    {
-                        Plugin.UnloadLocalMediaStreamSource();
-                        Plugin.UnloadRemoteMediaStreamSource();
-                        status = Status.Connected;
-                        commandQueue.Add(new Command { type = CommandType.SetConnected });
-                    }
-                    else if (status == Status.InCall)
+                    if (status == Status.EndingCall || status == Status.InCall)
                     {
                         Plugin.UnloadLocalMediaStreamSource();
                         Plugin.UnloadRemoteMediaStreamSource();
@@ -637,23 +630,18 @@ public class ControlScript : MonoBehaviour
         {
             lock (this)
             {
-                if (status == Status.InCall)
+                if (status == Status.InCall || status == Status.Connected)
                 {
-                    IntPtr source;
-                    if (Conductor.Instance.VideoCodec.Name == "H264")
-                        source = Conductor.Instance.CreateRemoteMediaStreamSource("H264");
-                    else
-                        source = Conductor.Instance.CreateRemoteMediaStreamSource("I420");
-                    Plugin.LoadRemoteMediaStreamSource(source);
-                }
-                else if (status == Status.Connected)
-                {
-                    IntPtr source;
-                    if (Conductor.Instance.VideoCodec.Name == "H264")
-                        source = Conductor.Instance.CreateRemoteMediaStreamSource("H264");
-                    else
-                        source = Conductor.Instance.CreateRemoteMediaStreamSource("I420");
-                    Plugin.LoadRemoteMediaStreamSource(source);
+                    ((Org.WebRtc.MediaStreamTrack)track).OnMediaSourceChanged += () =>
+                    {
+                        var eventTask = RunOnUiThread(() =>
+                        {
+                            lock (this)
+                            {
+                                Plugin.LoadRemoteMediaStreamSource(((Org.WebRtc.MediaSource)track.Source).Source);
+                            }
+                        });
+                    };
                 }
                 else
                 {
@@ -671,10 +659,7 @@ public class ControlScript : MonoBehaviour
         {
             lock (this)
             {
-                if (status == Status.InCall)
-                {
-                }
-                else if (status == Status.Connected)
+                if (status == Status.InCall || status == Status.Connected)
                 {
                 }
                 else
@@ -693,19 +678,18 @@ public class ControlScript : MonoBehaviour
         {
             lock (this)
             {
-                if (status == Status.InCall)
+                if (status == Status.InCall || status == Status.Connected)
                 {
-                    var source = Conductor.Instance.CreateLocalMediaStreamSource("I420");
-                    Plugin.LoadLocalMediaStreamSource(source);
-
-                    Conductor.Instance.EnableLocalVideoStream();
-                    Conductor.Instance.UnmuteMicrophone();
-                }
-                else if (status == Status.Connected)
-                {
-                    var source = Conductor.Instance.CreateLocalMediaStreamSource("I420");
-                    Plugin.LoadLocalMediaStreamSource(source);
-
+                    ((Org.WebRtc.MediaStreamTrack)track).OnMediaSourceChanged += () =>
+                    {
+                        var eventTask = RunOnUiThread(() =>
+                        {
+                            lock (this)
+                            {
+                                Plugin.LoadLocalMediaStreamSource(((Org.WebRtc.MediaSource)track.Source).Source);
+                            }
+                        });
+                    };
                     Conductor.Instance.EnableLocalVideoStream();
                     Conductor.Instance.UnmuteMicrophone();
                 }
@@ -740,13 +724,13 @@ public class ControlScript : MonoBehaviour
 
 #if !UNITY_EDITOR
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LoadLocalMediaStreamSource")]
-        internal static extern void LoadLocalMediaStreamSource(IntPtr mediaSourcePtr);
+        internal static extern void LoadLocalMediaStreamSource(Windows.Media.Core.IMediaSource mediaSource);
 
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "UnloadLocalMediaStreamSource")]
         internal static extern void UnloadLocalMediaStreamSource();
 
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "LoadRemoteMediaStreamSource")]
-        internal static extern void LoadRemoteMediaStreamSource(IntPtr mediaSourcePtr);
+        internal static extern void LoadRemoteMediaStreamSource(Windows.Media.Core.IMediaSource mediaSource);
 
         [DllImport("MediaEngineUWP", CallingConvention = CallingConvention.StdCall, EntryPoint = "UnloadRemoteMediaStreamSource")]
         internal static extern void UnloadRemoteMediaStreamSource();
