@@ -17,11 +17,12 @@ using Windows.Networking;
 using Windows.Data.Json;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using PeerConnectionClient.Model;
 using System.Collections.ObjectModel;
 using System.Threading;
 using System.Text.RegularExpressions;
 using static System.String;
+using Windows.UI.Core;
+using Windows.UI.Xaml.Controls;
 using Windows.Foundation;
 using Windows.Media.Capture;
 using Windows.Devices.Enumeration;
@@ -44,6 +45,9 @@ using UseRTCSessionDescription = Org.Ortc.Adapter.IRTCSessionDescription;
 #else
 using Org.WebRtc;
 using PeerConnectionClient.Utilities;
+#if !UNITY
+using PeerConnectionClientCore.Stats;
+#endif
 #if USE_CX_VERSION
 using UseMediaStreamTrack = Org.WebRtc.MediaStreamTrack;
 using UseRTCPeerConnectionIceEvent = Org.WebRtc.RTCPeerConnectionIceEvent;
@@ -66,124 +70,29 @@ namespace PeerConnectionClient.Signalling
     /// <summary>
     /// A singleton conductor for WebRTC session.
     /// </summary>
-    internal class Conductor
+    public class Conductor
     {
-        private static readonly object InstanceLock = new object();
-        private static Conductor _instance;
-#if ORTCLIB
-        private RTCPeerConnectionSignalingMode _signalingMode;
+#if !UNITY
+        private static readonly StatsController SC = StatsController.Instance;
 #endif
 
-        /// <summary>
-        /// Represents video camera capture capabilities.
-        /// </summary>
-        public class CaptureCapability
+        private string _localSDPForCallStats;
+
+        public class Peer
         {
-            /// <summary>
-            /// Gets the width in pixes of a video capture device capibility.
-            /// </summary>
-            public uint Width { get; set; }
-
-            /// <summary>
-            /// Gets the height in pixes of a video capture device capibility.
-            /// </summary>
-            public uint Height { get; set; }
-
-            /// <summary>
-            /// Gets the frame rate in frames per second of a video capture device capibility.
-            /// </summary>
-            public uint FrameRate { get; set; }
-
-            /// <summary>
-            /// Get the aspect ratio of the pixels of a video capture device capibility.
-            /// </summary>
-            public Windows.Media.MediaProperties.MediaRatio PixelAspectRatio { get; set; }
-
-            /// <summary>
-            /// Get a displayable string describing all the features of a
-            /// video capture device capability. Displays resolution, frame rate,
-            /// and pixel aspect ratio.
-            /// </summary>
-            public string FullDescription { get; set; }
-
-            /// <summary>
-            /// Get a displayable string describing the resolution of a
-            /// video capture device capability.
-            /// </summary>
-            public string ResolutionDescription { get; set; }
-
-            /// <summary>
-            /// Get a displayable string describing the frame rate in
-            // frames per second of a video capture device capability.
-            /// </summary>
-            public string FrameRateDescription { get; set; }
-        }
-
-#if !ORTCLIB
-        /// <summary>
-        /// Represents a local media device, such as a microphone or a camera.
-        /// </summary>
-        public class MediaDevice
-        {
-            /// <summary>
-            /// Gets or sets an identifier of the media device.
-            /// This value defaults to a unique OS assigned identifier of the media device.
-            /// </summary>
-            public string Id { get; set; }
-
-            /// <summary>
-            /// Get or sets a displayable name that describes the media device.
-            /// </summary>
+            public int Id { get; set; }
             public string Name { get; set; }
-
-            /// <summary>
-            /// Gets or sets the location of the media device.
-            /// </summary>
-            public EnclosureLocation Location { get; set; }
-
-            /// <summary>
-            /// Retrieves video capabilities for a given device.
-            /// </summary>
-            /// <returns>This is an asynchronous method. The result is a vector of the
-            /// capabilities supported by the video device.</returns>
-            public IAsyncOperation<IList<CaptureCapability>> GetVideoCaptureCapabilities()
-            {
-                if (Id == null)
-                    return null;
-
-                MediaCapture mediaCapture = new MediaCapture();
-                MediaCaptureInitializationSettings mediaSettings =
-                    new MediaCaptureInitializationSettings();
-                mediaSettings.VideoDeviceId = Id;
-
-                Task initTask = mediaCapture.InitializeAsync(mediaSettings).AsTask();
-                return initTask.ContinueWith(initResult => {
-                    if (initResult.Exception != null)
-                    {
-                        Debug.WriteLine("Failed to initialize video device: " + initResult.Exception.Message);
-                        return null;
-                    }
-                    var streamProperties =
-                        mediaCapture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoRecord);
-                    IList<CaptureCapability> capabilityList = new List<CaptureCapability>();
-                    foreach (VideoEncodingProperties property in streamProperties)
-                    {
-                        uint frameRate = (uint)(property.FrameRate.Numerator /
-                            property.FrameRate.Denominator);
-                        capabilityList.Add(new CaptureCapability
-                        {
-                            Width = (uint)property.Width,
-                            Height = (uint)property.Height,
-                            FrameRate = frameRate,
-                            FrameRateDescription = $"{frameRate} fps",
-                            ResolutionDescription = $"{property.Width} x {property.Height}"
-                        });
-                    }
-                    return capabilityList;
-                }).AsAsyncOperation<IList<CaptureCapability>>();
-            }
         }
-#endif
+
+        public class IceServer
+        {
+            public enum ServerType { STUN, TURN };
+
+            public ServerType Type { get; set; }
+            public string Host { get; set; }
+            public string Credential { get; set; }
+            public string Username { get; set; }
+        }
 
         public enum MediaDeviceType
         {
@@ -192,13 +101,54 @@ namespace PeerConnectionClient.Signalling
             VideoCapture
         };
 
-#if !ORTCLIB
+        public delegate void MediaDevicesChanged(MediaDeviceType type);
+
+        public class MediaDevice
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class CaptureCapability
+        {
+            public uint Width { get; set; }
+            public uint Height { get; set; }
+            public uint FrameRate { get; set; }
+            public bool MrcEnabled { get; set; }
+            public string ResolutionDescription { get; set; }
+            public string FrameRateDescription { get; set; }
+        }
+
         public class CodecInfo
         {
             public byte PreferredPayloadType { get; set; }
             public string Name { get; set; }
             public int ClockRate { get; set; }
         }
+
+        public enum LogLevel
+        {
+            Sensitive,
+            Verbose,
+            Info,
+            Warning,
+            Error
+        };
+
+        public class PeerConnectionHealthStats {
+            public long ReceivedBytes { get; set; }
+            public long ReceivedKpbs { get; set; }
+            public long SentBytes { get; set; }
+            public long SentKbps { get; set; }
+            public long RTT { get; set; }
+            public string LocalCandidateType { get; set; }
+            public string RemoteCandidateType { get; set; }
+        };
+
+        private static readonly object InstanceLock = new object();
+        private static Conductor _instance;
+#if ORTCLIB
+        private RTCPeerConnectionSignalingMode _signalingMode;
 #endif
 
         /// <summary>
@@ -229,7 +179,15 @@ namespace PeerConnectionClient.Signalling
         /// Helps to pass WebRTC session signals between client and server.
         /// </summary>
         public Signaller Signaller => _signaller;
-        
+
+        private UseMediaStreamTrack _peerVideoTrack;
+        private UseMediaStreamTrack _selfVideoTrack;
+        private UseMediaStreamTrack _peerAudioTrack;
+        private UseMediaStreamTrack _selfAudioTrack;
+
+        public Windows.UI.Xaml.Controls.MediaElement SelfVideo { get; set; }
+        public Windows.UI.Xaml.Controls.MediaElement PeerVideo { get; set; }
+
         /// <summary>
         /// Video codec used in WebRTC session.
         /// </summary>
@@ -258,9 +216,11 @@ namespace PeerConnectionClient.Signalling
 
         MediaDevice _selectedVideoDevice = null;
 
-        public ObservableCollection<Peer> Peers;
-        public Peer Peer;
+        private List<Peer> _peers = new List<Peer>();
+        private Peer _peer;
         readonly List<RTCIceServer> _iceServers;
+
+        private CoreDispatcher _uiDispatcher;
 
         private int _peerId = -1;
         protected bool VideoEnabled = true;
@@ -291,7 +251,165 @@ namespace PeerConnectionClient.Signalling
             }
         }
 
+        bool _videoLoopbackEnabled = true;
+        public bool VideoLoopbackEnabled
+        {
+            get
+            {
+                return _videoLoopbackEnabled;
+            }
+            set
+            {
+                if (_videoLoopbackEnabled == value)
+                    return;
+
+                _videoLoopbackEnabled = value;
+                if (_videoLoopbackEnabled)
+                {
+                    if (_selfVideoTrack != null)
+                    {
+                        Debug.WriteLine("Enabling video loopback");
+#if !UNITY && !ORTCLIB
+                        _selfVideoTrack.Element = Org.WebRtc.MediaElementMaker.Bind(SelfVideo);
+                        ((MediaStreamTrack)_selfVideoTrack).OnFrameRateChanged += (float frameRate) =>
+                        {
+                            FramesPerSecondChanged?.Invoke("SELF", frameRate.ToString("0.0"));
+                        };
+                        ((MediaStreamTrack)_selfVideoTrack).OnResolutionChanged += (uint width, uint height) =>
+                        {
+                            ResolutionChanged?.Invoke("SELF", width, height);
+                        };
+#endif
+                        Debug.WriteLine("Video loopback enabled");
+                    }
+                }
+                else
+                {
+                    // This is a hack/workaround for destroying the internal stream source (RTMediaStreamSource)
+                    // instance inside webrtc winuwp api when loopback is disabled.
+                    // For some reason, the RTMediaStreamSource instance is not destroyed when only SelfVideo.Source
+                    // is set to null.
+                    // For unknown reasons, when executing the above sequence (set to null, stop, set to null), the
+                    // internal stream source is destroyed.
+                    // Apparently, with webrtc package version < 1.1.175, the internal stream source was destroyed
+                    // corectly, only by setting SelfVideo.Source to null.
+#if !UNITY && !ORTCLIB
+                    _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj)
+#endif
+                    GC.Collect(); // Ensure all references are truly dropped.
+                }
+            }
+        }
+
+        bool _tracingEnabled;
+        public bool TracingEnabled
+        {
+            get
+            {
+                return _tracingEnabled;
+            }
+            set
+            {
+                _tracingEnabled = value;
+#if ORTCLIB
+                if (_tracingEnabled)
+                {
+                    Org.Ortc.Ortc.StartMediaTracing();
+                }
+                else
+                {
+                    Org.Ortc.Ortc.StopMediaTracing();
+                    Org.Ortc.Ortc.SaveMediaTrace(_traceServerIp, Int32.Parse(_traceServerPort));
+                }
+#else
+                if (_tracingEnabled)
+                {
+                    //WebRTC.StartTracing("webrtc-trace.txt");
+                }
+                else
+                {
+                    //WebRTC.StopTracing();
+                }
+#endif
+            }
+        }
+
         bool _peerConnectionStatsEnabled;
+
+        public void Initialize(CoreDispatcher uiDispatcher)
+        {
+            _uiDispatcher = uiDispatcher;
+#if !ORTCLIB
+            var queue = Org.WebRtc.EventQueueMaker.Bind(uiDispatcher);
+            var configuration = new Org.WebRtc.WebRtcLibConfiguration();
+            configuration.Queue = queue;
+            Org.WebRtc.WebRtcLib.Setup(configuration);
+#endif
+
+            Initialized?.Invoke(true);
+        }
+
+        public event Action<bool> Initialized;
+
+        public event Action<MediaDeviceType> OnMediaDevicesChanged;
+
+        public event Action<string, string> FramesPerSecondChanged;
+
+        public event Action<string, uint, uint> ResolutionChanged;
+
+        public void EnableLogging(LogLevel level)
+        {
+        }
+
+        public void DisableLogging()
+        {
+        }
+
+        public Windows.Storage.StorageFolder LogFolder
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        public String LogFileName
+        {
+            get
+            {
+                return "";
+            }
+        }
+
+        public void SynNTPTime(long ntpTime)
+        {
+        }
+
+        public double CpuUsage
+        {
+            get
+            {
+                return 0.0;
+            }
+            set
+            {
+            }
+        }
+
+        public long MemoryUsage
+        {
+            get
+            {
+                return 0;
+            }
+            set
+            {
+            }
+        }
+
+        public void OnAppSuspending()
+        {
+        }
 
         /// <summary>
         /// Enable/Disable connection health stats.
@@ -376,11 +494,46 @@ namespace PeerConnectionClient.Signalling
 #else
                     Id = deviceInfo.Info.Id,
                     Name = deviceInfo.Info.Name,
-                    Location = deviceInfo.Info.EnclosureLocation
+                    //Location = deviceInfo.Info.EnclosureLocation
 #endif
                 });
             }
             return deviceList;
+        }
+
+        public IAsyncOperation<IList<CaptureCapability>> GetVideoCaptureCapabilities(string deviceId)
+        {
+            MediaCapture mediaCapture = new MediaCapture();
+            MediaCaptureInitializationSettings mediaSettings =
+                new MediaCaptureInitializationSettings();
+            mediaSettings.VideoDeviceId = deviceId;
+
+            Task initTask = mediaCapture.InitializeAsync(mediaSettings).AsTask();
+            return initTask.ContinueWith(initResult => {
+                if (initResult.Exception != null)
+                {
+                    Debug.WriteLine("Failed to initialize video device: " + initResult.Exception.Message);
+                    return null;
+                }
+                var streamProperties =
+                    mediaCapture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoRecord);
+                IList<CaptureCapability> capabilityList = new List<CaptureCapability>();
+                foreach (VideoEncodingProperties property in streamProperties)
+                {
+                    uint frameRate = (uint)(property.FrameRate.Numerator /
+                        property.FrameRate.Denominator);
+                    capabilityList.Add(new CaptureCapability
+                    {
+                        Width = (uint)property.Width,
+                        Height = (uint)property.Height,
+                        FrameRate = frameRate,
+                        MrcEnabled = true,
+                        FrameRateDescription = $"{frameRate} fps",
+                        ResolutionDescription = $"{property.Width} x {property.Height}"
+                    });
+                }
+                return capabilityList;
+            }).AsAsyncOperation<IList<CaptureCapability>>();
         }
 
         public static IList<CodecInfo> GetAudioCodecs()
@@ -443,6 +596,49 @@ namespace PeerConnectionClient.Signalling
 
             Debug.WriteLine("Conductor: Creating peer connection.");
             _peerConnection = new RTCPeerConnection(config);
+
+#if !UNITY
+            if (SC.callStatsClient != null)
+                await SC.callStatsClient.SendStartCallStats("native", "UWP", "10.0", "1.0", SC.GenerateJWT());
+
+            SC.totalSetupTimeStart = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+
+            _peerConnection.OnIceGatheringStateChange += async () =>
+            {
+                if (SC.callStatsClient != null)
+                    await PeerConnectionStateChange.StatsOnIceGatheringStateChange(_peerConnection);
+
+                Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString().ToLower());
+            };
+#endif
+
+            _peerConnection.OnIceConnectionStateChange += async () =>
+            {
+                if (_peerConnection != null)
+                {
+#if !UNITY
+                    if (SC.callStatsClient != null)
+                        await PeerConnectionStateChange.StatsOnIceConnectionStateChange(_peerConnection);
+#endif
+                }
+                else
+                {
+#if !UNITY
+                    if (SC.callStatsClient != null)
+                    {
+                        await PeerConnectionStateChange.PeerConnectionClosedStateChange();
+                        ClosePeerConnection();
+                    }
+#else
+                    ClosePeerConnection();
+#endif
+                }
+
+                // TODO: Add to GUI
+                //await callStatsClient.SendConferenceUserFeedback(4, 3, 5, Empty);
+
+                Debug.WriteLine("Conductor: Ice connection state change, state=" + (null != _peerConnection ? _peerConnection.IceConnectionState.ToString().ToLower() : "closed"));
+            };
 
             if (_peerConnection == null)
                 throw new NullReferenceException("Peer connection is not created.");
@@ -523,13 +719,23 @@ namespace PeerConnectionClient.Signalling
                 }
             }
 #else
-            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id);
+            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id, false);
+#if false
+            // No need to keep event hadler attached if not used by the app
+            ((VideoCapturer)videoCapturer).OnVideoSampleReceived += (IMediaSample sample) =>
+            {
+                MediaSample mediaSample = MediaSample.Cast(sample);
+                IReadOnlyList<float> viewTransform = mediaSample.GetCameraViewTransform();
+                IReadOnlyList<float> projectionTransform = mediaSample.GetCameraProjectionTransform();
+            };
+#endif
+
             var videoTrackSource = VideoTrackSource.Create(videoCapturer, mediaConstraints);
-            var localVideoTrack = MediaStreamTrack.CreateVideoTrack("SELF_VIDEO", videoTrackSource);
+            _selfVideoTrack = MediaStreamTrack.CreateVideoTrack("SELF_VIDEO", videoTrackSource);
 
             AudioOptions audioOptions = new AudioOptions();
             var audioTrackSource = AudioTrackSource.Create(audioOptions);
-            var localAudioTrack = MediaStreamTrack.CreateAudioTrack("SELF_AUDIO", audioTrackSource);
+            _selfAudioTrack = MediaStreamTrack.CreateAudioTrack("SELF_AUDIO", audioTrackSource);
 #endif
 
             if (cancelationToken.IsCancellationRequested)
@@ -539,11 +745,28 @@ namespace PeerConnectionClient.Signalling
 
 #if !ORTCLIB
             Debug.WriteLine("Conductor: Adding local media tracks.");
-            _peerConnection.AddTrack(localVideoTrack);
-            _peerConnection.AddTrack(localAudioTrack);
+            _peerConnection.AddTrack(_selfVideoTrack);
+            _peerConnection.AddTrack(_selfAudioTrack);
 #endif
-            OnAddLocalTrack?.Invoke(localVideoTrack);
-            OnAddLocalTrack?.Invoke(localAudioTrack);
+            OnAddLocalTrack?.Invoke(_selfVideoTrack);
+            OnAddLocalTrack?.Invoke(_selfAudioTrack);
+            if (_selfVideoTrack != null)
+            {
+                if (VideoLoopbackEnabled)
+                {
+#if !UNITY && !ORTCLIB
+                    _selfVideoTrack.Element = Org.WebRtc.MediaElementMaker.Bind(SelfVideo);
+                    ((MediaStreamTrack)_selfVideoTrack).OnFrameRateChanged += (float frameRate) =>
+                    {
+                        FramesPerSecondChanged?.Invoke("SELF", frameRate.ToString("0.0"));
+                    };
+                    ((MediaStreamTrack)_selfVideoTrack).OnResolutionChanged += (uint width, uint height) =>
+                    {
+                        ResolutionChanged?.Invoke("SELF", width, height);
+                    };
+#endif
+                }
+            }
 
             if (cancelationToken.IsCancellationRequested)
             {
@@ -562,6 +785,20 @@ namespace PeerConnectionClient.Signalling
                 if (_peerConnection != null)
                 {
                     _peerId = -1;
+#if !UNITY && !ORTCLIB
+                    if (null != _peerVideoTrack) _peerVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
+                    if (null != _selfVideoTrack) _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
+#endif
+#if !USE_CX_VERSION
+                    (_peerVideoTrack as IDisposable)?.Dispose();
+                    (_selfVideoTrack as IDisposable)?.Dispose();
+                    (_peerAudioTrack as IDisposable)?.Dispose();
+                    (_selfAudioTrack as IDisposable)?.Dispose();
+#endif
+                    _peerVideoTrack = null;
+                    _selfVideoTrack = null;
+                    _peerAudioTrack = null;
+                    _selfAudioTrack = null;
 
                     OnPeerConnectionClosed?.Invoke();
 
@@ -569,18 +806,32 @@ namespace PeerConnectionClient.Signalling
                     (_peerConnection as IDisposable)?.Dispose();
 #endif
 
-                    SessionId = null;
 #if ORTCLIB
+                    SessionId = null;
                     OrtcStatsManager.Instance.CallEnded();
 #endif
                     _peerConnection = null;
 
                     OnReadyToConnect?.Invoke();
-
                     
                     GC.Collect(); // Ensure all references are truly dropped.
                 }
             }
+        }
+
+        public void AddPeer(Peer peer)
+        {
+            _peers.Add(peer);
+        }
+
+        public void RemovePeer(Peer peer)
+        {
+            _peers.RemoveAll(p => p.Id == peer.Id);
+        }
+
+        public List<Peer> GetPeers()
+        {
+            return new List<Peer>(_peers);
         }
 
         /// <summary>
@@ -595,7 +846,7 @@ namespace PeerConnectionClient.Signalling
                 return;
             }
 
-            double index = null != evt.Candidate.SdpMLineIndex ? (double)evt.Candidate.SdpMLineIndex : -1;
+            double index = (double)evt.Candidate.SdpMLineIndex;
 
             JsonObject json = null;
 #if ORTCLIB
@@ -642,7 +893,34 @@ namespace PeerConnectionClient.Signalling
         public event Action<UseMediaStreamTrack> OnAddRemoteTrack;
         private void PeerConnection_OnTrack(UseRTCTrackEvent evt)
         {
+#if !UNITY && !ORTCLIB
+            if (evt.Track.Kind == "video")
+            {
+                _peerVideoTrack = evt.Track;
+
+                if (_peerVideoTrack != null)
+                {
+                    _peerVideoTrack.Element = Org.WebRtc.MediaElementMaker.Bind(PeerVideo);
+                    ((MediaStreamTrack)_peerVideoTrack).OnFrameRateChanged += (float frameRate) =>
+                    {
+                        FramesPerSecondChanged?.Invoke("PEER", frameRate.ToString("0.0"));
+                    };
+                    ((MediaStreamTrack)_peerVideoTrack).OnResolutionChanged += (uint width, uint height) =>
+                    {
+                        ResolutionChanged?.Invoke("PEER", width, height);
+                    };
+                }
+            }
+            else if (evt.Track.Kind == "audio")
+            {
+                _peerAudioTrack = evt.Track;
+            }
+#endif
             OnAddRemoteTrack?.Invoke(evt.Track);
+
+#if !UNITY
+            SC.callStatsClient?.SendSSRCMap(SC.ssrcDataList);
+#endif
         }
 
         /// <summary>
@@ -651,6 +929,12 @@ namespace PeerConnectionClient.Signalling
         public event Action<UseMediaStreamTrack> OnRemoveRemoteTrack;
         private void PeerConnection_OnRemoveTrack(UseRTCTrackEvent evt)
         {
+#if !UNITY && !ORTCLIB
+            if (evt.Track.Kind == "video")
+            {
+                _peerVideoTrack.Element = null; //Org.WebRtc.MediaElementMaker.Bind(obj)
+            }
+#endif
             OnRemoveRemoteTrack?.Invoke(evt.Track);
         }
 
@@ -659,17 +943,16 @@ namespace PeerConnectionClient.Signalling
         /// Use ToggleConnectionHealthStats to turn on/of the connection health stats.
         /// </summary>
         //public event Action<RTCPeerConnectionHealthStats> OnConnectionHealthStats;
-        public event Action<String> OnConnectionHealthStats;
-        //private void PeerConnection_OnConnectionHealthStats(RTCPeerConnectionHealthStats stats)
-        private void PeerConnection_OnConnectionHealthStats(String stats)
-        {
-            OnConnectionHealthStats?.Invoke(stats);
+        public event Action<string> OnConnectionHealthStats;
+        private void PeerConnection_OnConnectionHealthStats(string stats)
+        { 
+            OnConnectionHealthStats?.Invoke("");
         }
 #endif
-        /// <summary>
-        /// Private constructor for singleton class.
-        /// </summary>
-        private Conductor()
+            /// <summary>
+            /// Private constructor for singleton class.
+            /// </summary>
+            private Conductor()
         {
 #if ORTCLIB
             _signalingMode = RTCPeerConnectionSignalingMode.Json;
@@ -695,10 +978,22 @@ namespace PeerConnectionClient.Signalling
         /// <param name="peerId">ID of the peer to hung up the call with.</param>
         void Signaller_OnPeerHangup(int peerId)
         {
+#if !UNITY
+            SC.callStatsClient?.SendUserLeft();
+#endif
+
             if (peerId != _peerId) return;
 
             Debug.WriteLine("Conductor: Our peer hung up.");
+
+#if !UNITY
+            if (SC.callStatsClient == null)
+                ClosePeerConnection();
+            else
+                _peerConnection = null;
+#else
             ClosePeerConnection();
+#endif
         }
 
         /// <summary>
@@ -714,6 +1009,11 @@ namespace PeerConnectionClient.Signalling
         private void Signaller_OnServerConnectionFailure()
         {
             Debug.WriteLine("[Error]: Connection to server failed!");
+
+
+#if !UNITY
+            SC.callStatsClient?.SendApplicationErrorLogs("error", "Connection to server failed!", "text");
+#endif
         }
 
         /// <summary>
@@ -753,13 +1053,22 @@ namespace PeerConnectionClient.Signalling
                 if (_peerId != peerId && _peerId != -1)
                 {
                     Debug.WriteLine("[Error] Conductor: Received a message from unknown peer while already in a conversation with a different peer.");
+
+#if !UNITY
+                    SC.callStatsClient?.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer", "text");
+#endif
+
                     return;
                 }
 
-                JsonObject jMessage;
-                if (!JsonObject.TryParse(message, out jMessage))
+                if (!JsonObject.TryParse(message, out JsonObject jMessage))
                 {
                     Debug.WriteLine("[Error] Conductor: Received unknown message." + message);
+
+#if !UNITY
+                    SC.callStatsClient?.SendApplicationErrorLogs("error", "Received unknown message.", "text");
+#endif
+
                     return;
                 }
 
@@ -780,8 +1089,8 @@ namespace PeerConnectionClient.Signalling
                             Debug.Assert(_peerId == -1);
                             _peerId = peerId;              
 
-                            IEnumerable<Peer> enumerablePeer = Peers.Where(x => x.Id == peerId);
-                            Peer = enumerablePeer.First();
+                            IEnumerable<Peer> enumerablePeer = _peers.Where(x => x.Id == peerId);
+                            _peer = enumerablePeer.First();
 #if ORTCLIB
                             created = true;
                             _signalingMode = Helper.SignalingModeForClientName(Peer.Name);
@@ -793,12 +1102,22 @@ namespace PeerConnectionClient.Signalling
                             if (!connectResult)
                             {
                                 Debug.WriteLine("[Error] Conductor: Failed to initialize our PeerConnection instance");
+
+#if !UNITY
+                                SC.callStatsClient?.SendApplicationErrorLogs("error", "Failed to initialize our PeerConnection instance.", "text");
+#endif
+
                                 await Signaller.SignOut();
                                 return;
                             }
                             else if (_peerId != peerId)
                             {
                                 Debug.WriteLine("[Error] Conductor: Received a message from unknown peer while already in a conversation with a different peer.");
+
+#if !UNITY
+                                SC.callStatsClient?.SendApplicationErrorLogs("error", "Received a message from unknown peer while already in a conversation with a different peer.", "text");
+#endif
+
                                 return;
                             }
                         }
@@ -834,8 +1153,21 @@ namespace PeerConnectionClient.Signalling
                     if (IsNullOrEmpty(sdp))
                     {
                         Debug.WriteLine("[Error] Conductor: Can't parse received session description message.");
+
+#if !UNITY
+                        SC.callStatsClient?.SendFabricSetupFailed("sendrecv", "peer", "NegotiationFailure", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
+
+                        SC.callStatsClient?.SendApplicationErrorLogs("error", "Can't parse received session description message.", "text");
+#endif
+
                         return;
                     }
+
+#if !UNITY
+                    SC.SSRCMapDataSetup(sdp, "inbound", "remote");
+
+                    SC.callStatsClient?.SendSDP(_localSDPForCallStats, sdp);
+#endif
 
                     Debug.WriteLine("Conductor: Received session description:\n" + message);
 #if ORTCLIB
@@ -902,6 +1234,11 @@ namespace PeerConnectionClient.Signalling
                         if (IsNullOrEmpty(sdpMid) || sdpMlineIndex == -1 || IsNullOrEmpty(sdp))
                         {
                             Debug.WriteLine("[Error] Conductor: Can't parse received message.\n" + message);
+
+#if !UNITY
+                            SC.callStatsClient?.SendApplicationErrorLogs("error", $"Can't parse received message.\n {message}", "text");
+#endif
+
                             return;
                         }
 #if ORTCLIB
@@ -960,6 +1297,7 @@ namespace PeerConnectionClient.Signalling
             if (_signaller.IsConnected())
             {
                 await _signaller.SignOut();
+                _peers.Clear();
             }
         }
 
@@ -975,6 +1313,11 @@ namespace PeerConnectionClient.Signalling
             if (_peerConnection != null)
             {
                 Debug.WriteLine("[Error] Conductor: We only support connecting to one peer at a time");
+
+#if !UNITY
+                SC.callStatsClient?.SendApplicationErrorLogs("error", "We only support connecting to one peer at a time", "text");
+#endif
+
                 return;
             }
 #if ORTCLIB
@@ -984,12 +1327,20 @@ namespace PeerConnectionClient.Signalling
             bool connectResult = await CreatePeerConnection(_connectToPeerCancelationTokenSource.Token);
             _connectToPeerTask = null;
             _connectToPeerCancelationTokenSource.Dispose();
-
             if (connectResult)
             {
                 _peerId = peer.Id;
                 var offerOptions = new RTCOfferOptions();
+                offerOptions.OfferToReceiveAudio = true;
+                offerOptions.OfferToReceiveVideo = true;
                 var offer = await _peerConnection.CreateOffer(offerOptions);
+
+                if (IsNullOrEmpty(offer.Sdp))
+                {
+#if !UNITY
+                    SC.callStatsClient?.SendFabricSetupFailed("sendrecv", "peer", "SDPGenerationError", "IsNullOrEmpty(sdp)", "Can't parse received session description message.", Empty);
+#endif
+                }
 #if ORTCLIB
                 var modifiedOffer = offer;
 #else
@@ -1004,6 +1355,12 @@ namespace PeerConnectionClient.Signalling
                 await _peerConnection.SetLocalDescription(modifiedOffer);
                 Debug.WriteLine("Conductor: Sending offer:\n" + modifiedOffer.Sdp);
                 SendSdp(modifiedOffer);
+
+                _localSDPForCallStats = offer.Sdp;
+
+#if !UNITY
+                SC.SSRCMapDataSetup(offer.Sdp, "outbound", "local");
+#endif
 #if ORTCLIB
                 OrtcStatsManager.Instance.StartCallWatch(SessionId, true);
 #endif
@@ -1016,7 +1373,15 @@ namespace PeerConnectionClient.Signalling
         public async Task DisconnectFromPeer()
         {
             await SendHangupMessage();
+
+#if !UNITY
+            if (SC.callStatsClient == null)
+                ClosePeerConnection();
+            else
+                _peerConnection = null;
+#else
             ClosePeerConnection();
+#endif
         }
 
         /// <summary>
@@ -1040,6 +1405,7 @@ namespace PeerConnectionClient.Signalling
         private void SendSdp(UseRTCSessionDescription description)
         {
             JsonObject json = null;
+            Debug.WriteLine("Conductor: Sent session description: " + description.Sdp);
 #if ORTCLIB
             var type = description.Type.ToString().ToLower();
             string formattedDescription = description.FormattedDescription;
@@ -1093,8 +1459,11 @@ namespace PeerConnectionClient.Signalling
                 default: Debug.Assert(false, description.SdpType.ToString()); break;
             }
 
-            json.Add(kSessionDescriptionTypeName, JsonValue.CreateStringValue(messageType));
-            json.Add(kSessionDescriptionSdpName, JsonValue.CreateStringValue(description.Sdp));
+            json = new JsonObject
+            {
+                { kSessionDescriptionTypeName, JsonValue.CreateStringValue(messageType) },
+                { kSessionDescriptionSdpName, JsonValue.CreateStringValue(description.Sdp) }
+            };
 #endif
             SendMessage(json);
         }
@@ -1118,10 +1487,78 @@ namespace PeerConnectionClient.Signalling
         }
 
         /// <summary>
+        /// Enables the local video stream.
+        /// </summary>
+        public void EnableLocalVideoStream()
+        {
+            lock (MediaLock)
+            {
+                if (_selfVideoTrack != null)
+                {
+                    _selfVideoTrack.Enabled = true;
+                }
+                VideoEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// Disables the local video stream.
+        /// </summary>
+        public void DisableLocalVideoStream()
+        {
+            lock (MediaLock)
+            {
+                if (_selfVideoTrack != null)
+                {
+                    _selfVideoTrack.Enabled = false;
+                }
+                VideoEnabled = false;
+            }
+        }
+
+        /// <summary>
+        /// Mutes the microphone.
+        /// </summary>
+        public void MuteMicrophone()
+        {
+            lock (MediaLock)
+            {
+                if (_selfAudioTrack != null)
+                {
+                    _selfAudioTrack.Enabled = false;
+                }
+                AudioEnabled = false;
+
+#if !UNITY
+                SC.callStatsClient?.SendMediaAction("audioMute", "", SC.remoteIceCandidates);
+#endif
+            }
+        }
+
+        /// <summary>
+        /// Unmutes the microphone.
+        /// </summary>
+        public void UnmuteMicrophone()
+        {
+            lock (MediaLock)
+            {
+                if (_selfAudioTrack != null)
+                {
+                    _selfAudioTrack.Enabled = true;
+                }
+                AudioEnabled = true;
+
+#if !UNITY
+                SC.callStatsClient?.SendMediaAction("audioUnmute", "", SC.remoteIceCandidates);
+#endif
+            }
+        }
+
+        /// <summary>
         /// Receives a new list of Ice servers and updates the local list of servers.
         /// </summary>
         /// <param name="iceServers">List of Ice servers to configure.</param>
-        public void ConfigureIceServers(Collection<IceServer> iceServers)
+        public void ConfigureIceServers(List<IceServer> iceServers)
         {
             _iceServers.Clear();
             foreach(IceServer iceServer in iceServers)
@@ -1133,7 +1570,7 @@ namespace PeerConnectionClient.Signalling
                     url = "turn:";
                 }
                 RTCIceServer server = null;
-                url += iceServer.Host.Value;
+                url += iceServer.Host;
                 server = new RTCIceServer { Urls = new List<string> { url } };
                 if (iceServer.Credential != null)
                 {
