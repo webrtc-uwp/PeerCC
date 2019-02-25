@@ -1048,7 +1048,7 @@ namespace PeerConnectionClient.Signalling
             if (SC.callStatsClient == null)
                 ClosePeerConnection();
             else
-                _peerConnection = null;
+                PeerConnection = null;
 #else
             ClosePeerConnection();
 #endif
