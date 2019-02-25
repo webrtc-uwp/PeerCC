@@ -158,12 +158,11 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API GetRemotePrimaryTextu
 		s_remotePlayer->GetPrimaryTexture(width, height, playbackSRV);
 }
 
-extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API LoadLocalMediaStreamSource(_In_ PVOID mediaSourcePtr)
+extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API LoadLocalMediaStreamSource(Windows::Media::Core::IMediaSource^ mediaSource)
 {
-  Windows::Media::Core::IMediaStreamSource^ mediaSourceHandle = reinterpret_cast<Windows::Media::Core::IMediaStreamSource^>(mediaSourcePtr);
-	if (mediaSourceHandle != nullptr && s_localPlayer != nullptr)
+	if (mediaSource != nullptr && s_localPlayer != nullptr)
 	{
-		s_localPlayer->SetMediaStreamSource(mediaSourceHandle);
+		s_localPlayer->SetMediaStreamSource(mediaSource);
 	}
 }
 
@@ -175,11 +174,11 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnloadLocalMediaStrea
 	}
 }
 
-extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API LoadRemoteMediaStreamSource(Windows::Media::Core::IMediaStreamSource^ mediaSourceHandle)
+extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API LoadRemoteMediaStreamSource(Windows::Media::Core::IMediaSource^ mediaSource)
 {
-	if (mediaSourceHandle != nullptr && s_remotePlayer != nullptr)
+	if (mediaSource != nullptr && s_remotePlayer != nullptr)
 	{
-		s_remotePlayer->SetMediaStreamSource(mediaSourceHandle);
+		s_remotePlayer->SetMediaStreamSource(mediaSource);
 	}
 }
 

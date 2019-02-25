@@ -494,7 +494,7 @@ HRESULT MEPlayer::GetPrimary2DTexture(UINT32 width, UINT32 height, ID3D11Texture
 	return S_OK;
 }
 
-HRESULT MEPlayer::SetMediaStreamSource(Windows::Media::Core::IMediaStreamSource^ streamSource)
+HRESULT MEPlayer::SetMediaStreamSource(Windows::Media::Core::IMediaSource^ streamSource)
 {
 	HRESULT hr;
 	if (streamSource == nullptr)
