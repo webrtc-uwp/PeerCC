@@ -46,6 +46,7 @@ using UseRTCSessionDescription = Org.Ortc.Adapter.IRTCSessionDescription;
 using Org.WebRtc;
 using PeerConnectionClient.Utilities;
 using PeerConnectionClientCore.Stats;
+using System.Text;
 #if USE_CX_VERSION
 using UseMediaStreamTrack = Org.WebRtc.MediaStreamTrack;
 using UseRTCPeerConnectionIceEvent = Org.WebRtc.RTCPeerConnectionIceEvent;
@@ -208,7 +209,35 @@ namespace PeerConnectionClient.Signalling
 #if ORTCLIB
         private static readonly string kSessionDescriptionJsonName = "session";
 #endif
-        RTCPeerConnection _peerConnection;
+        private readonly object _peerConnectionLock = new object();
+        private RTCPeerConnection _peerConnection_DoNotUse;
+        private RTCPeerConnection PeerConnection
+        {
+            get
+            {
+                lock (_peerConnectionLock)
+                {
+                    return _peerConnection_DoNotUse;
+                }
+            }
+            set
+            {
+                lock (_peerConnectionLock)
+                {
+                    if (null == value)
+                    {
+#if !USE_CX_VERSION
+                        if (null != _peerConnection_DoNotUse)
+                        {
+                            (_peerConnection_DoNotUse as IDisposable)?.Dispose();
+                        }
+#endif // !USE_CX_VERSION
+                    }
+                    _peerConnection_DoNotUse = value;
+                }
+            }
+        }
+
         WebRtcFactory _factory;
 
         MediaDevice _selectedVideoDevice = null;
@@ -240,7 +269,7 @@ namespace PeerConnectionClient.Signalling
             {
                 _etwStatsEnabled = value;
 #if !ORTCLIB
-                if (_peerConnection != null)
+                if (PeerConnection != null)
                 {
                     //_peerConnection.EtwStatsEnabled = value;
                 }
@@ -340,6 +369,9 @@ namespace PeerConnectionClient.Signalling
             var queue = Org.WebRtc.EventQueueMaker.Bind(uiDispatcher);
             var configuration = new Org.WebRtc.WebRtcLibConfiguration();
             configuration.Queue = queue;
+            configuration.AudioCaptureFrameProcessingQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("AudioCaptureProcessingQueue");
+            configuration.AudioRenderFrameProcessingQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("AudioRenderProcessingQueue");
+            configuration.VideoFrameProcessingQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("VideoFrameProcessingQueue");
             Org.WebRtc.WebRtcLib.Setup(configuration);
 #endif
 
@@ -422,7 +454,7 @@ namespace PeerConnectionClient.Signalling
             {
                 _peerConnectionStatsEnabled = value;
 #if !ORTCLIB
-                if (_peerConnection != null)
+                if (PeerConnection != null)
                 {
                     //_peerConnection.ConnectionHealthStatsEnabled = value;
                 }
@@ -570,7 +602,7 @@ namespace PeerConnectionClient.Signalling
         /// <returns>True if connection to a peer is successfully created.</returns>
         async private Task<bool> CreatePeerConnection(CancellationToken cancelationToken)
         {
-            Debug.Assert(_peerConnection == null);
+            Debug.Assert(PeerConnection == null);
             if(cancelationToken.IsCancellationRequested)
             {
                 return false;
@@ -578,6 +610,16 @@ namespace PeerConnectionClient.Signalling
 
             var factoryConfig = new WebRtcFactoryConfiguration();
             _factory = new WebRtcFactory(factoryConfig);
+
+#if ENABLE_AUDIO_PROCESSING
+            _factory.OnAudioPostCaptureInitialize += Factory_HandleAudioPostCaptureInit;
+            _factory.OnAudioPostCaptureRuntimeSetting += Factory_HandleAudioPostCaptureRuntimeSetting;
+            _factory.OnAudioPostCapture += Factory_HandleAudioPostCaptureBuffer;
+
+            _factory.OnAudioPreRenderInitialize += Factory_HandleAudioPreRenderInit;
+            _factory.OnAudioPreRenderRuntimeSetting += Factory_HandleAudioPreRenderRuntimeSetting;
+            _factory.OnAudioPreRender += Factory_HandleAudioPreRenderBuffer;
+#endif
 
             var config = new RTCConfiguration()
             {
@@ -596,27 +638,31 @@ namespace PeerConnectionClient.Signalling
             };
 
             Debug.WriteLine("Conductor: Creating peer connection.");
-            _peerConnection = new RTCPeerConnection(config);
+            PeerConnection = new RTCPeerConnection(config);
 
             if (SC.callStatsClient != null)
                 await SC.callStatsClient.SendStartCallStats("native", "UWP", "10.0", "1.0", SC.GenerateJWT());
 
             SC.totalSetupTimeStart = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
 
-            _peerConnection.OnIceGatheringStateChange += async () =>
+            PeerConnection.OnIceGatheringStateChange += async () =>
             {
+                var peerConnection = PeerConnection;
+                if (null == peerConnection)
+                    return;
                 if (SC.callStatsClient != null)
-                    await PeerConnectionStateChange.StatsOnIceGatheringStateChange(_peerConnection);
+                    await PeerConnectionStateChange.StatsOnIceGatheringStateChange(peerConnection);
 
-                Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + _peerConnection.IceGatheringState.ToString().ToLower());
+                Debug.WriteLine("Conductor: Ice connection state change, gathering-state=" + peerConnection.IceGatheringState.ToString().ToLower());
             };
 
-            _peerConnection.OnIceConnectionStateChange += async () =>
+            PeerConnection.OnIceConnectionStateChange += async () =>
             {
-                if (_peerConnection != null)
+                var peerConnection = PeerConnection;
+                if (peerConnection != null)
                 {
                     if (SC.callStatsClient != null)
-                        await PeerConnectionStateChange.StatsOnIceConnectionStateChange(_peerConnection);
+                        await PeerConnectionStateChange.StatsOnIceConnectionStateChange(peerConnection);
                 }
                 else
                 {
@@ -630,10 +676,10 @@ namespace PeerConnectionClient.Signalling
                 // TODO: Add to GUI
                 //await callStatsClient.SendConferenceUserFeedback(4, 3, 5, Empty);
 
-                Debug.WriteLine("Conductor: Ice connection state change, state=" + (null != _peerConnection ? _peerConnection.IceConnectionState.ToString().ToLower() : "closed"));
+                Debug.WriteLine("Conductor: Ice connection state change, state=" + (null != peerConnection ? peerConnection.IceConnectionState.ToString().ToLower() : "closed"));
             };
 
-            if (_peerConnection == null)
+            if (null == PeerConnection)
                 throw new NullReferenceException("Peer connection is not created.");
 
 #if !ORTCLIB
@@ -649,14 +695,14 @@ namespace PeerConnectionClient.Signalling
 #endif
             OnPeerConnectionCreated?.Invoke();
 
-            _peerConnection.OnIceCandidate += PeerConnection_OnIceCandidate;
+            PeerConnection.OnIceCandidate += PeerConnection_OnIceCandidate;
 #if ORTCLIB
             _peerConnection.OnTrack += PeerConnection_OnAddTrack;
             _peerConnection.OnTrackGone += PeerConnection_OnRemoveTrack;
             _peerConnection.OnIceConnectionStateChange += () => { Debug.WriteLine("Conductor: Ice connection state change, state=" + (null != _peerConnection ? _peerConnection.IceConnectionState.ToString() : "closed")); };
 #else
-            _peerConnection.OnTrack += PeerConnection_OnTrack;
-            _peerConnection.OnRemoveTrack += PeerConnection_OnRemoveTrack;
+            PeerConnection.OnTrack += PeerConnection_OnTrack;
+            PeerConnection.OnRemoveTrack += PeerConnection_OnRemoveTrack;
             //_peerConnection.OnConnectionHealthStats += PeerConnection_OnConnectionHealthStats;
 
             Debug.WriteLine("Conductor: Getting user media.");
@@ -713,12 +759,12 @@ namespace PeerConnectionClient.Signalling
             }
 #else
             var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id, false);
-            ((VideoCapturer)videoCapturer).OnVideoSampleReceived += (IMediaSample sample) =>
+#if ENABLE_VIDEO_PROCESSING
+            ((VideoCapturer)videoCapturer).OnVideoFrame += (IVideoFrameBufferEvent evt) =>
             {
-                MediaSample mediaSample = MediaSample.Cast(sample);
-                IReadOnlyList<float> viewTransform = mediaSample.GetCameraViewTransform();
-                IReadOnlyList<float> projectionTransform = mediaSample.GetCameraProjectionTransform();
+                Process_VideoFrameBufferEvent(evt);
             };
+#endif //ENABLE_VIDEO_PROCESSING
 
             VideoOptions options = new VideoOptions();
             options.Factory = _factory;
@@ -741,8 +787,8 @@ namespace PeerConnectionClient.Signalling
 
 #if !ORTCLIB
             Debug.WriteLine("Conductor: Adding local media tracks.");
-            _peerConnection.AddTrack(_selfVideoTrack);
-            _peerConnection.AddTrack(_selfAudioTrack);
+            PeerConnection.AddTrack(_selfVideoTrack);
+            PeerConnection.AddTrack(_selfAudioTrack);
 #endif
             OnAddLocalTrack?.Invoke(_selfVideoTrack);
             OnAddLocalTrack?.Invoke(_selfAudioTrack);
@@ -760,6 +806,13 @@ namespace PeerConnectionClient.Signalling
                     {
                         ResolutionChanged?.Invoke("SELF", width, height);
                     };
+#if ENABLE_VIDEO_PROCESSING
+                    ((MediaStreamTrack)_selfVideoTrack).OnVideoFrame += (IVideoFrameBufferEvent evt) =>
+                    {
+                        Process_VideoFrameBufferEvent(evt);
+                    };
+#endif //ENABLE_VIDEO_PROCESSING
+
 #endif
                 }
             }
@@ -778,7 +831,7 @@ namespace PeerConnectionClient.Signalling
         {
             lock (MediaLock)
             {
-                if (_peerConnection != null)
+                if (PeerConnection != null)
                 {
                     _peerId = -1;
 #if !UNITY && !ORTCLIB
@@ -798,15 +851,11 @@ namespace PeerConnectionClient.Signalling
 
                     OnPeerConnectionClosed?.Invoke();
 
-#if !USE_CX_VERSION
-                    (_peerConnection as IDisposable)?.Dispose();
-#endif
-
 #if ORTCLIB
                     SessionId = null;
                     OrtcStatsManager.Instance.CallEnded();
 #endif
-                    _peerConnection = null;
+                    PeerConnection = null;
 
                     OnReadyToConnect?.Invoke();
                     
@@ -986,7 +1035,7 @@ namespace PeerConnectionClient.Signalling
 
             if (peerId != _peerId) return;
 
-            _peerConnection = null;
+            PeerConnection = null;
 
             Debug.WriteLine("Conductor: Our peer hung up.");
 
@@ -1067,7 +1116,7 @@ namespace PeerConnectionClient.Signalling
 #if ORTCLIB
                 bool created = false;
 #endif
-                if (_peerConnection == null)
+                if (PeerConnection == null)
                 {
                     if (!IsNullOrEmpty(type))
                     {
@@ -1116,7 +1165,7 @@ namespace PeerConnectionClient.Signalling
                     }
                 }
 
-                if (_peerConnection != null && !IsNullOrEmpty(type))
+                if (PeerConnection != null && !IsNullOrEmpty(type))
                 {
                     if (type == "offer-loopback")
                     {
@@ -1178,7 +1227,7 @@ namespace PeerConnectionClient.Signalling
                     sdpInit.Type = messageType;
                     var description = new RTCSessionDescription(sdpInit);
 #endif
-                    await _peerConnection.SetRemoteDescription(description);
+                    await PeerConnection.SetRemoteDescription(description);
 
 #if ORTCLIB
                     if ((messageType == RTCSessionDescriptionSignalingType.SdpOffer) ||
@@ -1188,8 +1237,8 @@ namespace PeerConnectionClient.Signalling
 #endif
                     {
                         RTCAnswerOptions answerOptions = new RTCAnswerOptions();
-                        var answer = await _peerConnection.CreateAnswer(answerOptions);
-                        await _peerConnection.SetLocalDescription(answer);
+                        var answer = await PeerConnection.CreateAnswer(answerOptions);
+                        await PeerConnection.SetLocalDescription(answer);
                         // Send answer
                         SendSdp(answer);
 #if ORTCLIB
@@ -1239,7 +1288,7 @@ namespace PeerConnectionClient.Signalling
                     }
                     _peerConnection?.AddIceCandidate(candidate);
 #else
-                    await _peerConnection.AddIceCandidate(candidate);
+                    await PeerConnection.AddIceCandidate(candidate);
 #endif
 
 
@@ -1291,7 +1340,7 @@ namespace PeerConnectionClient.Signalling
             Debug.Assert(peer != null);
             Debug.Assert(_peerId == -1);
 
-            if (_peerConnection != null)
+            if (PeerConnection != null)
             {
                 Debug.WriteLine("[Error] Conductor: We only support connecting to one peer at a time");
 
@@ -1312,7 +1361,7 @@ namespace PeerConnectionClient.Signalling
                 var offerOptions = new RTCOfferOptions();
                 offerOptions.OfferToReceiveAudio = true;
                 offerOptions.OfferToReceiveVideo = true;
-                var offer = await _peerConnection.CreateOffer(offerOptions);
+                var offer = await PeerConnection.CreateOffer(offerOptions);
 
                 if (IsNullOrEmpty(offer.Sdp))
                 {
@@ -1329,7 +1378,7 @@ namespace PeerConnectionClient.Signalling
                 sdpInit.Type = offer.SdpType;
                 var modifiedOffer = new RTCSessionDescription(sdpInit);
 #endif
-                await _peerConnection.SetLocalDescription(modifiedOffer);
+                await PeerConnection.SetLocalDescription(modifiedOffer);
                 Debug.WriteLine("Conductor: Sending offer:\n" + modifiedOffer.Sdp);
                 SendSdp(modifiedOffer);
 
@@ -1352,7 +1401,7 @@ namespace PeerConnectionClient.Signalling
             if (SC.callStatsClient == null)
                 ClosePeerConnection();
             else
-                _peerConnection = null;
+                PeerConnection = null;
         }
 
         /// <summary>
@@ -1553,7 +1602,8 @@ namespace PeerConnectionClient.Signalling
 
         /// <summary>
         /// If a connection to a peer is establishing, requests it's
-        /// cancelation and wait the operation to cancel (blocks curren thread).
+        /// cancellation and wait the operation to cancel (blocks current
+        /// thread).
         /// </summary>
         public void CancelConnectingToPeer()
         {
@@ -1565,5 +1615,134 @@ namespace PeerConnectionClient.Signalling
                 Debug.WriteLine("Conductor: Connecting to peer flow canceled");
             }
         }
+
+        private void DisplayAudioBufferEvent(
+            ref int totalSamples,
+            String type,
+            Org.WebRtc.IAudioBufferEvent evt)
+        {
+            var buffer = evt.Buffer;
+            var data = buffer.Channel(0);
+            var array = data.Data.ToArray();
+
+#if DISPLAY_AUDIO_BUFFER_OUTPUT
+            var sb = new StringBuilder();
+
+            sb.Append("== AUDIO FRAME PROCESSING ==\n");
+            sb.Append("Type: " + type + "\n");
+            sb.Append("Activity: " + buffer.Activity.ToString() + "\n");
+            sb.Append("Channels: " + buffer.Channels.ToString() + "\n");
+            sb.Append("Bands: " + buffer.Bands.ToString() + "\n");
+            sb.Append("SamplesPerChannel: " + buffer.SamplesPerChannel.ToString() + "\n");
+            sb.Append("FramesPerBand: " + buffer.FramesPerBand.ToString() + "\n");
+
+            sb.Append("Samples: ");
+#endif // DISPLAY_AUDIO_BUFFER_OUTPUT
+
+            double scale = Math.Pow(2, 10);
+
+            for (int index = 0; index < array.Count(); ++index, ++totalSamples)
+            {
+#if DISPLAY_AUDIO_BUFFER_OUTPUT
+                sb.Append(array[index] + ",");
+#endif // DISPLAY_AUDIO_BUFFER_OUTPUT
+                array[index] = (short)(Math.Sin(totalSamples) * scale);
+            }
+
+            data.Data = array;
+
+#if DISPLAY_AUDIO_BUFFER_OUTPUT
+            sb.Append("\n== AUDIO FRAME PROCESSING ==\n");
+            Debug.WriteLine(sb.ToString());
+#endif // DISPLAY_AUDIO_BUFFER_OUTPUT
+        }
+
+        private void Factory_HandleAudioPostCaptureInit(Org.WebRtc.IAudioProcessingInitializeEvent evt)
+        {
+            (evt as IDisposable).Dispose();
+        }
+
+        private void Factory_HandleAudioPostCaptureRuntimeSetting(Org.WebRtc.IAudioProcessingRuntimeSettingEvent evt)
+        {
+            (evt as IDisposable).Dispose();
+        }
+
+        private static int totalCaptureSamples_ = 0;
+        private void Factory_HandleAudioPostCaptureBuffer(Org.WebRtc.IAudioBufferEvent evt)
+        {
+            DisplayAudioBufferEvent(ref totalCaptureSamples_, "post capture", evt);
+            (evt as IDisposable).Dispose();
+        }
+
+        private void Factory_HandleAudioPreRenderInit(Org.WebRtc.IAudioProcessingInitializeEvent evt)
+        {
+            (evt as IDisposable).Dispose();
+        }
+
+        private void Factory_HandleAudioPreRenderRuntimeSetting(Org.WebRtc.IAudioProcessingRuntimeSettingEvent evt)
+        {
+            (evt as IDisposable).Dispose();
+        }
+
+        private static int totalRenderSamples_ = 0;
+        private void Factory_HandleAudioPreRenderBuffer(Org.WebRtc.IAudioBufferEvent evt)
+        {
+            DisplayAudioBufferEvent(ref totalRenderSamples_, "pre-render", evt);
+            (evt as IDisposable).Dispose();
+        }
+
+        private void Process_VideoFrameBufferEvent(IVideoFrameBufferEvent evt)
+        {
+            var buffer = evt?.Buffer;
+            var i420Frame = buffer?.YuvFrame;
+            if (null == i420Frame)
+                i420Frame = buffer?.ToI420();
+            var nativeFrame = buffer?.NativeFrame;
+            var mediaSample = nativeFrame?.Sample;
+
+            int width = 0;
+            int height = 0;
+            if (null != nativeFrame)
+            {
+                width = nativeFrame.Width;
+                height = nativeFrame.Height;
+            }
+            if (null != i420Frame)
+            {
+                width = i420Frame.Width;
+                height = i420Frame.Height;
+            }
+
+            var y = i420Frame?.Y;
+            var u = i420Frame?.U;
+            var v = i420Frame?.V;
+
+            var array = new IVideoData[] { y, u, v };
+
+            foreach (var colorSpace in array) {
+                if (null == colorSpace)
+                    continue;
+
+                IReadOnlyList<byte> bits8View;
+                IReadOnlyList<UInt16> bits16View;
+
+                var hasBit8 = colorSpace.Is8BitColorSpace;
+                if (hasBit8)
+                    bits8View = colorSpace.Data8bit;
+
+                var hasBit16 = colorSpace.Is16BitColorSpace;
+                if (hasBit16)
+                    bits16View = colorSpace.Data16bit;
+            }
+
+            IReadOnlyList<float> viewTransform = mediaSample?.GetCameraViewTransform();
+            IReadOnlyList<float> projectionTransform = mediaSample?.GetCameraProjectionTransform();
+
+            (mediaSample as IDisposable)?.Dispose();
+            (buffer as IDisposable)?.Dispose();
+            (nativeFrame as IDisposable)?.Dispose();
+            (evt as IDisposable)?.Dispose();
+        }
+
     }
 }
