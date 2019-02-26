@@ -49,21 +49,12 @@ using PeerConnectionClient.Utilities;
 using PeerConnectionClientCore.Stats;
 #endif
 using System.Text;
-#if USE_CX_VERSION
-using UseMediaStreamTrack = Org.WebRtc.MediaStreamTrack;
-using UseRTCPeerConnectionIceEvent = Org.WebRtc.RTCPeerConnectionIceEvent;
-using UseRTCTrackEvent = Org.WebRtc.RTCTrackEvent;
-using UseRTCSessionDescription = Org.WebRtc.RTCSessionDescription;
-using UseConstraint = Org.WebRtc.Constraint;
-using UseMediaConstraints = Org.WebRtc.MediaConstraints;
-#else
 using UseMediaStreamTrack = Org.WebRtc.IMediaStreamTrack;
 using UseRTCPeerConnectionIceEvent = Org.WebRtc.IRTCPeerConnectionIceEvent;
 using UseRTCTrackEvent = Org.WebRtc.IRTCTrackEvent;
 using UseRTCSessionDescription = Org.WebRtc.IRTCSessionDescription;
 using UseConstraint = Org.WebRtc.IConstraint;
 using UseMediaConstraints = Org.WebRtc.IMediaConstraints;
-#endif
 #endif
 
 namespace PeerConnectionClient.Signalling
@@ -230,12 +221,10 @@ namespace PeerConnectionClient.Signalling
                 {
                     if (null == value)
                     {
-#if !USE_CX_VERSION
                         if (null != _peerConnection_DoNotUse)
                         {
                             (_peerConnection_DoNotUse as IDisposable)?.Dispose();
                         }
-#endif // !USE_CX_VERSION
                     }
                     _peerConnection_DoNotUse = value;
                 }
@@ -850,12 +839,10 @@ namespace PeerConnectionClient.Signalling
                     if (null != _peerVideoTrack) _peerVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
                     if (null != _selfVideoTrack) _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
 #endif
-#if !USE_CX_VERSION
                     (_peerVideoTrack as IDisposable)?.Dispose();
                     (_selfVideoTrack as IDisposable)?.Dispose();
                     (_peerAudioTrack as IDisposable)?.Dispose();
                     (_selfAudioTrack as IDisposable)?.Dispose();
-#endif
                     _peerVideoTrack = null;
                     _selfVideoTrack = null;
                     _peerAudioTrack = null;
