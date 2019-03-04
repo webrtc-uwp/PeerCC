@@ -1041,7 +1041,6 @@ namespace PeerConnectionClient.Signalling
 
             if (peerId != _peerId) return;
 
-            PeerConnection = null;
             Debug.WriteLine("Conductor: Our peer hung up.");
 
 #if !UNITY

@@ -82,7 +82,7 @@ public class ControlScript : MonoBehaviour
     }
 
 #if !UNITY_EDITOR
-    async Task RequestAccessForMediaCaptureAndInit()
+    void RequestAccessForMediaCaptureAndInit()
     {
         Conductor.RequestAccessForMediaCapture().AsTask().ContinueWith(async (antecedent) =>
         {
@@ -159,17 +159,10 @@ public class ControlScript : MonoBehaviour
     {
         Instance = this;
 #if !UNITY_EDITOR
-        if(!UnityEngine.WSA.Application.RunningOnUIThread())
+        RunOnUiThread(() =>
         {
-            UnityEngine.WSA.Application.InvokeOnUIThread(() =>
-            {
-                Task.Run(async () => { await RequestAccessForMediaCaptureAndInit(); });
-            }, false);
-        }
-        else
-        {
-            Task.Run(async () => { await RequestAccessForMediaCaptureAndInit(); });
-        }
+            Task.Run(async () => { RequestAccessForMediaCaptureAndInit(); });
+        });
 #endif
         ServerAddressInputField.text = "peercc-server.ortclib.org";
     }
@@ -363,18 +356,18 @@ public class ControlScript : MonoBehaviour
         {
             if (status == Status.NotConnected)
             {
-                new Task(() =>
+                Task.Run(async () =>
                 {
                     Conductor.Instance.StartLogin(ServerAddressInputField.text, "8888");
-                }).Start();
+                });
                 status = Status.Connecting;
             }
             else if (status == Status.Connected)
             {
-                new Task(() =>
+                Task.Run(async () =>
                 {
                     var task = Conductor.Instance.DisconnectFromServer();
-                }).Start();
+                });
 
                 status = Status.Disconnecting;
                 selectedPeerIndex = -1;
@@ -397,22 +390,22 @@ public class ControlScript : MonoBehaviour
             {
                 if (selectedPeerIndex == -1)
                     return;
-                new Task(() =>
+                Task.Run(async () =>
                 {
                     Conductor.Peer conductorPeer = Conductor.Instance.GetPeers()[selectedPeerIndex];
                     if (conductorPeer != null)
                     {
                         Conductor.Instance.ConnectToPeer(conductorPeer);
                     }
-                }).Start();
+                });
                 status = Status.Calling;
             }
             else if (status == Status.InCall)
             {
-                new Task(() =>
+                Task.Run(async () =>
                 {
                     var task = Conductor.Instance.DisconnectFromPeer();
-                }).Start();
+                });
                 status = Status.EndingCall;
             }
             else
@@ -470,9 +463,19 @@ public class ControlScript : MonoBehaviour
         Conductor.Instance.OnAppSuspending();
     }
 
-    private IAsyncAction RunOnUiThread(Action fn)
+    private void RunOnUiThread(Action fn)
     {
-        return CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(fn));
+        if(!UnityEngine.WSA.Application.RunningOnUIThread())
+        {
+            UnityEngine.WSA.Application.InvokeOnUIThread(() =>
+            {
+                fn.Invoke();
+            }, false);
+        }
+        else
+        {
+            fn.Invoke();
+        }
     }
 #endif
 
@@ -482,7 +485,7 @@ public class ControlScript : MonoBehaviour
         // A Peer is connected to the server event handler
         Conductor.Instance.Signaller.OnPeerConnected += (peerId, peerName) =>
         {
-            var task = RunOnUiThread(() =>
+            RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -496,7 +499,7 @@ public class ControlScript : MonoBehaviour
         // A Peer is disconnected from the server event handler
         Conductor.Instance.Signaller.OnPeerDisconnected += peerId =>
         {
-            var task = RunOnUiThread(() =>
+            RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -514,7 +517,7 @@ public class ControlScript : MonoBehaviour
         // The user is Signed in to the server event handler
         Conductor.Instance.Signaller.OnSignedIn += () =>
         {
-            var task = RunOnUiThread(() =>
+            RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -534,7 +537,7 @@ public class ControlScript : MonoBehaviour
         // Failed to connect to the server event handler
         Conductor.Instance.Signaller.OnServerConnectionFailure += () =>
         {
-            var task = RunOnUiThread(() =>
+            RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -554,7 +557,7 @@ public class ControlScript : MonoBehaviour
         // The current user is disconnected from the server event handler
         Conductor.Instance.Signaller.OnDisconnected += () =>
         {
-            var task = RunOnUiThread(() =>
+            RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -578,7 +581,7 @@ public class ControlScript : MonoBehaviour
         // Connected to a peer event handler
         Conductor.Instance.OnPeerConnectionCreated += () =>
         {
-            var task = RunOnUiThread(() =>
+            RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -603,7 +606,7 @@ public class ControlScript : MonoBehaviour
         // Connection between the current user and a peer is closed event handler
         Conductor.Instance.OnPeerConnectionClosed += () =>
         {
-            var task = RunOnUiThread(() =>
+            RunOnUiThread(() =>
             {
                 lock (this)
                 {
@@ -623,14 +626,14 @@ public class ControlScript : MonoBehaviour
         };
 
         // Ready to connect to the server event handler
-        Conductor.Instance.OnReadyToConnect += () => { var task = RunOnUiThread(() => { }); };
+        Conductor.Instance.OnReadyToConnect += () => { RunOnUiThread(() => { }); };
     }
 #endif
 
 #if !UNITY_EDITOR
     private void Conductor_OnAddRemoteTrack(UseMediaStreamTrack track)
     {
-        var task = RunOnUiThread(() =>
+        RunOnUiThread(() =>
         {
             lock (this)
             {
@@ -638,7 +641,7 @@ public class ControlScript : MonoBehaviour
                 {
                     ((Org.WebRtc.MediaStreamTrack)track).OnMediaSourceChanged += () =>
                     {
-                        var eventTask = RunOnUiThread(() =>
+                        RunOnUiThread(() =>
                         {
                             lock (this)
                             {
@@ -659,7 +662,7 @@ public class ControlScript : MonoBehaviour
 #if !UNITY_EDITOR
     private void Conductor_OnRemoveRemoteTrack(UseMediaStreamTrack track)
     {
-        var task = RunOnUiThread(() =>
+        RunOnUiThread(() =>
         {
             lock (this)
             {
@@ -678,7 +681,7 @@ public class ControlScript : MonoBehaviour
 #if !UNITY_EDITOR
     private void Conductor_OnAddLocalTrack(UseMediaStreamTrack track)
     {
-        var task = RunOnUiThread(() =>
+        RunOnUiThread(() =>
         {
             lock (this)
             {
@@ -686,7 +689,7 @@ public class ControlScript : MonoBehaviour
                 {
                     ((Org.WebRtc.MediaStreamTrack)track).OnMediaSourceChanged += () =>
                     {
-                        var eventTask = RunOnUiThread(() =>
+                        RunOnUiThread(() =>
                         {
                             lock (this)
                             {
