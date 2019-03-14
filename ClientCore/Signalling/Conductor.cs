@@ -846,6 +846,12 @@ namespace PeerConnectionClient.Signalling
                 if (PeerConnection != null)
                 {
                     _peerId = -1;
+
+                    PeerConnection.OnIceCandidate -= PeerConnection_OnIceCandidate;
+                    PeerConnection.OnTrack -= PeerConnection_OnTrack;
+                    PeerConnection.OnRemoveTrack -= PeerConnection_OnRemoveTrack;
+                    //_peerConnection.OnConnectionHealthStats -= PeerConnection_OnConnectionHealthStats;
+
 #if !UNITY && !ORTCLIB
                     if (null != _peerVideoTrack) _peerVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
                     if (null != _selfVideoTrack) _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
