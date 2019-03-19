@@ -291,13 +291,8 @@ namespace PeerConnectionClient.Signalling
                 // Set the DataReader to only wait for available data
                 reader.InputStreamOptions = InputStreamOptions.Partial;
 
-                ManualResetEvent loadTaskEvent = new ManualResetEvent(false);
                 loadTask = reader.LoadAsync(0xffff);
-                loadTask.Completed = new Windows.Foundation.AsyncOperationCompletedHandler<uint>((operation, asyncStatus) =>
-                {
-                    loadTaskEvent.Set();
-                });
-                bool succeeded = loadTaskEvent.WaitOne(20000);
+                bool succeeded = loadTask.AsTask().Wait(20000);
                 if (!succeeded)
                 {
                     throw new TimeoutException("Timed out long polling, re-trying.");
