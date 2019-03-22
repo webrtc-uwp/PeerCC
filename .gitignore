@@ -14,6 +14,9 @@ ClientUnity/Assets/Plugins/WSA/x86/*.pdb
 ClientUnity/Assets/Plugins/WSA/x64/*.dll
 ClientUnity/Assets/Plugins/WSA/x64/*.winmd
 ClientUnity/Assets/Plugins/WSA/x64/*.pdb
+ClientUnity/Assets/Plugins/WSA/arm/*.dll
+ClientUnity/Assets/Plugins/WSA/arm/*.winmd
+ClientUnity/Assets/Plugins/WSA/arm/*.pdb
 ClientUnity/Library
 ClientUnity/*.sln
 ClientUnity/*.csproj
