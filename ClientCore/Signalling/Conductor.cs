@@ -1757,8 +1757,8 @@ namespace PeerConnectionClient.Signalling
                 if (null == colorSpace)
                     continue;
 
-                IReadOnlyList<byte> bits8View;
-                IReadOnlyList<UInt16> bits16View;
+                Windows.Foundation.IMemoryBuffer bits8View;
+                Windows.Foundation.IMemoryBuffer bits16View;
 
                 var hasBit8 = colorSpace.Is8BitColorSpace;
                 if (hasBit8)
