@@ -31,6 +31,8 @@ using PeerConnectionClient.MVVM;
 using PeerConnectionClient.Signalling;
 using PeerConnectionClient.Utilities;
 using Windows.Foundation;
+using Windows.Devices.Enumeration;
+using Windows.Media.Devices;
 #if ORTCLIB
 using Org.Ortc;
 using Org.Ortc.Adapter;
@@ -251,6 +253,42 @@ namespace PeerConnectionClient.ViewModels
                     SelectedCamera = Cameras.First();
                 }
                 Conductor.Instance.OnMediaDevicesChanged += OnMediaDevicesChanged;
+
+                foreach (DeviceInformation audioInput in await DeviceInformation.FindAllAsync(MediaDevice.GetAudioCaptureSelector()))
+                {
+                    Conductor.MediaDevice audioInputDevice = new Conductor.MediaDevice();
+                    audioInputDevice.Id = audioInput.Id;
+                    audioInputDevice.Name = audioInput.Name;
+
+                    if (savedAudioRecordingDeviceId != null && savedAudioRecordingDeviceId == audioInput.Id)
+                    {
+                        SelectedMicrophone = audioInputDevice;
+                    }
+                    Microphones.Add(audioInputDevice);
+                }
+
+                if (SelectedMicrophone == null && Microphones.Count > 0)
+                {
+                    SelectedMicrophone = Microphones.First();
+                }
+
+                foreach (var audioOutput in await DeviceInformation.FindAllAsync(MediaDevice.GetAudioRenderSelector()))
+                {
+                    Conductor.MediaDevice audioOutputDevice = new Conductor.MediaDevice();
+                    audioOutputDevice.Id = audioOutput.Id;
+                    audioOutputDevice.Name = audioOutput.Name;
+
+                    if (savedAudioPlayoutDeviceId != null && savedAudioPlayoutDeviceId == audioOutput.Id)
+                    {
+                        SelectedAudioPlayoutDevice = audioOutputDevice;
+                    }
+                    AudioPlayoutDevices.Add(audioOutputDevice);
+                }
+
+                if (SelectedAudioPlayoutDevice == null && AudioPlayoutDevices.Count > 0)
+                {
+                    SelectedAudioPlayoutDevice = AudioPlayoutDevices.First();
+                }
             });
 #endif
 
