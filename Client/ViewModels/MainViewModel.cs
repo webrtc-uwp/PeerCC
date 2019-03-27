@@ -602,7 +602,29 @@ namespace PeerConnectionClient.ViewModels
                 {
                 case Conductor.MediaDeviceType.VideoCapture:
                     RefreshVideoCaptureDevices(await Conductor.GetVideoCaptureDevices());
-                        break;
+                    break;
+                case Conductor.MediaDeviceType.AudioCapture:
+                    List<Conductor.MediaDevice> audioInputDevices = new List<Conductor.MediaDevice>();
+                    foreach (DeviceInformation audioInput in await DeviceInformation.FindAllAsync(MediaDevice.GetAudioCaptureSelector()))
+                    {
+                        Conductor.MediaDevice audioInputDevice = new Conductor.MediaDevice();
+                        audioInputDevice.Id = audioInput.Id;
+                        audioInputDevice.Name = audioInput.Name;
+                        audioInputDevices.Add(audioInputDevice);
+                    }
+                    RefreshAudioCaptureDevices(audioInputDevices);
+                    break;
+                case Conductor.MediaDeviceType.AudioPlayout:
+                    List<Conductor.MediaDevice> audioOutputDevices = new List<Conductor.MediaDevice>();
+                    foreach (var audioOutput in await DeviceInformation.FindAllAsync(MediaDevice.GetAudioRenderSelector()))
+                    {
+                        Conductor.MediaDevice audioOutputDevice = new Conductor.MediaDevice();
+                        audioOutputDevice.Id = audioOutput.Id;
+                        audioOutputDevice.Name = audioOutput.Name;
+                        audioOutputDevices.Add(audioOutputDevice);
+                    }
+                    RefreshAudioPlayoutDevices(audioOutputDevices);
+                    break;
                 }
             });
         }
@@ -1433,6 +1455,7 @@ namespace PeerConnectionClient.ViewModels
                 {
                     var localSettings = ApplicationData.Current.LocalSettings;
                     localSettings.Values["SelectedMicrophoneId"] = _selectedMicrophone.Id;
+                    Conductor.Instance.SelectAudioCaptureDevice(_selectedMicrophone);
                 }
             }
         }
@@ -1462,6 +1485,7 @@ namespace PeerConnectionClient.ViewModels
                 {
                     var localSettings = ApplicationData.Current.LocalSettings;
                     localSettings.Values["SelectedAudioPlayoutDeviceId"] = _selectedAudioPlayoutDevice.Id;
+                    Conductor.Instance.SelectAudioPlayoutDevice(_selectedAudioPlayoutDevice);
                 }
             }
         }

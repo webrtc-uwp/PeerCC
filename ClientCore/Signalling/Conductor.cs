@@ -234,6 +234,8 @@ namespace PeerConnectionClient.Signalling
         WebRtcFactory _factory;
 
         MediaDevice _selectedVideoDevice = null;
+        MediaDevice _selectedAudioCaptureDevice = null;
+        MediaDevice _selectedAudioPlayoutDevice = null;
 
         private List<Peer> _peers = new List<Peer>();
         private Peer _peer;
@@ -587,6 +589,16 @@ namespace PeerConnectionClient.Signalling
         public void SelectVideoDevice(MediaDevice device)
         {
             _selectedVideoDevice = device;
+        }
+
+        public void SelectAudioCaptureDevice(MediaDevice device)
+        {
+            _selectedAudioCaptureDevice = device;
+        }
+
+        public void SelectAudioPlayoutDevice(MediaDevice device)
+        {
+            _selectedAudioPlayoutDevice = device;
         }
 
         /// <summary>
