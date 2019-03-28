@@ -1769,7 +1769,7 @@ namespace PeerConnectionClient.Signalling
                 {
                     // copy the data
                     buffer8bit = new byte[colorSpace.Length];
-                    colorSpace.GetData8bit(out buffer8bit);
+                    colorSpace.GetData8bit(ref buffer8bit);
                     // or get a buffer view
                     bits8View = colorSpace.Data8bit;
                 }
@@ -1779,7 +1779,7 @@ namespace PeerConnectionClient.Signalling
                 {
                     // copy the data
                     buffer16bit = new ushort[colorSpace.Length];
-                    colorSpace.GetData16bit(out buffer16bit);
+                    colorSpace.GetData16bit(ref buffer16bit);
                     // or get a buffer view
                     bits16View = colorSpace.Data16bit;
                 }
