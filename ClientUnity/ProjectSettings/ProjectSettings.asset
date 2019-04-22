@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: OpticalTone
+  companyName: DefaultCompany
   productName: PeerCCUnity
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
@@ -539,8 +539,8 @@ PlayerSettings:
   metroPackageVersion: 1.0.0.0
   metroCertificatePath: Assets\WSATestCertificate.pfx
   metroCertificatePassword: 
-  metroCertificateSubject: OpticalTone
-  metroCertificateIssuer: OpticalTone
+  metroCertificateSubject: DefaultCompany
+  metroCertificateIssuer: DefaultCompany
   metroCertificateNotAfter: 00f458483918d601
   metroApplicationDescription: PeerCCUnity
   wsaImages: {}
