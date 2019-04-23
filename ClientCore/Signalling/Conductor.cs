@@ -1669,7 +1669,9 @@ namespace PeerConnectionClient.Signalling
         {
             var buffer = evt.Buffer;
             var data = buffer.Channel(0);
-            var array = data.Data.ToArray();
+
+            var dataArray = new Int16[data.Length];
+            data.GetData(dataArray);
 
 #if DISPLAY_AUDIO_BUFFER_OUTPUT
             var sb = new StringBuilder();
@@ -1687,15 +1689,15 @@ namespace PeerConnectionClient.Signalling
 
             double scale = Math.Pow(2, 10);
 
-            for (int index = 0; index < array.Count(); ++index, ++totalSamples)
+            for (int index = 0; index < dataArray.Count(); ++index, ++totalSamples)
             {
 #if DISPLAY_AUDIO_BUFFER_OUTPUT
-                sb.Append(array[index] + ",");
+                sb.Append(dataArray[index] + ",");
 #endif // DISPLAY_AUDIO_BUFFER_OUTPUT
-                array[index] = (short)(Math.Sin(totalSamples) * scale);
+                dataArray[index] = (Int16)(Math.Sin(totalSamples) * scale);
             }
 
-            data.Data = array;
+            data.SetData(dataArray);
 
 #if DISPLAY_AUDIO_BUFFER_OUTPUT
             sb.Append("\n== AUDIO FRAME PROCESSING ==\n");
@@ -1769,16 +1771,30 @@ namespace PeerConnectionClient.Signalling
                 if (null == colorSpace)
                     continue;
 
-                IReadOnlyList<byte> bits8View;
-                IReadOnlyList<UInt16> bits16View;
+                byte[] buffer8bit = null;
+                ushort[] buffer16bit = null;
+                Windows.Foundation.IMemoryBuffer bits8View;
+                Windows.Foundation.IMemoryBuffer bits16View;
 
                 var hasBit8 = colorSpace.Is8BitColorSpace;
                 if (hasBit8)
+                {
+                    // copy the data
+                    buffer8bit = new byte[colorSpace.Length];
+                    colorSpace.GetData8bit(buffer8bit);
+                    // or get a buffer view
                     bits8View = colorSpace.Data8bit;
+                }
 
                 var hasBit16 = colorSpace.Is16BitColorSpace;
                 if (hasBit16)
+                {
+                    // copy the data
+                    buffer16bit = new ushort[colorSpace.Length];
+                    colorSpace.GetData16bit(buffer16bit);
+                    // or get a buffer view
                     bits16View = colorSpace.Data16bit;
+                }
             }
 
             IReadOnlyList<float> viewTransform = mediaSample?.GetCameraViewTransform();
