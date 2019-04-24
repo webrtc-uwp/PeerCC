@@ -614,6 +614,8 @@ namespace PeerConnectionClient.Signalling
             }
 
             var factoryConfig = new WebRtcFactoryConfiguration();
+            factoryConfig.AudioCaptureDeviceId = _selectedAudioCaptureDevice.Id;
+            factoryConfig.AudioRenderDeviceId = _selectedAudioPlayoutDevice.Id;
             _factory = new WebRtcFactory(factoryConfig);
 
 #if ENABLE_AUDIO_PROCESSING
