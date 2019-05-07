@@ -234,6 +234,8 @@ namespace PeerConnectionClient.Signalling
         WebRtcFactory _factory;
 
         MediaDevice _selectedVideoDevice = null;
+        MediaDevice _selectedAudioCaptureDevice = null;
+        MediaDevice _selectedAudioPlayoutDevice = null;
 
         private List<Peer> _peers = new List<Peer>();
         private Peer _peer;
@@ -589,6 +591,16 @@ namespace PeerConnectionClient.Signalling
             _selectedVideoDevice = device;
         }
 
+        public void SelectAudioCaptureDevice(MediaDevice device)
+        {
+            _selectedAudioCaptureDevice = device;
+        }
+
+        public void SelectAudioPlayoutDevice(MediaDevice device)
+        {
+            _selectedAudioPlayoutDevice = device;
+        }
+
         /// <summary>
         /// Creates a peer connection.
         /// </summary>
@@ -602,6 +614,8 @@ namespace PeerConnectionClient.Signalling
             }
 
             var factoryConfig = new WebRtcFactoryConfiguration();
+            factoryConfig.AudioCaptureDeviceId = _selectedAudioCaptureDevice.Id;
+            factoryConfig.AudioRenderDeviceId = _selectedAudioPlayoutDevice.Id;
             _factory = new WebRtcFactory(factoryConfig);
 
 #if ENABLE_AUDIO_PROCESSING
