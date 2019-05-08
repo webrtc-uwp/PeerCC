@@ -16,7 +16,7 @@ using System.Xml.Serialization;
 
 namespace PeerConnectionClient.Utilities
 {
-    internal static class XmlSerializer<T>
+    public static class XmlSerializer<T>
     {
         /// <summary>
         /// Serialize to xml.

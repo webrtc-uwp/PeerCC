@@ -776,7 +776,7 @@ namespace PeerConnectionClient.Utilities
     }
 #else
     //Dummy implementation if _APP_PERFORMANCE_ is not defined
-    internal static class MEMData
+    public static class MEMData
     {
         public static Int64 GetMEMUsage()
         {
@@ -784,7 +784,7 @@ namespace PeerConnectionClient.Utilities
         }
     }
 
-    internal static class CPUData
+    public static class CPUData
     {
         public static double GetCPUUsage()
         {

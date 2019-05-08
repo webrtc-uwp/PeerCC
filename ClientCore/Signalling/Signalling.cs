@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 using Windows.Networking;
@@ -33,7 +34,7 @@ namespace PeerConnectionClient.Signalling
     /// <summary>
     /// Signaller instance is used to fire connection events.
     /// </summary>
-    class Signaller
+    public class Signaller
     {
         // Connection events
         public event SignedInDelegate OnSignedIn;
@@ -156,7 +157,7 @@ namespace PeerConnectionClient.Signalling
                     throw new KeyNotFoundException();
                 }
                 index += header.Length;
-                value = buffer.Substring(index).ParseLeadingInt();
+                value = ParseLeadingInt(buffer.Substring(index));
                 return true;
             }
             catch
@@ -264,12 +265,12 @@ namespace PeerConnectionClient.Signalling
             int separator = entry.IndexOf(',');
             if (separator != -1)
             {
-                id = entry.Substring(separator + 1).ParseLeadingInt();
+                id = ParseLeadingInt(entry.Substring(separator + 1));
                 name = entry.Substring(0, separator);
                 separator = entry.IndexOf(',', separator + 1);
                 if (separator != -1)
                 {
-                    connected = entry.Substring(separator + 1).ParseLeadingInt() > 0 ? true : false;
+                    connected = ParseLeadingInt(entry.Substring(separator + 1)) > 0 ? true : false;
                 }
             }
             return name.Length > 0;
@@ -377,7 +378,7 @@ namespace PeerConnectionClient.Signalling
                     return false;
                 }
                 // Send the request
-                socket.WriteStringAsync(sendBuffer);
+                WriteStringAsync(socket, sendBuffer);
 
                 // Read the response
                 var readResult = await ReadIntoBufferAsync(socket);
@@ -461,9 +462,8 @@ namespace PeerConnectionClient.Signalling
                         {
                             return;
                         }
-
                         // Send the request
-                        _hangingGetSocket.WriteStringAsync(String.Format("GET /wait?peer_id={0} HTTP/1.0\r\n\r\n", _myId));
+                        WriteStringAsync(_hangingGetSocket, String.Format("GET /wait?peer_id={0} HTTP/1.0\r\n\r\n", _myId));
 
                         // Read the response.
                         var readResult = await ReadIntoBufferAsync(_hangingGetSocket);
@@ -471,7 +471,6 @@ namespace PeerConnectionClient.Signalling
                         {
                             continue;
                         }
-
                         string buffer = readResult.Item1;
                         int content_length = readResult.Item2;
 
@@ -520,7 +519,7 @@ namespace PeerConnectionClient.Signalling
                     }
                     catch (Exception e)
                     {
-                        Debug.WriteLine("[Error] Signaling: Long-polling exception: {0}", e.Message);
+                        Debug.WriteLine("[Error] Signaling: Long-polling exception: " + e.Message);
                     }
                 }
             }
@@ -614,14 +613,8 @@ namespace PeerConnectionClient.Signalling
             string message = json.Stringify();
             return await SendToPeer(peerId, message);
         }
-    }
 
-    /// <summary>
-    /// Class providing helper functions for parsing responses and messages.
-    /// </summary>
-    public static class Extensions
-    {
-        public static async void WriteStringAsync(this StreamSocket socket, string str)
+        public static async void WriteStringAsync(StreamSocket socket, string str)
         {
             try
             {
@@ -635,7 +628,7 @@ namespace PeerConnectionClient.Signalling
             }
         }
 
-        public static int ParseLeadingInt(this string str)
+        public static int ParseLeadingInt(string str)
         {
             return int.Parse(Regex.Match(str, "\\d+").Value);
         }
