@@ -365,6 +365,8 @@ namespace PeerConnectionClient.Signalling
             configuration.AudioCaptureFrameProcessingQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("AudioCaptureProcessingQueue");
             configuration.AudioRenderFrameProcessingQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("AudioRenderProcessingQueue");
             configuration.VideoFrameProcessingQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("VideoFrameProcessingQueue");
+            configuration.CustomAudioQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("CustomAudioQueue");
+            configuration.CustomVideoQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("CustomVideoQueue");
             Org.WebRtc.WebRtcLib.Setup(configuration);
 #endif
 
@@ -602,6 +604,7 @@ namespace PeerConnectionClient.Signalling
             }
 
             var factoryConfig = new WebRtcFactoryConfiguration();
+            factoryConfig.CustomVideoFactory = null;
             _factory = new WebRtcFactory(factoryConfig);
 
 #if ENABLE_AUDIO_PROCESSING
@@ -759,7 +762,10 @@ namespace PeerConnectionClient.Signalling
                 }
             }
 #else
-            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id, false);
+            var parameters = new VideoCapturerCreationParameters();
+            parameters.Name = _selectedVideoDevice.Name;
+            parameters.Id = _selectedVideoDevice.Id;
+            var videoCapturer = VideoCapturer.Create(parameters);
 #if ENABLE_VIDEO_PROCESSING
             ((VideoCapturer)videoCapturer).OnVideoFrame += (IVideoFrameBufferEvent evt) =>
             {
