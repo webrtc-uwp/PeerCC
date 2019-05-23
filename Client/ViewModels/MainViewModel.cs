@@ -79,10 +79,6 @@ namespace PeerConnectionClient.ViewModels
             _settingsButtonChecked = false;
             ScrollBarVisibilityType = ScrollBarVisibility.Auto;
 
-            _ntpService = new NtpService(uiDispatcher);
-            _ntpService.OnNTPSyncFailed += HandleNtpSynFailed;
-            _ntpService.OnNTPTimeAvailable += HandleNtpTimeSync;
-
             Conductor.Instance.Initialized += Conductor_Initialized;
 
             // Prepare Hockey app to collect the crash logs and send to the server
@@ -149,8 +145,6 @@ namespace PeerConnectionClient.ViewModels
         // Help to make sure the screen is not locked while on call
         readonly DisplayRequest _keepScreenOnRequest = new DisplayRequest();
         private bool _keepOnScreenRequested;
-
-        private readonly NtpService _ntpService;
 
         private readonly TimeSpan _maxWaitForSocketToBeAvailable = new TimeSpan(0, 0, 60);
 
@@ -841,23 +835,6 @@ namespace PeerConnectionClient.ViewModels
 
 #region Bindings
 
-        private ValidableNonEmptyString _ntpServer;
-
-        /// <summary>
-        /// Address of the ntp server to sync app clock.
-        /// </summary>
-        public ValidableNonEmptyString NtpServer
-        {
-            get { return _ntpServer; }
-            set
-            {
-                SetProperty(ref _ntpServer, value);
-                _ntpServer.PropertyChanged += NtpServer_PropertyChanged;
-                NtpSyncEnabled = false; //reset
-            }
-        }
-
-
         private ValidableNonEmptyString _ip;
 
         /// <summary>
@@ -1287,8 +1264,30 @@ namespace PeerConnectionClient.ViewModels
                 {
                     return;
                 }
-                Conductor.Instance.TracingEnabled = value;
+                if (_tracingEnabled)
+                    Conductor.StartMediaTracing(_traceFileName);
+                else
+                    Conductor.StopMediaTracing();
                 AppPerformanceCheck();
+            }
+        }
+
+        private string _traceFileName = string.Empty;
+
+        /// <summary>
+        /// The trace file name.
+        /// </summary>
+        public string TraceFileName
+        {
+            get { return _traceFileName; }
+            set
+            {
+                if (!SetProperty(ref _traceFileName, value))
+                {
+                    return;
+                }
+                var localSettings = ApplicationData.Current.LocalSettings;
+                localSettings.Values["TraceFileName"] = _traceFileName;
             }
         }
 
@@ -2202,10 +2201,10 @@ namespace PeerConnectionClient.ViewModels
             var settings = ApplicationData.Current.LocalSettings;
 
             // Default values:
+            var configTraceFileName = "webrtc-trace.txt";
             var configTraceServerIp = "127.0.0.1";
             var configTraceServerPort = "55000";
             var peerCcServerIp = new ValidableNonEmptyString("127.0.0.1");
-            var ntpServerAddress = new ValidableNonEmptyString("time.windows.com");
             var peerCcPortInt = 8888;
 
             if (settings.Values["PeerCCServerIp"] != null)
@@ -2219,6 +2218,11 @@ namespace PeerConnectionClient.ViewModels
             }
 
             var configIceServers = new ObservableCollection<IceServer>();
+
+            if (settings.Values["TraceFileName"] != null)
+            {
+                configTraceFileName = (string)settings.Values["TraceFileName"];
+            }
 
             if (settings.Values["TraceServerIp"] != null)
             {
@@ -2254,18 +2258,13 @@ namespace PeerConnectionClient.ViewModels
                 configIceServers.Add(new IceServer("stun4.l.google.com:19302", IceServer.ServerType.STUN));
             }
 
-            if (settings.Values["NTPServer"] != null && (string)settings.Values["NTPServer"] !="" )
-            {
-                ntpServerAddress = new ValidableNonEmptyString((string)settings.Values["NTPServer"]);
-            }
-
             RunOnUiThread(() =>
             {
                 IceServers = configIceServers;
+                TraceFileName = configTraceFileName;
                 TraceServerIp = configTraceServerIp;
                 TraceServerPort = configTraceServerPort;
                 Ip = peerCcServerIp;
-                NtpServer = ntpServerAddress;
                 Port = new ValidableIntegerString(peerCcPortInt, 0, 65535);
                 ReevaluateHasServer();
             });
@@ -2339,21 +2338,6 @@ namespace PeerConnectionClient.ViewModels
         }
 
         /// <summary>
-        /// ntp server changed event handler.
-        /// </summary>
-        /// <param name="sender">The sender object.</param>
-        /// <param name="e">Property Changed event information.</param>
-        void NtpServer_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == "Valid")
-            {
-                ConnectCommand.RaiseCanExecuteChanged();
-            }
-            var localSettings = ApplicationData.Current.LocalSettings;
-            localSettings.Values["NTPServer"] = _ntpServer.Value;
-        }
-
-        /// <summary>
         /// IP changed event handler.
         /// </summary>
         /// <param name="sender">The sender object.</param>
@@ -2387,66 +2371,6 @@ namespace PeerConnectionClient.ViewModels
         }
 
         protected StorageFile WebrtcLoggingFile;
-
-
-        private Boolean _ntpSyncInProgress;
-
-        /// <summary>
-        /// Indicator if sync with ntp is in progress.
-        /// </summary>
-        public Boolean NtpSyncInProgress
-        {
-            get { return _ntpSyncInProgress; }
-            set { SetProperty(ref _ntpSyncInProgress, value); }
-        }
-
-        private bool _ntpSyncEnabled;
-
-        /// <summary>
-        /// Indicator and control of NTP syncronization.
-        /// </summary>
-        public bool NtpSyncEnabled
-        {
-            get { return _ntpSyncEnabled; }
-            set
-            {
-                if (!SetProperty(ref _ntpSyncEnabled, value))
-                {
-                    return;
-                }
-
-                if (_ntpSyncEnabled)
-                {
-                    NtpSyncInProgress = true;
-                    _ntpService.GetNetworkTime(NtpServer.Value);
-                }
-                else
-                {
-                    if (NtpSyncInProgress)
-                    {
-                        NtpSyncInProgress = false;
-                        _ntpService.AbortSync();
-                    }
-                }
-            }
-        }
-
-        private void HandleNtpTimeSync(long ntpTime)
-        {
-            Debug.WriteLine("New NTP time: {0}", ntpTime);
-#if ORTCLIB
-            //Org.Ortc.OrtcLib.NtpServerTime = ntpTime;
-#else
-            //WebRTC.SynNTPTime(ntpTime);
-#endif
-            NtpSyncInProgress = false;
-        }
-
-        private void HandleNtpSynFailed()
-        {
-            NtpSyncInProgress = false;
-            NtpSyncEnabled = false;
-        }
 
         /// <summary>
         /// Application suspending event handler.

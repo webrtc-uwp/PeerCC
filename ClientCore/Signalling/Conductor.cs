@@ -27,6 +27,7 @@ using Windows.Foundation;
 using Windows.Media.Capture;
 using Windows.Devices.Enumeration;
 using Windows.Media.MediaProperties;
+using Windows.Storage;
 #if ORTCLIB
 using Org.Ortc;
 using Org.Ortc.Adapter;
@@ -322,6 +323,33 @@ namespace PeerConnectionClient.Signalling
             }
         }
 
+        public static void StartMediaTracing(String filename)
+        {
+#if !ORTCLIB
+            Org.WebRtc.WebRtcLib.StartMediaTracing();
+            StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+            Org.WebRtc.WebRtcLib.StartMediaTrace(localFolder.Path + "\\" + filename);
+#endif
+        }
+
+        public static void StopMediaTracing()
+        {
+#if !ORTCLIB
+            Org.WebRtc.WebRtcLib.StopMediaTrace();
+            Org.WebRtc.WebRtcLib.StopMediaTracing();
+#endif
+        }
+
+        public static bool IsMediaTracing()
+        {
+#if !ORTCLIB
+            return Org.WebRtc.WebRtcLib.IsMediaTracing();
+#else
+            return false;
+#endif
+        }
+
+
         bool _tracingEnabled;
         public bool TracingEnabled
         {
@@ -341,15 +369,6 @@ namespace PeerConnectionClient.Signalling
                 {
                     Org.Ortc.Ortc.StopMediaTracing();
                     Org.Ortc.Ortc.SaveMediaTrace(_traceServerIp, Int32.Parse(_traceServerPort));
-                }
-#else
-                if (_tracingEnabled)
-                {
-                    //WebRTC.StartTracing("webrtc-trace.txt");
-                }
-                else
-                {
-                    //WebRTC.StopTracing();
                 }
 #endif
             }
@@ -403,10 +422,6 @@ namespace PeerConnectionClient.Signalling
             {
                 return "";
             }
-        }
-
-        public void SynNTPTime(long ntpTime)
-        {
         }
 
         public double CpuUsage
