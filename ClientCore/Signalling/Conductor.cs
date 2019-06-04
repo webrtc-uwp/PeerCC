@@ -551,7 +551,7 @@ namespace PeerConnectionClient.Signalling
                         Width = (uint)property.Width,
                         Height = (uint)property.Height,
                         FrameRate = frameRate,
-                        MrcEnabled = true,
+                        MrcEnabled = false,
                         FrameRateDescription = $"{frameRate} fps",
                         ResolutionDescription = $"{property.Width} x {property.Height}"
                     });
@@ -773,7 +773,7 @@ namespace PeerConnectionClient.Signalling
                 }
             }
 #else
-            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id, false);
+            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id, VideoCaptureProfile.MrcEnabled);
 #if ENABLE_VIDEO_PROCESSING
             ((VideoCapturer)videoCapturer).OnVideoFrame += (IVideoFrameBufferEvent evt) =>
             {
