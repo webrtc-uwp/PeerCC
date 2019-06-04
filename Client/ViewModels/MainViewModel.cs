@@ -31,6 +31,7 @@ using PeerConnectionClient.MVVM;
 using PeerConnectionClient.Signalling;
 using PeerConnectionClient.Utilities;
 using Windows.Foundation;
+using Windows.UI.Input;
 #if ORTCLIB
 using Org.Ortc;
 using Org.Ortc.Adapter;
@@ -1884,6 +1885,11 @@ namespace PeerConnectionClient.ViewModels
                 _peerVideo = value;
                 Conductor.Instance.PeerVideo = _peerVideo;
             }
+        }
+
+        public PointerPoint MousePosition
+        {
+            set { Conductor.Instance.MousePosition = value.Position; }
         }
 
 #endregion

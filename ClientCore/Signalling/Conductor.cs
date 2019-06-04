@@ -180,6 +180,19 @@ namespace PeerConnectionClient.Signalling
         public Windows.UI.Xaml.Controls.MediaElement SelfVideo { get; set; }
         public Windows.UI.Xaml.Controls.MediaElement PeerVideo { get; set; }
 
+        private Point _mousePosition;
+
+        public Point MousePosition
+        {
+            set
+            {
+                lock (InstanceLock)
+                {
+                    _mousePosition = value;
+                }
+            }
+        }
+
         private ICustomVideoCapturer _customVideoCapturer;
         private Timer _capturerTimer;
         private DateTime _startTimestamp = DateTime.MinValue;
@@ -585,6 +598,24 @@ namespace PeerConnectionClient.Signalling
                         FrameRateDescription = "30 fps",
                         ResolutionDescription = "640 x 480"
                     });
+                    capabilityList.Add(new CaptureCapability
+                    {
+                        Width = 800,
+                        Height = 600,
+                        FrameRate = 30,
+                        MrcEnabled = false,
+                        FrameRateDescription = "30 fps",
+                        ResolutionDescription = "800 x 600"
+                    });
+                    capabilityList.Add(new CaptureCapability
+                    {
+                        Width = 1024,
+                        Height = 768,
+                        FrameRate = 30,
+                        MrcEnabled = false,
+                        FrameRateDescription = "30 fps",
+                        ResolutionDescription = "1024 x 768"
+                    });
                     return capabilityList;
                 });
                 task.Start();
@@ -815,28 +846,55 @@ namespace PeerConnectionClient.Signalling
             {
                 _capturerTimer = new Timer((object o) =>
                 {
+                    int mousePositionX;
+                    int mousePositionY;
+                    lock (InstanceLock)
+                    {
+                        mousePositionX = Convert.ToInt32(_mousePosition.X);
+                        mousePositionY = Convert.ToInt32(_mousePosition.Y);
+                    }
                     if (_customVideoCapturer == null)
                         return;
-                    var dataY = new VideoData(640 * 480);
-                    var arrayY = new byte[640 * 480];
-                    var dataU = new VideoData(640 * 480 / 4);
-                    var arrayU = new byte[640 * 480 / 4];
-                    var dataV = new VideoData(640 * 480 / 4);
-                    var arrayV = new byte[640 * 480 / 4];
+                    int frameWidth = (int)VideoCaptureProfile.Width;
+                    int frameHeight = (int)VideoCaptureProfile.Height;
+                    var dataY = new VideoData((ulong)(frameWidth * frameHeight));
+                    var arrayY = new byte[frameWidth * frameHeight];
+                    var dataU = new VideoData((ulong)(frameWidth * frameHeight / 4));
+                    var arrayU = new byte[frameWidth * frameHeight / 4];
+                    var dataV = new VideoData((ulong)(frameWidth * frameHeight / 4));
+                    var arrayV = new byte[frameWidth * frameHeight / 4];
                     for (int i = 0; i < arrayY.Length; i++)
-                        arrayY[i] = 0x80;
+                        arrayY[i] = 0x00;
                     for (int i = 0; i < arrayU.Length; i++)
                         arrayU[i] = 0x80;
                     for (int i = 0; i < arrayV.Length; i++)
                         arrayV[i] = 0x80;
+                    if (mousePositionX > frameWidth)
+                        mousePositionX = frameWidth;
+                    if (mousePositionY > frameHeight)
+                        mousePositionY = frameHeight;
+                    int leftOffsetX = mousePositionX > 10 ? 10 : mousePositionX;
+                    int rightOffsetX = mousePositionX < frameWidth - 10 ? 10 : frameWidth - mousePositionX;
+                    int upOffsetY = mousePositionY > 10 ? 10 : mousePositionY;
+                    int downOffsetY = mousePositionY < frameHeight - 10 ? 10 : frameHeight - mousePositionY;
+                    for (int y = mousePositionY - upOffsetY; y < mousePositionY + downOffsetY; y++)
+                    {
+                        for (int x = mousePositionX - leftOffsetX; x < mousePositionX + rightOffsetX; x++)
+                        {
+                            arrayY[y * frameWidth + x] = 0xff;
+                        }
+                    }
                     dataY.SetData8bit(arrayY);
                     dataU.SetData8bit(arrayU);
                     dataV.SetData8bit(arrayV);
-                    var buffer = VideoFrameBuffer.CreateFromYuv(640, 480, 640, 320, 320, dataY, dataU, dataV);
+                    var buffer = VideoFrameBuffer.CreateFromYuv(frameWidth, frameHeight, frameWidth,
+                        frameWidth / 2, frameWidth / 2, dataY, dataU, dataV);
                     if (_startTimestamp == DateTime.MinValue)
                         _startTimestamp = DateTime.Now;
-                    _customVideoCapturer.NotifyFrame(buffer, (ulong)(DateTime.UtcNow - _startTimestamp.ToUniversalTime()).TotalMilliseconds, Org.WebRtc.VideoRotation.Rotation0, 640, 480);
-                }, null, 0, 33);
+                    _customVideoCapturer.NotifyFrame(buffer, 
+                        (ulong)(DateTime.UtcNow - _startTimestamp.ToUniversalTime()).TotalMilliseconds,
+                        Org.WebRtc.VideoRotation.Rotation0, frameWidth, frameHeight);
+                }, null, 0, 1000 / VideoCaptureProfile.FrameRate);
             }
 #if ENABLE_VIDEO_PROCESSING
             ((VideoCapturer)videoCapturer).OnVideoFrame += (IVideoFrameBufferEvent evt) =>
