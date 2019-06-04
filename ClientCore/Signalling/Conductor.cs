@@ -722,17 +722,6 @@ namespace PeerConnectionClient.Signalling
 
             Debug.WriteLine("Conductor: Getting user media.");
 
-            IReadOnlyList<UseConstraint> mandatoryConstraints = new List<UseConstraint>() {
-                new Constraint("maxWidth", VideoCaptureProfile.Width.ToString()),
-                new Constraint("minWidth", VideoCaptureProfile.Width.ToString()),
-                new Constraint("maxHeight", VideoCaptureProfile.Height.ToString()),
-                new Constraint("minHeight", VideoCaptureProfile.Height.ToString()),
-                new Constraint("maxFrameRate", VideoCaptureProfile.FrameRate.ToString()),
-                new Constraint("minFrameRate", VideoCaptureProfile.FrameRate.ToString())
-            };
-            IReadOnlyList<UseConstraint> optionalConstraints = new List<UseConstraint>();
-            UseMediaConstraints mediaConstraints = new MediaConstraints(mandatoryConstraints, optionalConstraints);
-
             if (cancelationToken.IsCancellationRequested)
             {
                 return false;
@@ -784,7 +773,6 @@ namespace PeerConnectionClient.Signalling
             VideoOptions options = new VideoOptions();
             options.Factory = _factory;
             options.Capturer = videoCapturer;
-            options.Constraints = mediaConstraints;
 
             var videoTrackSource = VideoTrackSource.Create(options);
             _selfVideoTrack = MediaStreamTrack.CreateVideoTrack("SELF_VIDEO", videoTrackSource);
