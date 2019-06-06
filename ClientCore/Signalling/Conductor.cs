@@ -180,6 +180,23 @@ namespace PeerConnectionClient.Signalling
         public Windows.UI.Xaml.Controls.MediaElement SelfVideo { get; set; }
         public Windows.UI.Xaml.Controls.MediaElement PeerVideo { get; set; }
 
+        private Point _mousePosition;
+
+        public Point MousePosition
+        {
+            set
+            {
+                lock (InstanceLock)
+                {
+                    _mousePosition = value;
+                }
+            }
+        }
+
+        private ICustomVideoCapturer _customVideoCapturer;
+        private Timer _capturerTimer;
+        private DateTime _startTimestamp = DateTime.MinValue;
+
         /// <summary>
         /// Video codec used in WebRTC session.
         /// </summary>
@@ -367,6 +384,8 @@ namespace PeerConnectionClient.Signalling
             configuration.AudioCaptureFrameProcessingQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("AudioCaptureProcessingQueue");
             configuration.AudioRenderFrameProcessingQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("AudioRenderProcessingQueue");
             configuration.VideoFrameProcessingQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("VideoFrameProcessingQueue");
+            configuration.CustomAudioQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("CustomAudioQueue");
+            configuration.CustomVideoQueue = Org.WebRtc.EventQueue.GetOrCreateThreadQueueByName("CustomVideoQueue");
             Org.WebRtc.WebRtcLib.Setup(configuration);
 #endif
 
@@ -522,42 +541,88 @@ namespace PeerConnectionClient.Signalling
 #endif
                 });
             }
+            deviceList.Add(new MediaDevice
+            {
+                Id = "",
+                Name = "Custom Capture Device"
+            });
             return deviceList;
         }
 
         public IAsyncOperation<IList<CaptureCapability>> GetVideoCaptureCapabilities(string deviceId)
         {
-            MediaCapture mediaCapture = new MediaCapture();
-            MediaCaptureInitializationSettings mediaSettings =
-                new MediaCaptureInitializationSettings();
-            mediaSettings.VideoDeviceId = deviceId;
+            if (deviceId.Length != 0)
+            {
+                MediaCapture mediaCapture = new MediaCapture();
+                MediaCaptureInitializationSettings mediaSettings =
+                    new MediaCaptureInitializationSettings();
+                mediaSettings.VideoDeviceId = deviceId;
 
-            Task initTask = mediaCapture.InitializeAsync(mediaSettings).AsTask();
-            return initTask.ContinueWith(initResult => {
-                if (initResult.Exception != null)
+                Task initTask = mediaCapture.InitializeAsync(mediaSettings).AsTask();
+                return initTask.ContinueWith(initResult =>
                 {
-                    Debug.WriteLine("Failed to initialize video device: " + initResult.Exception.Message);
-                    return null;
-                }
-                var streamProperties =
-                    mediaCapture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoRecord);
-                IList<CaptureCapability> capabilityList = new List<CaptureCapability>();
-                foreach (VideoEncodingProperties property in streamProperties)
+                    if (initResult.Exception != null)
+                    {
+                        Debug.WriteLine("Failed to initialize video device: " + initResult.Exception.Message);
+                        return null;
+                    }
+                    var streamProperties =
+                        mediaCapture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoRecord);
+                    IList<CaptureCapability> capabilityList = new List<CaptureCapability>();
+                    foreach (VideoEncodingProperties property in streamProperties)
+                    {
+                        uint frameRate = (uint)(property.FrameRate.Numerator /
+                            property.FrameRate.Denominator);
+                        capabilityList.Add(new CaptureCapability
+                        {
+                            Width = (uint)property.Width,
+                            Height = (uint)property.Height,
+                            FrameRate = frameRate,
+                            MrcEnabled = true,
+                            FrameRateDescription = $"{frameRate} fps",
+                            ResolutionDescription = $"{property.Width} x {property.Height}"
+                        });
+                    }
+                    return capabilityList;
+                }).AsAsyncOperation<IList<CaptureCapability>>();
+            }
+            else
+            {
+                var task = new Task<IList<CaptureCapability>>(() =>
                 {
-                    uint frameRate = (uint)(property.FrameRate.Numerator /
-                        property.FrameRate.Denominator);
+                    IList<CaptureCapability> capabilityList = new List<CaptureCapability>();
                     capabilityList.Add(new CaptureCapability
                     {
-                        Width = (uint)property.Width,
-                        Height = (uint)property.Height,
-                        FrameRate = frameRate,
-                        MrcEnabled = true,
-                        FrameRateDescription = $"{frameRate} fps",
-                        ResolutionDescription = $"{property.Width} x {property.Height}"
+                        Width = 640,
+                        Height = 480,
+                        FrameRate = 30,
+                        MrcEnabled = false,
+                        FrameRateDescription = "30 fps",
+                        ResolutionDescription = "640 x 480"
                     });
-                }
-                return capabilityList;
-            }).AsAsyncOperation<IList<CaptureCapability>>();
+                    capabilityList.Add(new CaptureCapability
+                    {
+                        Width = 800,
+                        Height = 600,
+                        FrameRate = 30,
+                        MrcEnabled = false,
+                        FrameRateDescription = "30 fps",
+                        ResolutionDescription = "800 x 600"
+                    });
+                    capabilityList.Add(new CaptureCapability
+                    {
+                        Width = 1024,
+                        Height = 768,
+                        FrameRate = 30,
+                        MrcEnabled = false,
+                        FrameRateDescription = "30 fps",
+                        ResolutionDescription = "1024 x 768"
+                    });
+                    return capabilityList;
+                });
+                task.Start();
+                return task.AsAsyncOperation<IList<CaptureCapability>>();
+            }
         }
 
         public static IList<CodecInfo> GetAudioCodecs()
@@ -601,6 +666,13 @@ namespace PeerConnectionClient.Signalling
             _selectedAudioPlayoutDevice = device;
         }
 
+        private void VideoCapturerFactory_OnCreateCustomVideoCapturer(ICustomVideoCapturerCreateEvent evt)
+        {
+            var parameters = new CustomVideoCapturerParameters();
+            _customVideoCapturer = CustomVideoCapturer.Cast(CustomVideoCapturer.Create(parameters));
+            evt.CreatedCapturer = _customVideoCapturer;
+        }
+
         /// <summary>
         /// Creates a peer connection.
         /// </summary>
@@ -614,8 +686,21 @@ namespace PeerConnectionClient.Signalling
             }
 
             var factoryConfig = new WebRtcFactoryConfiguration();
+
             factoryConfig.AudioCaptureDeviceId = _selectedAudioCaptureDevice.Id;
             factoryConfig.AudioRenderDeviceId = _selectedAudioPlayoutDevice.Id;
+
+            // Device ID is empty string for Custom Video Capturer
+            if (_selectedVideoDevice.Id.Length != 0)
+            {
+                factoryConfig.CustomVideoFactory = null;
+            }
+            else
+            {
+                var videoCapturerFactory = CustomVideoCapturerFactory.Cast(CustomVideoCapturerFactory.Create());
+                videoCapturerFactory.OnCreateCustomVideoCapturer += VideoCapturerFactory_OnCreateCustomVideoCapturer;
+                factoryConfig.CustomVideoFactory = videoCapturerFactory;
+            }
             _factory = new WebRtcFactory(factoryConfig);
 
 #if ENABLE_AUDIO_PROCESSING
@@ -762,13 +847,73 @@ namespace PeerConnectionClient.Signalling
                 }
             }
 #else
-            var videoCapturer = VideoCapturer.Create(_selectedVideoDevice.Name, _selectedVideoDevice.Id, false);
+            if (_selectedVideoDevice.Id.Length == 0)
+            {
+                _capturerTimer = new Timer((object o) =>
+                {
+                    int mousePositionX;
+                    int mousePositionY;
+                    lock (InstanceLock)
+                    {
+                        mousePositionX = Convert.ToInt32(_mousePosition.X);
+                        mousePositionY = Convert.ToInt32(_mousePosition.Y);
+                    }
+                    if (_customVideoCapturer == null)
+                        return;
+                    int frameWidth = (int)VideoCaptureProfile.Width;
+                    int frameHeight = (int)VideoCaptureProfile.Height;
+                    var dataY = new VideoData((ulong)(frameWidth * frameHeight));
+                    var arrayY = new byte[frameWidth * frameHeight];
+                    var dataU = new VideoData((ulong)(frameWidth * frameHeight / 4));
+                    var arrayU = new byte[frameWidth * frameHeight / 4];
+                    var dataV = new VideoData((ulong)(frameWidth * frameHeight / 4));
+                    var arrayV = new byte[frameWidth * frameHeight / 4];
+                    for (int i = 0; i < arrayY.Length; i++)
+                        arrayY[i] = 0x00;
+                    for (int i = 0; i < arrayU.Length; i++)
+                        arrayU[i] = 0x80;
+                    for (int i = 0; i < arrayV.Length; i++)
+                        arrayV[i] = 0x80;
+                    if (mousePositionX > frameWidth)
+                        mousePositionX = frameWidth;
+                    if (mousePositionY > frameHeight)
+                        mousePositionY = frameHeight;
+                    int leftOffsetX = mousePositionX > 10 ? 10 : mousePositionX;
+                    int rightOffsetX = mousePositionX < frameWidth - 10 ? 10 : frameWidth - mousePositionX;
+                    int upOffsetY = mousePositionY > 10 ? 10 : mousePositionY;
+                    int downOffsetY = mousePositionY < frameHeight - 10 ? 10 : frameHeight - mousePositionY;
+                    for (int y = mousePositionY - upOffsetY; y < mousePositionY + downOffsetY; y++)
+                    {
+                        for (int x = mousePositionX - leftOffsetX; x < mousePositionX + rightOffsetX; x++)
+                        {
+                            arrayY[y * frameWidth + x] = 0xff;
+                        }
+                    }
+                    dataY.SetData8bit(arrayY);
+                    dataU.SetData8bit(arrayU);
+                    dataV.SetData8bit(arrayV);
+                    var buffer = VideoFrameBuffer.CreateFromYuv(frameWidth, frameHeight, frameWidth,
+                        frameWidth / 2, frameWidth / 2, dataY, dataU, dataV);
+                    if (_startTimestamp == DateTime.MinValue)
+                        _startTimestamp = DateTime.Now;
+                    _customVideoCapturer.NotifyFrame(buffer, 
+                        (ulong)(DateTime.UtcNow - _startTimestamp.ToUniversalTime()).TotalMilliseconds,
+                        Org.WebRtc.VideoRotation.Rotation0, frameWidth, frameHeight);
+                }, null, 0, 1000 / VideoCaptureProfile.FrameRate);
+            }
 #if ENABLE_VIDEO_PROCESSING
             ((VideoCapturer)videoCapturer).OnVideoFrame += (IVideoFrameBufferEvent evt) =>
             {
                 Process_VideoFrameBufferEvent(evt);
             };
 #endif //ENABLE_VIDEO_PROCESSING
+
+            var parameters = new VideoCapturerCreationParameters();
+            parameters.Name = _selectedVideoDevice.Name;
+            parameters.Id = _selectedVideoDevice.Id;
+            if (_selectedVideoDevice.Id.Length == 0)
+                parameters.Factory = _factory;
+            var videoCapturer = VideoCapturer.Create(parameters);
 
             VideoOptions options = new VideoOptions();
             options.Factory = _factory;
@@ -842,6 +987,12 @@ namespace PeerConnectionClient.Signalling
                     PeerConnection.OnTrack -= PeerConnection_OnTrack;
                     PeerConnection.OnRemoveTrack -= PeerConnection_OnRemoveTrack;
                     //_peerConnection.OnConnectionHealthStats -= PeerConnection_OnConnectionHealthStats;
+
+                    if (_selectedVideoDevice.Id.Length == 0)
+                    {
+                        _capturerTimer.Dispose();
+                        _capturerTimer = null;
+                    }
 
 #if !UNITY && !ORTCLIB
                     if (null != _peerVideoTrack) _peerVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
