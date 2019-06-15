@@ -53,8 +53,6 @@ using UseMediaStreamTrack = Org.WebRtc.IMediaStreamTrack;
 using UseRTCPeerConnectionIceEvent = Org.WebRtc.IRTCPeerConnectionIceEvent;
 using UseRTCTrackEvent = Org.WebRtc.IRTCTrackEvent;
 using UseRTCSessionDescription = Org.WebRtc.IRTCSessionDescription;
-using UseConstraint = Org.WebRtc.IConstraint;
-using UseMediaConstraints = Org.WebRtc.IMediaConstraints;
 #endif
 
 namespace PeerConnectionClient.Signalling
@@ -523,20 +521,21 @@ namespace PeerConnectionClient.Signalling
 #if ORTCLIB
             var devices = (await MediaDevices.EnumerateDevices());
 #else
-            var devices = (await VideoCapturer.GetDevices());
+            var devices = (await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync());
 #endif
 
             IList<MediaDevice> deviceList = new List<MediaDevice>();
             foreach (var deviceInfo in devices)
             {
+                
                 deviceList.Add(new MediaDevice
                 {
 #if ORTCLIB
                     Id = deviceInfo.DeviceId,
                     Name = deviceInfo.Label
 #else
-                    Id = deviceInfo.Info.Id,
-                    Name = deviceInfo.Info.Name,
+                    Id = deviceInfo.Id,
+                    Name = deviceInfo.Name
                     //Location = deviceInfo.Info.EnclosureLocation
 #endif
                 });
@@ -898,7 +897,7 @@ namespace PeerConnectionClient.Signalling
                         _startTimestamp = DateTime.Now;
                     _customVideoCapturer.NotifyFrame(buffer, 
                         (ulong)(DateTime.UtcNow - _startTimestamp.ToUniversalTime()).TotalMilliseconds,
-                        Org.WebRtc.VideoRotation.Rotation0, frameWidth, frameHeight);
+                        Org.WebRtc.VideoRotation.Rotation0);
                 }, null, 0, 1000 / VideoCaptureProfile.FrameRate);
             }
 #if ENABLE_VIDEO_PROCESSING
@@ -915,17 +914,12 @@ namespace PeerConnectionClient.Signalling
                 parameters.Factory = _factory;
             var videoCapturer = VideoCapturer.Create(parameters);
 
-            VideoOptions options = new VideoOptions();
-            options.Factory = _factory;
-            options.Capturer = videoCapturer;
-
-            var videoTrackSource = VideoTrackSource.Create(options);
-            _selfVideoTrack = MediaStreamTrack.CreateVideoTrack("SELF_VIDEO", videoTrackSource);
+            _selfVideoTrack = MediaStreamTrack.CreateVideoTrack(_factory, "SELF_VIDEO", videoCapturer);
 
             AudioOptions audioOptions = new AudioOptions();
             audioOptions.Factory = _factory;
             var audioTrackSource = AudioTrackSource.Create(audioOptions);
-            _selfAudioTrack = MediaStreamTrack.CreateAudioTrack("SELF_AUDIO", audioTrackSource);
+            _selfAudioTrack = MediaStreamTrack.CreateAudioTrack(_factory, "SELF_AUDIO", audioTrackSource);
 #endif
 
             if (cancelationToken.IsCancellationRequested)
