@@ -513,6 +513,15 @@ namespace PeerConnectionClient.ViewModels
             });
         }
 
+        /// <summary>
+        /// Sets up a screen capturer.
+        /// </summary>
+        /// <param name="uiElement">Main page UI element.</param>
+        public void SetupScreenCapturer(UIElement uiElement)
+        {
+            Conductor.Instance.SetupScreenCapturer(uiElement);
+        }
+
 #if ORTCLIB
         /// <summary>
         /// Handle media devices change event triggered by WebRTC.
