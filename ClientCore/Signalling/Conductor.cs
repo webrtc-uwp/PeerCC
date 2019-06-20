@@ -549,7 +549,10 @@ namespace PeerConnectionClient.Signalling
 
             // prevent queue flooding
             if (_screenCaptureQueue.Count > 120)
-                return;
+            {
+                // drop a frame in the buffer to compensate for the additional frame
+                using (frame = _screenCaptureQueue.Take()) {}
+            }
 
             _screenCaptureQueue.Add(frame);
         }
@@ -579,23 +582,46 @@ namespace PeerConnectionClient.Signalling
                         if (null == frame)
                             return;
 
-                        bool needsReset = false;
-                        bool recreateDevice = false;
                         if ((frame.ContentSize.Width != _lastSize.Width) ||
                             (frame.ContentSize.Height != _lastSize.Height))
                         {
-                            needsReset = true;
                             _lastSize = frame.ContentSize;
+                            ResetFramePool(frame.ContentSize, false);
                         }
                         try
                         {
                             var canvasBitmap = CanvasBitmap.CreateFromDirect3D11Surface(
                                 _canvasDevice,
                                 frame.Surface);
-                            uint bitmapWidth = canvasBitmap.SizeInPixels.Width;
-                            uint bitmapHeight = canvasBitmap.SizeInPixels.Height;
+
+                            uint actualBitmapWidth = canvasBitmap.SizeInPixels.Width;
+                            uint actualBitmapHeight = canvasBitmap.SizeInPixels.Height;
+
+                            uint bitmapWidth = actualBitmapWidth;
+                            uint bitmapHeight = actualBitmapHeight;
+
+                            // frame height must always be even
+                            if (bitmapWidth % 2 != 0)
+                                bitmapWidth += 1;
+                            if (bitmapHeight % 2 != 0)
+                                bitmapHeight += 1;
                             VideoData rgbData = new VideoData((ulong)(bitmapWidth * bitmapHeight * 4));
                             var pixels = canvasBitmap.GetPixelBytes();
+                            if (bitmapWidth != actualBitmapWidth)
+                            {
+                                var tmpPixels = new byte[bitmapWidth * bitmapHeight * 4];
+                                Int64 indexSource = 0;
+                                Int64 indexDest = 0;
+                                Int64 strideSource = actualBitmapWidth * 4;
+                                Int64 strideDest = bitmapWidth * 4;
+                                for (uint y = 0; y < actualBitmapHeight; ++y)
+                                {
+                                    Array.Copy(pixels, indexSource, tmpPixels, indexDest, strideSource);
+                                    indexSource += strideSource;
+                                    indexDest += strideDest;
+                                }
+                                pixels = tmpPixels;
+                            }
                             rgbData.SetData8bit(pixels);
                             var buffer = VideoFrameBuffer.CreateFromBGRA((int)bitmapWidth, (int)bitmapHeight, (int)(4 * bitmapWidth), rgbData);
                             if (_startTimestamp == DateTime.MinValue)
@@ -606,12 +632,7 @@ namespace PeerConnectionClient.Signalling
                         }
                         catch (Exception e) when (_canvasDevice.IsDeviceLost(e.HResult))
                         {
-                            needsReset = true;
-                            recreateDevice = true;
-                        }
-                        if (needsReset)
-                        {
-                            ResetFramePool(frame.ContentSize, recreateDevice);
+                            ResetFramePool(frame.ContentSize, true);
                         }
                     }
 
