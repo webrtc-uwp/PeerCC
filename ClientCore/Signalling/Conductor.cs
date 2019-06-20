@@ -564,8 +564,6 @@ namespace PeerConnectionClient.Signalling
                         VideoData rgbData = new VideoData((ulong)(bitmapWidth * bitmapHeight * 4));
                         var pixels = canvasBitmap.GetPixelBytes();
                         rgbData.SetData8bit(pixels);
-                        uint position = 50 * 4 + 200 * 4 * bitmapWidth;
-                        Debug.WriteLine("===== Point 1 - " + pixels[position] + " " + pixels[position + 1] + " " + pixels[position + 2] + " " + pixels[position + 3]);
                         var buffer = VideoFrameBuffer.CreateFromBGRA((int)bitmapWidth, (int)bitmapHeight, (int)(4 * bitmapWidth), rgbData);
                         if (_startTimestamp == DateTime.MinValue)
                             _startTimestamp = DateTime.Now;
