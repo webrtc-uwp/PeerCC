@@ -25,6 +25,7 @@ using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
 using Windows.Foundation;
 using Windows.Media.Capture;
+using Windows.Media.Devices;
 using Windows.Devices.Enumeration;
 using Windows.Media.MediaProperties;
 #if ORTCLIB
@@ -521,7 +522,8 @@ namespace PeerConnectionClient.Signalling
 #if ORTCLIB
             var devices = (await MediaDevices.EnumerateDevices());
 #else
-            var devices = (await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync());
+            var devices = (await Windows.Devices.Enumeration.DeviceInformation.FindAllAsync(
+                Windows.Media.Devices.MediaDevice.GetVideoCaptureSelector()));
 #endif
 
             IList<MediaDevice> deviceList = new List<MediaDevice>();
@@ -912,6 +914,11 @@ namespace PeerConnectionClient.Signalling
             parameters.Id = _selectedVideoDevice.Id;
             if (_selectedVideoDevice.Id.Length == 0)
                 parameters.Factory = _factory;
+            var format = new VideoFormat();
+            format.Width = (int)VideoCaptureProfile.Width;
+            format.Height = (int)VideoCaptureProfile.Height;
+            format.Interval = new TimeSpan(0, 0, 0, 0, (int)(1000 / VideoCaptureProfile.FrameRate));
+            parameters.Format = format;
             var videoCapturer = VideoCapturer.Create(parameters);
 
             _selfVideoTrack = MediaStreamTrack.CreateVideoTrack(_factory, "SELF_VIDEO", videoCapturer);
