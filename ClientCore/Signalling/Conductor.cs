@@ -923,6 +923,8 @@ namespace PeerConnectionClient.Signalling
 
             _selfVideoTrack = MediaStreamTrack.CreateVideoTrack(_factory, "SELF_VIDEO", videoCapturer);
 
+            (videoCapturer as IDisposable).Dispose();
+
             AudioOptions audioOptions = new AudioOptions();
             audioOptions.Factory = _factory;
             var audioTrackSource = AudioTrackSource.Create(audioOptions);
