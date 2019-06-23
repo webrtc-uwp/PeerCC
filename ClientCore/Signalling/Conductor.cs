@@ -647,7 +647,7 @@ namespace PeerConnectionClient.Signalling
             {
                 new CodecInfo { PreferredPayloadType = 96, ClockRate = 90000, Name = "VP8" },
                 new CodecInfo { PreferredPayloadType = 98, ClockRate = 90000, Name = "VP9" },
-                new CodecInfo { PreferredPayloadType = 100, ClockRate = 90000, Name = "H264" }
+                new CodecInfo { PreferredPayloadType = 127, ClockRate = 90000, Name = "H264" }
             };
             return ret;
 		}
