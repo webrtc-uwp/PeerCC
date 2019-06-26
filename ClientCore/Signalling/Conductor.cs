@@ -1614,9 +1614,19 @@ namespace PeerConnectionClient.Signalling
                     {
                         RTCAnswerOptions answerOptions = new RTCAnswerOptions();
                         var answer = await PeerConnection.CreateAnswer(answerOptions);
-                        await PeerConnection.SetLocalDescription(answer);
+
+                        // Alter sdp to force usage of selected codecs
+                        string modifiedSdp = answer.Sdp;
+                        SdpUtils.SelectCodec(ref modifiedSdp, AudioCodec.Name, "audio");
+                        SdpUtils.SelectCodec(ref modifiedSdp, VideoCodec.Name, "video");
+                        sdpInit = new RTCSessionDescriptionInit();
+                        sdpInit.Sdp = modifiedSdp;
+                        sdpInit.Type = answer.SdpType;
+                        var modifieAnswer = new RTCSessionDescription(sdpInit);
+
+                        await PeerConnection.SetLocalDescription(modifieAnswer);
                         // Send answer
-                        SendSdp(answer);
+                        SendSdp(modifieAnswer);
 #if ORTCLIB
                         OrtcStatsManager.Instance.StartCallWatch(SessionId, false);
 #endif
@@ -1754,7 +1764,8 @@ namespace PeerConnectionClient.Signalling
 #else
                 // Alter sdp to force usage of selected codecs
                 string modifiedSdp = offer.Sdp;
-                SdpUtils.SelectCodecs(ref modifiedSdp, AudioCodec.PreferredPayloadType, VideoCodec.PreferredPayloadType);
+                SdpUtils.SelectCodec(ref modifiedSdp, AudioCodec.Name, "audio");
+                SdpUtils.SelectCodec(ref modifiedSdp, VideoCodec.Name, "video");
                 RTCSessionDescriptionInit sdpInit = new RTCSessionDescriptionInit();
                 sdpInit.Sdp = modifiedSdp;
                 sdpInit.Type = offer.SdpType;
