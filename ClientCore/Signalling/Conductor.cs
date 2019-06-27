@@ -1614,19 +1614,9 @@ namespace PeerConnectionClient.Signalling
                     {
                         RTCAnswerOptions answerOptions = new RTCAnswerOptions();
                         var answer = await PeerConnection.CreateAnswer(answerOptions);
-
-                        // Alter sdp to force usage of selected codecs
-                        string modifiedSdp = answer.Sdp;
-                        SdpUtils.SelectCodec(ref modifiedSdp, AudioCodec.Name, "audio");
-                        SdpUtils.SelectCodec(ref modifiedSdp, VideoCodec.Name, "video");
-                        sdpInit = new RTCSessionDescriptionInit();
-                        sdpInit.Sdp = modifiedSdp;
-                        sdpInit.Type = answer.SdpType;
-                        var modifieAnswer = new RTCSessionDescription(sdpInit);
-
-                        await PeerConnection.SetLocalDescription(modifieAnswer);
+                        await PeerConnection.SetLocalDescription(answer);
                         // Send answer
-                        SendSdp(modifieAnswer);
+                        SendSdp(answer);
 #if ORTCLIB
                         OrtcStatsManager.Instance.StartCallWatch(SessionId, false);
 #endif
