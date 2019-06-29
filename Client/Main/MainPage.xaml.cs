@@ -51,6 +51,7 @@ namespace PeerConnectionClient
             this.DataContext = _mainViewModel;
             _mainViewModel.PeerVideo = PeerVideo;
             _mainViewModel.SelfVideo = SelfVideo;
+            _mainViewModel.SetupScreenCapturer(this);
         }
 
         /// <summary>
@@ -89,6 +90,16 @@ namespace PeerConnectionClient
             {
                 _mainViewModel.SelfVideo_MediaFailed(sender, e);
             }
+        }
+
+        /// <summary>
+        /// Invoked when the mouse pointer is moved 
+        /// </summary>
+        /// <param name="sender">The object where the handler is attached.</param>
+        /// <param name="e">Details about the pointer routed event.</param>
+        private void Page_PointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            _mainViewModel.MousePosition = e.GetCurrentPoint(this);
         }
     }
 }
