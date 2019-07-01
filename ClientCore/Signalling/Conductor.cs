@@ -918,6 +918,7 @@ namespace PeerConnectionClient.Signalling
             format.Width = (int)VideoCaptureProfile.Width;
             format.Height = (int)VideoCaptureProfile.Height;
             format.Interval = new TimeSpan(0, 0, 0, 0, (int)(1000 / VideoCaptureProfile.FrameRate));
+            format.Fourcc = 0;
             parameters.Format = format;
             var videoCapturer = VideoCapturer.Create(parameters);
 
