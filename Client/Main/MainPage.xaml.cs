@@ -51,6 +51,7 @@ namespace PeerConnectionClient
             this.DataContext = _mainViewModel;
             _mainViewModel.PeerVideo = PeerVideo;
             _mainViewModel.SelfVideo = SelfVideo;
+            _mainViewModel.SetupScreenCapturer(this);
         }
 
         /// <summary>
