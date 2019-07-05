@@ -629,7 +629,7 @@ namespace PeerConnectionClient.Signalling
                                 _startTimestamp = DateTime.Now;
                             _customVideoCapturer.NotifyFrame(buffer,
                                 (ulong)(DateTime.UtcNow - _startTimestamp.ToUniversalTime()).TotalMilliseconds,
-                                Org.WebRtc.VideoRotation.Rotation0, (int)bitmapWidth, (int)bitmapHeight);
+                                Org.WebRtc.VideoRotation.Rotation0);
                         }
                         catch (Exception e) when (_canvasDevice.IsDeviceLost(e.HResult))
                         {
