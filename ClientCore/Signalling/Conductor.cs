@@ -205,7 +205,6 @@ namespace PeerConnectionClient.Signalling
 
         private ICustomVideoCapturer _customVideoCapturer;
         private Timer _capturerTimer;
-        private DateTime _startTimestamp = DateTime.MinValue;
 
         private SizeInt32 _lastSize;
         private GraphicsCaptureItem _item;
@@ -625,10 +624,7 @@ namespace PeerConnectionClient.Signalling
                             }
                             rgbData.SetData8bit(pixels);
                             var buffer = VideoFrameBuffer.CreateFromBGRA((int)bitmapWidth, (int)bitmapHeight, (int)(4 * bitmapWidth), rgbData);
-                            if (_startTimestamp == DateTime.MinValue)
-                                _startTimestamp = DateTime.Now;
-                            _customVideoCapturer.NotifyFrame(buffer,
-                                (ulong)(DateTime.UtcNow - _startTimestamp.ToUniversalTime()).TotalMilliseconds,
+                            _customVideoCapturer.NotifyFrame(buffer, (ulong)(DateTimeOffset.Now.ToUnixTimeMilliseconds()),
                                 Org.WebRtc.VideoRotation.Rotation0);
                         }
                         catch (Exception e) when (_canvasDevice.IsDeviceLost(e.HResult))
@@ -1091,10 +1087,7 @@ namespace PeerConnectionClient.Signalling
                     dataV.SetData8bit(arrayV);
                     var buffer = VideoFrameBuffer.CreateFromYuv(frameWidth, frameHeight, frameWidth,
                         frameWidth / 2, frameWidth / 2, dataY, dataU, dataV);
-                    if (_startTimestamp == DateTime.MinValue)
-                        _startTimestamp = DateTime.Now;
-                    _customVideoCapturer.NotifyFrame(buffer, 
-                        (ulong)(DateTime.UtcNow - _startTimestamp.ToUniversalTime()).TotalMilliseconds,
+                    _customVideoCapturer.NotifyFrame(buffer, (ulong)(DateTimeOffset.Now.ToUnixTimeMilliseconds()),
                         Org.WebRtc.VideoRotation.Rotation0);
                 }, null, 0, 1000 / VideoCaptureProfile.FrameRate);
             }
