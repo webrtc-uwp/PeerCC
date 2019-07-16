@@ -28,6 +28,9 @@ using Windows.Media.Capture;
 using Windows.Media.Devices;
 using Windows.Devices.Enumeration;
 using Windows.Media.MediaProperties;
+using Windows.Graphics.Capture;
+using Windows.Graphics.DirectX;
+using Microsoft.Graphics.Canvas;
 #if ORTCLIB
 using Org.Ortc;
 using Org.Ortc.Adapter;
@@ -54,6 +57,14 @@ using UseMediaStreamTrack = Org.WebRtc.IMediaStreamTrack;
 using UseRTCPeerConnectionIceEvent = Org.WebRtc.IRTCPeerConnectionIceEvent;
 using UseRTCTrackEvent = Org.WebRtc.IRTCTrackEvent;
 using UseRTCSessionDescription = Org.WebRtc.IRTCSessionDescription;
+using Windows.Graphics;
+using Windows.UI.Composition;
+using Microsoft.Graphics.Canvas.UI.Composition;
+using Windows.UI.Xaml;
+using System.Numerics;
+using Windows.UI.Xaml.Hosting;
+using Windows.UI;
+using System.Collections.Concurrent;
 #endif
 
 namespace PeerConnectionClient.Signalling
@@ -194,7 +205,14 @@ namespace PeerConnectionClient.Signalling
 
         private ICustomVideoCapturer _customVideoCapturer;
         private Timer _capturerTimer;
-        private DateTime _startTimestamp = DateTime.MinValue;
+
+        private SizeInt32 _lastSize;
+        private GraphicsCaptureItem _item;
+        private Direct3D11CaptureFramePool _framePool;
+        private GraphicsCaptureSession _session;
+        private CanvasDevice _canvasDevice;
+        private BlockingCollection<Direct3D11CaptureFrame> _screenCaptureQueue = new BlockingCollection<Direct3D11CaptureFrame>();
+        private Task _screenCaptureTask;
 
         /// <summary>
         /// Video codec used in WebRTC session.
@@ -391,6 +409,12 @@ namespace PeerConnectionClient.Signalling
             Initialized?.Invoke(true);
         }
 
+        public void SetupScreenCapturer(UIElement uiElement)
+        {
+            bool supported = GraphicsCaptureSession.IsSupported();
+            _canvasDevice = new CanvasDevice();
+        }
+
         public event Action<bool> Initialized;
 
         public event Action<MediaDeviceType> OnMediaDevicesChanged;
@@ -517,6 +541,164 @@ namespace PeerConnectionClient.Signalling
             }).AsAsyncOperation<bool>();
         }
 
+        private void FramePool_FrameArrived(Direct3D11CaptureFramePool p, object o)
+        {
+            var frame = p.TryGetNextFrame();
+            if (null == frame)
+                return;
+
+            // prevent queue flooding
+            if (_screenCaptureQueue.Count > 120)
+            {
+                // drop a frame in the buffer to compensate for the additional frame
+                using (frame = _screenCaptureQueue.Take()) {}
+            }
+
+            _screenCaptureQueue.Add(frame);
+        }
+
+        async public Task StartCaptureAsync()
+        {
+            var picker = new GraphicsCapturePicker();
+            GraphicsCaptureItem item = await picker.PickSingleItemAsync();
+
+            if (item == null)
+                return;
+
+            StopCapture();
+
+            _item = item;
+            _lastSize = _item.Size;
+
+            _screenCaptureTask = new Task(() =>
+            {
+                if (null == _customVideoCapturer)
+                    return;
+
+                while (true)
+                {
+                    using (var frame = _screenCaptureQueue.Take())
+                    {
+                        if (null == frame)
+                            return;
+
+                        if ((frame.ContentSize.Width != _lastSize.Width) ||
+                            (frame.ContentSize.Height != _lastSize.Height))
+                        {
+                            _lastSize = frame.ContentSize;
+                            ResetFramePool(frame.ContentSize, false);
+                        }
+                        try
+                        {
+                            var canvasBitmap = CanvasBitmap.CreateFromDirect3D11Surface(
+                                _canvasDevice,
+                                frame.Surface);
+
+                            uint actualBitmapWidth = canvasBitmap.SizeInPixels.Width;
+                            uint actualBitmapHeight = canvasBitmap.SizeInPixels.Height;
+
+                            uint bitmapWidth = actualBitmapWidth;
+                            uint bitmapHeight = actualBitmapHeight;
+
+                            // frame height must always be even
+                            if (bitmapWidth % 2 != 0)
+                                bitmapWidth += 1;
+                            if (bitmapHeight % 2 != 0)
+                                bitmapHeight += 1;
+                            VideoData rgbData = new VideoData((ulong)(bitmapWidth * bitmapHeight * 4));
+                            var pixels = canvasBitmap.GetPixelBytes();
+                            if (bitmapWidth != actualBitmapWidth)
+                            {
+                                var tmpPixels = new byte[bitmapWidth * bitmapHeight * 4];
+                                Int64 indexSource = 0;
+                                Int64 indexDest = 0;
+                                Int64 strideSource = actualBitmapWidth * 4;
+                                Int64 strideDest = bitmapWidth * 4;
+                                for (uint y = 0; y < actualBitmapHeight; ++y)
+                                {
+                                    Array.Copy(pixels, indexSource, tmpPixels, indexDest, strideSource);
+                                    indexSource += strideSource;
+                                    indexDest += strideDest;
+                                }
+                                pixels = tmpPixels;
+                            }
+                            rgbData.SetData8bit(pixels);
+                            var buffer = VideoFrameBuffer.CreateFromBGRA((int)bitmapWidth, (int)bitmapHeight, (int)(4 * bitmapWidth), rgbData);
+                            _customVideoCapturer.NotifyFrame(buffer, (ulong)(DateTimeOffset.Now.ToUnixTimeMilliseconds()),
+                                Org.WebRtc.VideoRotation.Rotation0);
+                        }
+                        catch (Exception e) when (_canvasDevice.IsDeviceLost(e.HResult))
+                        {
+                            ResetFramePool(frame.ContentSize, true);
+                        }
+                    }
+
+                }
+            });
+
+            _screenCaptureTask.Start();
+
+            _framePool = Direct3D11CaptureFramePool.Create(
+               _canvasDevice,
+               DirectXPixelFormat.B8G8R8A8UIntNormalized,
+               2,
+               _item.Size);
+
+            _framePool.FrameArrived += FramePool_FrameArrived;
+
+            _item.Closed += (s, a) =>
+            {
+                StopCapture();
+            };
+
+            _session = _framePool.CreateCaptureSession(_item);
+            _session.StartCapture();
+        }
+
+        public void StopCapture()
+        {
+            if (_item != null)
+                _framePool.FrameArrived -= FramePool_FrameArrived;
+
+            if (null != _screenCaptureTask)
+            {
+                _screenCaptureQueue.Add(null);
+                _screenCaptureTask.Wait();
+                _screenCaptureTask = null;
+            }
+
+            _session?.Dispose();
+            _framePool?.Dispose();
+            _item = null;
+            _session = null;
+            _framePool = null;
+        }
+
+        private void ResetFramePool(SizeInt32 size, bool recreateDevice)
+        {
+            do
+            {
+                try
+                {
+                    if (recreateDevice)
+                    {
+                        _canvasDevice = new CanvasDevice();
+                    }
+
+                    _framePool.Recreate(
+                        _canvasDevice,
+                        DirectXPixelFormat.B8G8R8A8UIntNormalized,
+                        2,
+                        size);
+                }
+                catch (Exception e) when (_canvasDevice.IsDeviceLost(e.HResult))
+                {
+                    _canvasDevice = null;
+                    recreateDevice = true;
+                }
+            } while (_canvasDevice == null);
+        }
+
         async public static Task<IList<MediaDevice>> GetVideoCaptureDevices()
         {
 #if ORTCLIB
@@ -544,15 +726,25 @@ namespace PeerConnectionClient.Signalling
             }
             deviceList.Add(new MediaDevice
             {
-                Id = "",
+                Id = "custom-capture",
                 Name = "Custom Capture Device"
             });
+
+            if (GraphicsCaptureSession.IsSupported())
+            {
+                deviceList.Add(new MediaDevice
+                {
+                    Id = "screen-share",
+                    Name = "Screen Sharing"
+                });
+            }
+
             return deviceList;
         }
 
         public IAsyncOperation<IList<CaptureCapability>> GetVideoCaptureCapabilities(string deviceId)
         {
-            if (deviceId.Length != 0)
+            if (!_selectedVideoDevice.Id.Equals("custom-capture") && !_selectedVideoDevice.Id.Equals("screen-share"))
             {
                 MediaCapture mediaCapture = new MediaCapture();
                 MediaCaptureInitializationSettings mediaSettings =
@@ -691,17 +883,17 @@ namespace PeerConnectionClient.Signalling
             factoryConfig.AudioCaptureDeviceId = _selectedAudioCaptureDevice.Id;
             factoryConfig.AudioRenderDeviceId = _selectedAudioPlayoutDevice.Id;
 
-            // Device ID is empty string for Custom Video Capturer
-            if (_selectedVideoDevice.Id.Length != 0)
-            {
-                factoryConfig.CustomVideoFactory = null;
-            }
-            else
+            if (_selectedVideoDevice.Id.Equals("custom-capture") || _selectedVideoDevice.Id.Equals("screen-share"))
             {
                 var videoCapturerFactory = CustomVideoCapturerFactory.Cast(CustomVideoCapturerFactory.Create());
                 videoCapturerFactory.OnCreateCustomVideoCapturer += VideoCapturerFactory_OnCreateCustomVideoCapturer;
                 factoryConfig.CustomVideoFactory = videoCapturerFactory;
             }
+            else
+            {
+                factoryConfig.CustomVideoFactory = null;
+            }
+
             _factory = new WebRtcFactory(factoryConfig);
 
 #if ENABLE_AUDIO_PROCESSING
@@ -848,7 +1040,7 @@ namespace PeerConnectionClient.Signalling
                 }
             }
 #else
-            if (_selectedVideoDevice.Id.Length == 0)
+            if (_selectedVideoDevice.Id.Equals("custom-capture"))
             {
                 _capturerTimer = new Timer((object o) =>
                 {
@@ -895,12 +1087,16 @@ namespace PeerConnectionClient.Signalling
                     dataV.SetData8bit(arrayV);
                     var buffer = VideoFrameBuffer.CreateFromYuv(frameWidth, frameHeight, frameWidth,
                         frameWidth / 2, frameWidth / 2, dataY, dataU, dataV);
-                    if (_startTimestamp == DateTime.MinValue)
-                        _startTimestamp = DateTime.Now;
-                    _customVideoCapturer.NotifyFrame(buffer, 
-                        (ulong)(DateTime.UtcNow - _startTimestamp.ToUniversalTime()).TotalMilliseconds,
+                    _customVideoCapturer.NotifyFrame(buffer, (ulong)(DateTimeOffset.Now.ToUnixTimeMilliseconds()),
                         Org.WebRtc.VideoRotation.Rotation0);
                 }, null, 0, (int)(1000 / VideoCaptureProfile.FrameRate));
+            }
+            else if (_selectedVideoDevice.Id.Equals("screen-share"))
+            {
+                await _uiDispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                {
+                    await StartCaptureAsync();
+                });
             }
 #if ENABLE_VIDEO_PROCESSING
             ((VideoCapturer)videoCapturer).OnVideoFrame += (IVideoFrameBufferEvent evt) =>
@@ -912,7 +1108,7 @@ namespace PeerConnectionClient.Signalling
             var parameters = new VideoCapturerCreationParameters();
             parameters.Name = _selectedVideoDevice.Name;
             parameters.Id = _selectedVideoDevice.Id;
-            if (_selectedVideoDevice.Id.Length == 0)
+            if (_selectedVideoDevice.Id.Equals("custom-capture") || _selectedVideoDevice.Id.Equals("screen-share"))
                 parameters.Factory = _factory;
             var format = new VideoFormat();
             format.Width = (int)VideoCaptureProfile.Width;
@@ -992,10 +1188,17 @@ namespace PeerConnectionClient.Signalling
                     PeerConnection.OnRemoveTrack -= PeerConnection_OnRemoveTrack;
                     //_peerConnection.OnConnectionHealthStats -= PeerConnection_OnConnectionHealthStats;
 
-                    if (_selectedVideoDevice.Id.Length == 0)
+                    if (_selectedVideoDevice.Id.Equals("custom-capture"))
                     {
                         _capturerTimer.Dispose();
                         _capturerTimer = null;
+                    }
+                    else if (_selectedVideoDevice.Id.Equals("screen-share"))
+                    {
+                        _uiDispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            StopCapture();
+                        }).AsTask().Wait();
                     }
 
 #if !UNITY && !ORTCLIB
@@ -1553,7 +1756,8 @@ namespace PeerConnectionClient.Signalling
 #else
                 // Alter sdp to force usage of selected codecs
                 string modifiedSdp = offer.Sdp;
-                SdpUtils.SelectCodecs(ref modifiedSdp, AudioCodec.PreferredPayloadType, VideoCodec.PreferredPayloadType);
+                SdpUtils.SelectCodec(ref modifiedSdp, AudioCodec.Name, "audio");
+                SdpUtils.SelectCodec(ref modifiedSdp, VideoCodec.Name, "video");
                 RTCSessionDescriptionInit sdpInit = new RTCSessionDescriptionInit();
                 sdpInit.Sdp = modifiedSdp;
                 sdpInit.Type = offer.SdpType;
