@@ -900,7 +900,7 @@ namespace PeerConnectionClient.Signalling
                     _customVideoCapturer.NotifyFrame(buffer, 
                         (ulong)(DateTime.UtcNow - _startTimestamp.ToUniversalTime()).TotalMilliseconds,
                         Org.WebRtc.VideoRotation.Rotation0);
-                }, null, 0, 1000 / VideoCaptureProfile.FrameRate);
+                }, null, 0, (int)(1000 / VideoCaptureProfile.FrameRate));
             }
 #if ENABLE_VIDEO_PROCESSING
             ((VideoCapturer)videoCapturer).OnVideoFrame += (IVideoFrameBufferEvent evt) =>
