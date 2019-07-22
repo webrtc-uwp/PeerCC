@@ -625,7 +625,7 @@ namespace PeerConnectionClient.Signalling
                                 pixels = tmpPixels;
                             }
                             rgbData.SetData8bit(pixels);
-                            var buffer = VideoFrameBuffer.CreateFromBGRA((int)bitmapWidth, (int)bitmapHeight, (int)(4 * bitmapWidth), rgbData);
+                            var buffer = VideoFrameBuffer.CreateFromARGB((int)bitmapWidth, (int)bitmapHeight, (int)(4 * bitmapWidth), rgbData);
                             if (_startTimestamp == DateTime.MinValue)
                                 _startTimestamp = DateTime.Now;
                             _customVideoCapturer.NotifyFrame(buffer,
