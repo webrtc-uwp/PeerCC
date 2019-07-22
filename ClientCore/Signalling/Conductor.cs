@@ -623,7 +623,7 @@ namespace PeerConnectionClient.Signalling
                                 pixels = tmpPixels;
                             }
                             rgbData.SetData8bit(pixels);
-                            var buffer = VideoFrameBuffer.CreateFromBGRA((int)bitmapWidth, (int)bitmapHeight, (int)(4 * bitmapWidth), rgbData);
+                            var buffer = VideoFrameBuffer.CreateFromARGB((int)bitmapWidth, (int)bitmapHeight, (int)(4 * bitmapWidth), rgbData);
                             _customVideoCapturer.NotifyFrame(buffer, (ulong)(DateTimeOffset.Now.ToUnixTimeMilliseconds()),
                                 Org.WebRtc.VideoRotation.Rotation0);
                         }
