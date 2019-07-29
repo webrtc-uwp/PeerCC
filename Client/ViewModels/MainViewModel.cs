@@ -33,6 +33,7 @@ using PeerConnectionClient.Utilities;
 using Windows.Foundation;
 using Windows.Devices.Enumeration;
 using Windows.Media.Devices;
+using Windows.UI.Input;
 #if ORTCLIB
 using Org.Ortc;
 using Org.Ortc.Adapter;
@@ -542,6 +543,15 @@ namespace PeerConnectionClient.ViewModels
             {
                 OnInitialized?.Invoke();
             });
+        }
+
+        /// <summary>
+        /// Sets up a screen capturer.
+        /// </summary>
+        /// <param name="uiElement">Main page UI element.</param>
+        public void SetupScreenCapturer(UIElement uiElement)
+        {
+            Conductor.Instance.SetupScreenCapturer(uiElement);
         }
 
 #if ORTCLIB
@@ -1945,6 +1955,11 @@ namespace PeerConnectionClient.ViewModels
                 _peerVideo = value;
                 Conductor.Instance.PeerVideo = _peerVideo;
             }
+        }
+
+        public PointerPoint MousePosition
+        {
+            set { Conductor.Instance.MousePosition = value.Position; }
         }
 
 #endregion

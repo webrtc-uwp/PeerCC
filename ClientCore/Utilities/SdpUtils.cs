@@ -27,84 +27,72 @@ namespace PeerConnectionClient.Utilities
     class SdpUtils
     {
         /// <summary>
-        /// Forces the SDP to use the selected audio and video codecs.
+        /// Forces the SDP to use the selected audio or video codec.
         /// </summary>
         /// <param name="sdp">Session description.</param>
-        /// <param name="audioCodec">Audio codec.</param>
-        /// <param name="videoCodec">Video codec.</param>
+        /// <param name="codecName">Name of the codec.</param>
+        /// <param name="codecType">Type of the codec (audio or video).</param>
         /// <returns>True if succeeds to force to use the selected audio/video codecs.</returns>
-#if ORTCLIB
-        public static bool SelectCodecs(ref string sdp, CodecInfo audioCodec, CodecInfo videoCodec)
-#else
-        public static bool SelectCodecs(ref string sdp, int audioCodecId, int videoCodecId)
-#endif
+        public static bool SelectCodec(ref string sdp, string codecName, string codecType)
         {
-            Regex mfdRegex = new Regex("\r\nm=audio.*RTP.*?( .\\d*)+\r\n");
-            Match mfdMatch = mfdRegex.Match(sdp);
-            List<string> mfdListToErase = new List<string>(); //mdf = media format descriptor
-            bool audioMediaDescFound = mfdMatch.Groups.Count > 1; //Group 0 is whole match
-#if ORTCLIB
-            byte audioCodecId=audioCodec?.PreferredPayloadType ?? 0;
-            byte videoCodecId=videoCodec?.PreferredPayloadType ?? 0;
-#endif
-            if (audioMediaDescFound)
+            var sdpLines = sdp.Split("\r\n");
+            var mLineIndex = -1;
+
+            for (var i = 0; i < sdpLines.Length; i++)
             {
-                if (audioCodecId < 0)
+                if (sdpLines[i].IndexOf("m=") == 0 && sdpLines[i].ToLower().IndexOf(codecType) != -1)
                 {
-                    return false;
+                    mLineIndex = i;
+                    break;
                 }
-                for (int groupCtr = 1/*Group 0 is whole match*/; groupCtr < mfdMatch.Groups.Count; groupCtr++)
+            }
+
+            if (mLineIndex == -1)
+                return false;
+
+            string payload = String.Empty;
+
+            for (var i = sdpLines.Length - 1; i >= 0; i--)
+            {
+                var index = -1;
+                for (var j = i; j >= 0; j--)
                 {
-                    for (int captureCtr = 0; captureCtr < mfdMatch.Groups[groupCtr].Captures.Count; captureCtr++)
+                    if (sdpLines[j].IndexOf("a=rtpmap") == 0 && sdpLines[j].ToLower().IndexOf(codecName.ToLower()) != -1)
                     {
-                        mfdListToErase.Add(mfdMatch.Groups[groupCtr].Captures[captureCtr].Value.TrimStart());
+                        index = j;
+                        break;
                     }
                 }
-                if (!mfdListToErase.Remove(audioCodecId.ToString()))
+                if (index != -1)
                 {
-                    return false;
-                }
-            }
-
-            mfdRegex = new Regex("\r\nm=video.*RTP.*?( .\\d*)+\r\n");
-            mfdMatch = mfdRegex.Match(sdp);
-            bool videoMediaDescFound = mfdMatch.Groups.Count > 1; //Group 0 is whole match
-            if (videoMediaDescFound)
-            {
-                if (videoCodecId < 0)
-                {
-                    return false;
-                }
-                for (int groupCtr = 1/*Group 0 is whole match*/; groupCtr < mfdMatch.Groups.Count; groupCtr++)
-                {
-                    for (int captureCtr = 0; captureCtr < mfdMatch.Groups[groupCtr].Captures.Count; captureCtr++)
+                    i = index;
+                    var pattern = new Regex("a=rtpmap:(\\d+) [a-zA-Z0-9-]+\\/\\d+");
+                    var result = pattern.Match(sdpLines[index]).Groups;
+                    if (result.Count == 2)
+                        payload = result[1].Value;
+                    if (payload.Length != 0)
                     {
-                        mfdListToErase.Add(mfdMatch.Groups[groupCtr].Captures[captureCtr].Value.TrimStart());
+                        var elements = new List<string>(sdpLines[mLineIndex].Split(" "));
+
+                        var newLine = elements.GetRange(0, 3);
+                        newLine.Add(payload);
+                        for (var j = 3; j < elements.Count; j++)
+                        {
+                            if (elements[j] != payload)
+                            {
+                                newLine.Add(elements[j]);
+                            }
+                        }
+                        sdpLines[mLineIndex] = String.Join(" ", newLine);
                     }
                 }
-                if (!mfdListToErase.Remove(videoCodecId.ToString()))
+                else
                 {
-                    return false;
+                    break;
                 }
             }
 
-            if (audioMediaDescFound)
-            {
-                // Alter audio entry
-                Regex audioRegex = new Regex("\r\n(m=audio.*RTP.*?)( .\\d*)+");
-                sdp = audioRegex.Replace(sdp, "\r\n$1 " + audioCodecId);
-            }
-
-            if (videoMediaDescFound)
-            {
-                // Alter video entry
-                Regex videoRegex = new Regex("\r\n(m=video.*RTP.*?)( .\\d*)+");
-                sdp = videoRegex.Replace(sdp, "\r\n$1 " + videoCodecId);
-            }
-
-            // Remove associated rtp mapping, format parameters, feedback parameters
-            Regex removeOtherMdfs = new Regex("a=(rtpmap|fmtp|rtcp-fb):(" + String.Join("|", mfdListToErase) + ") .*\r\n");
-            sdp = removeOtherMdfs.Replace(sdp, "");
+            sdp = String.Join("\r\n", sdpLines);
 
             return true;
         }
