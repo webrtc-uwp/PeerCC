@@ -620,8 +620,17 @@
                         TextWrapping="Wrap"
                         Margin="5,0,5,10"
                         Width="200"
-                        Text="Note: Traces are automatically sent upon the tracing is stopped!"
+                        Text="Note: Traces are saved to the file in local applicaition data store folder!"
                         RelativePanel.Below="TracingToggleSwitch"/>
+                    <TextBox 
+                        Name="TraceFileNameTextBox"
+                        Header="Trace file name"
+                        Margin="5"
+                        HorizontalAlignment="Left"
+                        PlaceholderText="File name"
+                        Text="{Binding TraceFileName, Mode=TwoWay}"
+                        Width="155"
+                        RelativePanel.Below="TracingNote"/>
                     <TextBox 
                         Name="TraceServerIpTextBox"
                         Header="Trace server IP"
@@ -629,15 +638,15 @@
                         HorizontalAlignment="Left"
                         PlaceholderText="IPv4"
                         Text="{Binding TraceServerIp, Mode=TwoWay}"
-                        IsEnabled="{Binding TracingEnabled, Mode=OneWay}"
+                        IsEnabled="false"
                         Width="155"
-                        RelativePanel.Below="TracingNote"/>
+                        RelativePanel.Below="TraceFileNameTextBox"/>
                     <TextBox 
                         Name="TraceServerPortTextBox"
                         Header="Trace server port"
                         Margin="5"
                         Text="{Binding TraceServerPort, Mode=TwoWay}"
-                        IsEnabled="{Binding TracingEnabled, Mode=OneWay}"
+                        IsEnabled="false"
                         HorizontalAlignment="Left"
                         PlaceholderText="Port"
                         Width="155"
@@ -650,40 +659,15 @@
                         HorizontalAlignment="Left"
                         HorizontalContentAlignment="Left"
                         RelativePanel.Below="TraceServerPortTextBox"/>
-                    <controls:ErrorControl 
-                          x:Name="NTPServerAddressTextBox"
-                          RelativePanel.Below="LoggingToggleSwitch"
-                          DataContext="{Binding NtpServer}"
-                          Margin="5">
-                        <controls:ErrorControl.InnerContent>
-                            <TextBox 
-                                  Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  MinWidth="160"
-                                  Header="NTP Server"/>
-                        </controls:ErrorControl.InnerContent>
-                    </controls:ErrorControl>
-                    <ToggleSwitch 
-                          Name="NtpSyncToggleSwitch"
-                          Header="NTP Sync"
-                          IsOn="{Binding NtpSyncEnabled, Mode=TwoWay}"
-                          HorizontalAlignment="Left"
-                          HorizontalContentAlignment="Left"
-                          RelativePanel.Below="NTPServerAddressTextBox"
-                          Margin="5,5,5,0"/>
-                    <TextBlock 
-                        Name="NtpSyncInProgressLabel"
-                        Text="NTP sync in progress..."
-                        Visibility="{Binding NtpSyncInProgress, Mode=OneWay, Converter={StaticResource BoolToVisConverter}}"
-                        RelativePanel.Below="NtpSyncToggleSwitch"
-                        Margin="5,0,5,5"/>
                     <ToggleSwitch 
                           Name="EtwStatsToggleSwitch"
                           Header="ETW Statistics"
                           IsOn="{Binding EtwStatsEnabled, Mode=TwoWay}"
                           HorizontalAlignment="Left"
                           HorizontalContentAlignment="Left"
-                          RelativePanel.Below="NtpSyncInProgressLabel"
-                          Margin="5"/>
+                          RelativePanel.Below="TraceServerPortTextBox"
+                          Margin="5"
+                          Visibility="Collapsed"/>
                     <ToggleSwitch 
                           Name="ConnectionHealtStatsToggleSwitch"
                           Header="Connection Health Statistics"
@@ -691,7 +675,8 @@
                           HorizontalAlignment="Left"
                           HorizontalContentAlignment="Left"
                           RelativePanel.Below="EtwStatsToggleSwitch"
-                          Margin="5"/>
+                          Margin="5"
+                          Visibility="Collapsed"/>
                 </RelativePanel>
             </RelativePanel>
             <TextBlock
