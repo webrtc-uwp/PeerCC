@@ -18,7 +18,7 @@
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <PackageCertificateKeyFile>PeerConnectionClient.WebRtc_TemporaryKey.pfx</PackageCertificateKeyFile>
     <AppxBundlePlatforms>$(Platform)</AppxBundlePlatforms>
-    <PackageCertificateThumbprint>BB8A06CAEDBC89DD4FD493DAE421659FB98BEEB9</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>50e9a12c95c8970e0b1469b62014fa11d070c550</PackageCertificateThumbprint>
     <RuntimeIdentifiers>win10-x64;win10-x86;win10-arm64;win10-arm64-aot;win10-arm;win10-x64-aot;win10-arm-aot;win10-x86-aot</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
