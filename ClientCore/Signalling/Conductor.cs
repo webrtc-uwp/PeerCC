@@ -53,6 +53,7 @@ using PeerConnectionClient.Utilities;
 using PeerConnectionClientCore.Stats;
 #endif
 using System.Text;
+using UseMediaStream = Org.WebRtc.IMediaStream;
 using UseMediaStreamTrack = Org.WebRtc.IMediaStreamTrack;
 using UseRTCPeerConnectionIceEvent = Org.WebRtc.IRTCPeerConnectionIceEvent;
 using UseRTCTrackEvent = Org.WebRtc.IRTCTrackEvent;
@@ -184,6 +185,7 @@ namespace PeerConnectionClient.Signalling
         /// </summary>
         public Signaller Signaller => _signaller;
 
+        private UseMediaStream _selfStream;
         private UseMediaStreamTrack _peerVideoTrack;
         private UseMediaStreamTrack _selfVideoTrack;
         private UseMediaStreamTrack _peerAudioTrack;
@@ -891,7 +893,7 @@ namespace PeerConnectionClient.Signalling
         async private Task<bool> CreatePeerConnection(CancellationToken cancelationToken)
         {
             Debug.Assert(PeerConnection == null);
-            if(cancelationToken.IsCancellationRequested)
+            if (cancelationToken.IsCancellationRequested)
             {
                 return false;
             }
@@ -1137,6 +1139,8 @@ namespace PeerConnectionClient.Signalling
             };
 #endif //ENABLE_VIDEO_PROCESSING
 
+            _selfStream = MediaStream.CreateLocalMediaStream("SELF_STREAM", _factory);
+
             var parameters = new VideoCapturerCreationParameters();
             parameters.Name = _selectedVideoDevice.Name;
             parameters.Id = _selectedVideoDevice.Id;
@@ -1165,8 +1169,10 @@ namespace PeerConnectionClient.Signalling
 
 #if !ORTCLIB
             Debug.WriteLine("Conductor: Adding local media tracks.");
-            PeerConnection.AddTrack(_selfVideoTrack);
-            PeerConnection.AddTrack(_selfAudioTrack);
+            _selfStream.AddTrack(_selfVideoTrack);
+            _selfStream.AddTrack(_selfAudioTrack);
+            PeerConnection.AddTrack(_selfVideoTrack, new List<String> { _selfStream.Id });
+            PeerConnection.AddTrack(_selfAudioTrack, new List<String> { _selfStream.Id });
 #endif
             OnAddLocalTrack?.Invoke(_selfVideoTrack);
             OnAddLocalTrack?.Invoke(_selfAudioTrack);
