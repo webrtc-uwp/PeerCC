@@ -1241,14 +1241,19 @@ namespace PeerConnectionClient.Signalling
                     if (null != _peerVideoTrack) _peerVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
                     if (null != _selfVideoTrack) _selfVideoTrack.Element = null; // Org.WebRtc.MediaElementMaker.Bind(obj);
 #endif
+                    PeerConnection.RemoveTrack(PeerConnection.GetSenders()[0]);
+                    PeerConnection.RemoveTrack(PeerConnection.GetSenders()[1]);
+
                     (_peerVideoTrack as IDisposable)?.Dispose();
                     (_selfVideoTrack as IDisposable)?.Dispose();
                     (_peerAudioTrack as IDisposable)?.Dispose();
                     (_selfAudioTrack as IDisposable)?.Dispose();
+                    (_selfStream as IDisposable)?.Dispose();
                     _peerVideoTrack = null;
                     _selfVideoTrack = null;
                     _peerAudioTrack = null;
                     _selfAudioTrack = null;
+                    _selfStream = null;
 
                     OnPeerConnectionClosed?.Invoke();
 
