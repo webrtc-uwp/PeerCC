@@ -35,7 +35,8 @@ namespace PeerConnectionClient.Utilities
         /// <returns>True if succeeds to force to use the selected audio/video codecs.</returns>
         public static bool SelectCodec(ref string sdp, string codecName, string codecType)
         {
-            var sdpLines = sdp.Split("\r\n");
+            string[] delimiters = { "\r\n" };
+            var sdpLines = sdp.Split(delimiters, StringSplitOptions.None);
             var mLineIndex = -1;
 
             for (var i = 0; i < sdpLines.Length; i++)
@@ -72,7 +73,7 @@ namespace PeerConnectionClient.Utilities
                         payload = result[1].Value;
                     if (payload.Length != 0)
                     {
-                        var elements = new List<string>(sdpLines[mLineIndex].Split(" "));
+                        var elements = new List<string>(sdpLines[mLineIndex].Split(' '));
 
                         var newLine = elements.GetRange(0, 3);
                         newLine.Add(payload);

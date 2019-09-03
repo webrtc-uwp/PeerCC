@@ -13,6 +13,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using PeerConnectionClient.Signalling;
 using Windows.ApplicationModel.Core;
+using Windows.Devices.Enumeration;
+using Windows.Media.Devices;
 
 #if USE_CX_VERSION
 using UseMediaStreamTrack = Org.WebRtc.MediaStreamTrack;
@@ -88,6 +90,10 @@ public class ControlScript : MonoBehaviour
         {
             if (antecedent.Result)
             {
+                Conductor.Instance.Initialized += Conductor_Initialized;
+                Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
+                Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
+
                 List<Conductor.IceServer> iceServers = new List<Conductor.IceServer>();
                 iceServers.Add(new Conductor.IceServer { Host = "stun.l.google.com:19302", Type = Conductor.IceServer.ServerType.STUN });
                 iceServers.Add(new Conductor.IceServer { Host = "stun1.l.google.com:19302", Type = Conductor.IceServer.ServerType.STUN });
@@ -109,43 +115,51 @@ public class ControlScript : MonoBehaviour
                 Conductor.Instance.VideoCodec = videoCodecList.FirstOrDefault(c => c.Name == "H264");
                 System.Diagnostics.Debug.WriteLine("Selected video codec - " + Conductor.Instance.VideoCodec.Name);
 
-                uint preferredWidth = 896;
-                uint preferredHeght = 504;
-                uint preferredFrameRate = 15;
-                uint minSizeDiff = uint.MaxValue;
-                Conductor.MediaDevice selectedDevice = null;
-                Conductor.CaptureCapability selectedCapability = null;
-                foreach (Conductor.MediaDevice device in await Conductor.GetVideoCaptureDevices())
+                Conductor.MediaDevice device = (await Conductor.GetVideoCaptureDevices()).First();
+
+                Conductor.Instance.GetVideoCaptureCapabilities(device.Id).AsTask().ContinueWith(capabilities =>
                 {
-                    Conductor.Instance.GetVideoCaptureCapabilities(device.Id).AsTask().ContinueWith(capabilities =>
+                    uint preferredWidth = 896;
+                    uint preferredHeght = 504;
+                    uint preferredFrameRate = 15;
+                    uint minSizeDiff = uint.MaxValue;
+                    Conductor.MediaDevice selectedDevice = null;
+                    Conductor.CaptureCapability selectedCapability = null;
+
+                    foreach (Conductor.CaptureCapability capability in capabilities.Result)
                     {
-                        foreach (Conductor.CaptureCapability capability in capabilities.Result)
+                        uint sizeDiff = (uint)Math.Abs(preferredWidth - capability.Width) + (uint)Math.Abs(preferredHeght - capability.Height);
+                        if (sizeDiff < minSizeDiff)
                         {
-                            uint sizeDiff = (uint)Math.Abs(preferredWidth - capability.Width) + (uint)Math.Abs(preferredHeght - capability.Height);
-                            if (sizeDiff < minSizeDiff)
-                            {
-                                selectedDevice = device;
-                                selectedCapability = capability;
-                                minSizeDiff = sizeDiff;
-                            }
-                            System.Diagnostics.Debug.WriteLine("Video device capability - " + device.Name + " - " + capability.Width + "x" + capability.Height + "@" + capability.FrameRate);
+                            selectedDevice = device;
+                            selectedCapability = capability;
+                            minSizeDiff = sizeDiff;
                         }
-                    }).Wait();
-                }
+                        System.Diagnostics.Debug.WriteLine("Video device capability - " + device.Name + " - " + capability.Width + "x" + capability.Height + "@" + capability.FrameRate);
+                    }
 
-                if (selectedDevice != null)
-                {
-                    selectedCapability.FrameRate = preferredFrameRate;
-                    selectedCapability.MrcEnabled = true;
-                    Conductor.Instance.SelectVideoDevice(selectedDevice);
-                    Conductor.Instance.VideoCaptureProfile = selectedCapability;
-                    System.Diagnostics.Debug.WriteLine("Selected video device - " + selectedDevice.Name);
-                    System.Diagnostics.Debug.WriteLine("Selected video device capability - " + selectedCapability.Width + "x" + selectedCapability.Height + "@" + selectedCapability.FrameRate);
-                }
+                    if (selectedDevice != null)
+                    {
+                        selectedCapability.FrameRate = preferredFrameRate;
+                        selectedCapability.MrcEnabled = true;
+                        Conductor.Instance.SelectVideoDevice(selectedDevice);
+                        Conductor.Instance.VideoCaptureProfile = selectedCapability;
+                        System.Diagnostics.Debug.WriteLine("Selected video device - " + selectedDevice.Name);
+                        System.Diagnostics.Debug.WriteLine("Selected video device capability - " + selectedCapability.Width + "x" + selectedCapability.Height + "@" + selectedCapability.FrameRate);
+                    }
+                });
 
-                Conductor.Instance.Initialized += Conductor_Initialized;
-                Conductor.Instance.EnableLogging(Conductor.LogLevel.Verbose);
-                Conductor.Instance.Initialize(CoreApplication.MainView.CoreWindow.Dispatcher);
+                DeviceInformation audioInput = (await DeviceInformation.FindAllAsync(MediaDevice.GetAudioCaptureSelector())).First();
+                Conductor.MediaDevice audioCaptureDevice = new Conductor.MediaDevice();
+                audioCaptureDevice.Id = audioInput.Id;
+                audioCaptureDevice.Name = audioInput.Name;
+                Conductor.Instance.SelectAudioCaptureDevice(audioCaptureDevice);
+
+                DeviceInformation audioOutput = (await DeviceInformation.FindAllAsync(MediaDevice.GetAudioRenderSelector())).First();
+                Conductor.MediaDevice audioPlayoutDevice = new Conductor.MediaDevice();
+                audioPlayoutDevice.Id = audioOutput.Id;
+                audioPlayoutDevice.Name = audioOutput.Name;
+                Conductor.Instance.SelectAudioPlayoutDevice(audioPlayoutDevice);
             }
             else
             {
@@ -161,7 +175,7 @@ public class ControlScript : MonoBehaviour
 #if !UNITY_EDITOR
         RunOnUiThread(() =>
         {
-            Task.Run(async () => { RequestAccessForMediaCaptureAndInit(); });
+            RequestAccessForMediaCaptureAndInit();
         });
 #endif
         ServerAddressInputField.text = "peercc-server.ortclib.org";
